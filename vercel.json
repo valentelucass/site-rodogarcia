@@ -24,5 +24,30 @@
       "source": "/trabalhe-conosco.html",
       "destination": "/src/trabalhe-conosco.html"
     }
+  ],
+  "routes": [
+    {
+      "src": "/css/(.*)",
+      "dest": "/src/css/$1",
+      "headers": {
+        "Content-Type": "text/css"
+      }
+    },
+    {
+      "src": "/script/(.*)",
+      "dest": "/src/script/$1"
+    },
+    {
+      "src": "/components/(.*)",
+      "dest": "/src/components/$1"
+    },
+    {
+      "src": "/public/(.*)",
+      "dest": "/public/$1"
+    },
+    {
+      "src": "/(.*\\.(css|js|svg|png|jpg|jpeg|gif|ico|json))",
+      "dest": "/src/$1"
+    }
   ]
 }
