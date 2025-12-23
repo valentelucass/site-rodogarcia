@@ -38,8 +38,8 @@ export const MAPEAMENTO_INDICE_PARA_ESTADO = {
     // Região Sudeste
     22: 'sp',  // São Paulo (está mostrando "Roraima 22")
     24: 'es',  // Espírito Santo (está mostrando "São Paulo 24")
-    23: 'df',  // Distrito Federal (está mostrando "Santa Catarina 23" mas aponta para RJ) ✅ CORRIGIDO
-    // RJ - Rio de Janeiro: precisa descobrir qual índice realmente é
+    23: 'rj',  // Rio de Janeiro (está mostrando "Santa Catarina 23" mas aponta para RJ) ✅ CORRIGIDO
+    // DF - Distrito Federal: precisa descobrir qual índice realmente é
     // GO - Goiás: você disse que está mostrando "Espírito Santo", então preciso descobrir qual índice
     
     // Região Sul

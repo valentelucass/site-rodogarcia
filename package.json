@@ -5,8 +5,7 @@
   "main": "src/index.html",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js",
-    "build": "echo 'Build complete'"
+    "dev": "node server.js"
   },
   "keywords": ["rodogarcia", "transportes", "logística"],
   "author": "Lucas Andrade",
