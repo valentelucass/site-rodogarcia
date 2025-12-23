@@ -127,21 +127,40 @@ O site é totalmente responsivo com breakpoints otimizados:
 
 ## 📦 Deploy
 
-Para fazer deploy, você só precisa dos arquivos:
-- `index.html`
-- `public/` (pasta completa)
+### Deploy no Vercel (Recomendado)
+
+O projeto está configurado para deploy no Vercel. Veja o arquivo `README-DEPLOY.md` para instruções detalhadas.
+
+**Arquivos de configuração:**
+- `vercel.json` - Configuração do Vercel
+- `.vercelignore` - Arquivos ignorados no deploy
+- `.gitignore` - Arquivos ignorados no Git
+
+**Comandos rápidos:**
+```bash
+# Instalar Vercel CLI
+npm i -g vercel
+
+# Deploy
+vercel
+
+# Deploy em produção
+vercel --prod
+```
+
+### Outras Plataformas
+
+- **Netlify**: Arraste a pasta no site
+- **GitHub Pages**: Configure nas settings do repositório
+
+**Arquivos necessários para deploy:**
 - `src/` (pasta completa)
+- `public/` (pasta completa)
+- `vercel.json` (para Vercel)
 
 **Não é necessário:**
 - `server.js` (apenas para desenvolvimento local)
-- `package.json` (apenas para desenvolvimento local)
 - Arquivos de desenvolvimento em `src/mapa/sources/` (já processados)
-
-### Plataformas de Deploy Gratuitas
-
-- **Vercel**: `vercel --prod`
-- **Netlify**: Arraste a pasta no site
-- **GitHub Pages**: Configure nas settings do repositório
 
 ## 🔧 Desenvolvimento
 
