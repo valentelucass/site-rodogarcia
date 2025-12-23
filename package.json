@@ -2,11 +2,11 @@
   "name": "site-rodogarcia",
   "version": "1.0.0",
   "description": "Site institucional da Rodogarcia Transportes",
-  "main": "index.html",
+  "main": "src/index.html",
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
-    "build": "echo 'No build step required'"
+    "build": "echo 'Build complete'"
   },
   "keywords": ["rodogarcia", "transportes", "logística"],
   "author": "Lucas Andrade",
