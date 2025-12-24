@@ -21,10 +21,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function fecharMenuFunc(e) {
-        if (e) {
-            e.preventDefault();
-            e.stopPropagation();
+        // Só previne o comportamento padrão se for um link âncora (#)
+        if (e && e.target && e.target.tagName === 'A') {
+            const href = e.target.getAttribute('href');
+            // Se não for âncora, permite a navegação normal
+            if (href && !href.startsWith('#')) {
+                // Não previne o comportamento padrão para links externos
+                // Apenas fecha o menu
+            } else if (href && href.startsWith('#')) {
+                // Para âncoras, previne e deixa o smooth scroll funcionar
+                e.preventDefault();
+                e.stopPropagation();
+            }
         }
+        
         if (navPrincipal) {
             navPrincipal.classList.remove('ativo');
         }
@@ -76,11 +86,35 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Fechar ao clicar em qualquer link do menu
     linksMobile.forEach(link => {
-        link.addEventListener('click', fecharMenuFunc);
+        link.addEventListener('click', function(e) {
+            const href = link.getAttribute('href');
+            // Se for um link para outra página (não âncora), permite navegação normal
+            if (href && !href.startsWith('#')) {
+                // Fecha o menu mas permite a navegação
+                if (navPrincipal) {
+                    navPrincipal.classList.remove('ativo');
+                }
+                if (menuToggle) {
+                    menuToggle.setAttribute('aria-expanded', 'false');
+                }
+                document.body.classList.remove('menu-aberto');
+                document.body.style.overflow = '';
+                // Não previne o comportamento padrão - permite navegação
+                return true;
+            } else {
+                // Para âncoras, usa a função normal que faz smooth scroll
+                fecharMenuFunc(e);
+            }
+        });
     });
 
     // Fechar ao clicar fora do menu (overlay click) - Opcional, mas boa UX
     document.addEventListener('click', (e) => {
+        // Não interfere se o clique for em um link
+        if (e.target.tagName === 'A') {
+            return;
+        }
+        
         if (navPrincipal && navPrincipal.classList.contains('ativo') &&
             !navPrincipal.contains(e.target) &&
             menuToggle && !menuToggle.contains(e.target)) {

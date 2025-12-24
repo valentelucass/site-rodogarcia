@@ -44,6 +44,8 @@
 .nav-principal .link-nav {
     font-weight: 500;
     opacity: 0.9;
+    pointer-events: auto;
+    cursor: pointer;
 }
 
 .nav-principal .link-nav:hover {
