@@ -16,7 +16,7 @@ npm start
 
 Depois abra no navegador: `http://localhost:3000`
 
-### Opção 2: Live Server (VS Code)
+### Opção 2: Live Server (VS Code).
 
 1. Instale a extensão "Live Server" no VS Code
 2. Clique com botão direito no `index.html`
