@@ -1,19 +1,19 @@
 <header class="cabecalho">
     <div class="container cabecalho__container">
         <a href="index.html" class="cabecalho__logo">
-            <img src="/public/logo.png" alt="Rodogarcia Logística" class="logo-img">
+            <img src="/public/logo.png" alt="Rodogarcia Logistica" class="logo-img" loading="eager" decoding="async" fetchpriority="high" width="231" height="43">
         </a>
 
         <!-- Botão Menu Mobile (Sanduíche) -->
-        <button class="menu-toggle" aria-label="Abrir menu" aria-expanded="false">
+        <button type="button" class="menu-toggle" aria-label="Abrir menu" aria-expanded="false" aria-controls="nav-principal">
             <span class="hamburger"></span>
         </button>
 
         <!-- Navegação Desktop & Mobile Drawer -->
-        <nav class="nav-principal">
+        <nav id="nav-principal" class="nav-principal">
             <div class="nav-header-mobile">
                 <span class="titulo-menu">Menu</span>
-                <button class="fechar-menu" aria-label="Fechar menu">
+                <button type="button" class="fechar-menu" aria-label="Fechar menu">
                     <i class="ph ph-x"></i>
                 </button>
             </div>
@@ -27,16 +27,15 @@
             </ul>
 
             <div class="nav-acoes-mobile">
-                <a href="#" class="botao botao--outline-branco">Área do Cliente</a>
-                <a href="https://rodogarcia.eslcloud.com.br/recipient_tracking" target="_blank" class="botao botao--secundario">Rastrear</a>
+                <a href="https://rodogarcia.eslcloud.com.br/recipient_tracking" target="_blank" rel="noopener noreferrer" class="botao botao--outline-branco">Área do Cliente</a>
+                <a href="https://rodogarcia.eslcloud.com.br/recipient_tracking" target="_blank" rel="noopener noreferrer" class="botao botao--secundario">Rastrear</a>
             </div>
         </nav>
 
         <!-- Ações Desktop -->
         <div class="cabecalho__acoes-desktop">
-            <a href="#" class="botao botao--texto-branco">Entrar</a>
-            <a href="https://rodogarcia.eslcloud.com.br/recipient_tracking" target="_blank" class="botao botao--branco">Criar Conta</a>
+            <a href="https://rodogarcia.eslcloud.com.br/recipient_tracking" target="_blank" rel="noopener noreferrer" class="botao botao--texto-branco">Entrar</a>
+            <a href="https://rodogarcia.eslcloud.com.br/recipient_tracking" target="_blank" rel="noopener noreferrer" class="botao botao--branco">Criar Conta</a>
         </div>
     </div>
 </header>
-

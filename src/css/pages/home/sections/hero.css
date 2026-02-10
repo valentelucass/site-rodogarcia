@@ -8,7 +8,7 @@
     margin-top: -2rem; /* Desktop: aproxima do header */
     position: relative;
     overflow: hidden;
-    min-height: 40vh;
+    min-height: 80vh;
     display: flex;
     align-items: center;
 }
@@ -86,7 +86,8 @@
 }
 
 .img-hero-destaque {
-    max-width: 130%;
+    max-width: 115%;
+    height: auto;
     transform: translateX(-5%);
     filter: drop-shadow(0 30px 40px rgba(0, 0, 0, 0.4));
     transition: transform 0.3s ease;

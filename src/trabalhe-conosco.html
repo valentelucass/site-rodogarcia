@@ -4,25 +4,80 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description"
-        content="Trabalhe Conosco - Rodogarcia Transportes. Faça parte de uma equipe que conecta o Brasil com excelência e tecnologia.">
+    <meta name="description" content="Envie seu curriculo e faca parte do time Rodogarcia em uma empresa solida no setor de logistica.">
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
     <title>Trabalhe Conosco - Rodogarcia Transportes</title>
+    <link rel="canonical" href="https://rodogarcia.com.br/trabalhe-conosco.html">
+    <meta property="og:locale" content="pt_BR">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Rodogarcia Transportes">
+    <meta property="og:title" content="Trabalhe Conosco - Rodogarcia Transportes">
+    <meta property="og:description" content="Envie seu curriculo e faca parte do time Rodogarcia em uma empresa solida no setor de logistica.">
+    <meta property="og:url" content="https://rodogarcia.com.br/trabalhe-conosco.html">
+    <meta property="og:image" content="https://rodogarcia.com.br/public/caminhoneiro1.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Trabalhe Conosco - Rodogarcia Transportes">
+    <meta name="twitter:description" content="Envie seu curriculo e faca parte do time Rodogarcia em uma empresa solida no setor de logistica.">
+    <meta name="twitter:image" content="https://rodogarcia.com.br/public/caminhoneiro1.png">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
     <link rel="shortcut icon" type="image/x-icon" href="/public/favicon.ico">
     <link rel="manifest" href="/public/manifest.json">
 
     <!-- Fontes Google (Inter) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
-        rel="stylesheet">
+    <link rel="preconnect" href="https://unpkg.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
-    <!-- Phosphor Icons (Ícones Modernos) -->
-    <script src="https://unpkg.com/@phosphor-icons/web"></script>
-
-    <!-- CSS Base (genérico) -->
-    <link rel="stylesheet" href="/src/css/main.css">
-    <!-- CSS Específico da Página -->
+    <!-- Phosphor Icons -->
+    <script defer src="https://unpkg.com/@phosphor-icons/web"></script>
+    <!-- CSS (carregamento direto para evitar cadeia de @import) -->
+    <link rel="stylesheet" href="/src/css/base/variables.css">
+    <link rel="stylesheet" href="/src/css/base/base.css">
+    <link rel="stylesheet" href="/src/css/base/animations.css">
+    <link rel="stylesheet" href="/src/css/base/responsive.css">
+    <link rel="stylesheet" href="/src/css/components/buttons.css">
+    <link rel="stylesheet" href="/src/css/components/cards.css">
+    <link rel="stylesheet" href="/src/css/components/icons.css">
+    <link rel="stylesheet" href="/src/css/components/mapa.css">
+    <link rel="stylesheet" href="/src/css/layout/header.css">
+    <link rel="stylesheet" href="/src/css/layout/footer.css">
     <link rel="stylesheet" href="/src/css/pages/trabalhe-conosco/trabalhe-conosco.css">
+
+    <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+  "@type": "Organization",
+  "@id": "https://rodogarcia.com.br/#organization",
+  "name": "Rodogarcia Transportes",
+  "url": "https://rodogarcia.com.br/",
+  "logo": "https://rodogarcia.com.br/public/logo.png",
+  "telephone": "+55 14 0800-591-4557",
+  "email": "gerente.financeiro@rodogarcia.com.br"
+},
+    {
+      "@type": "BreadcrumbList",
+      "@id": "https://rodogarcia.com.br/trabalhe-conosco.html#breadcrumb",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Inicio",
+          "item": "https://rodogarcia.com.br/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Trabalhe Conosco",
+          "item": "https://rodogarcia.com.br/trabalhe-conosco.html"
+        }
+      ]
+    }
+  ]
+}
+</script>
 </head>
 
 <body>
@@ -31,19 +86,19 @@
         <div class="container cabecalho__container">
             <a href="index.html" class="cabecalho__logo">
                 <!-- Logo Branco para fundo azul -->
-                <img src="/public/logo.png" alt="Rodogarcia Logística" class="logo-img">
+                <img src="/public/logo.png" alt="Rodogarcia Logistica" class="logo-img" loading="eager" decoding="async" fetchpriority="high" width="231" height="43">
             </a>
 
             <!-- Botão Menu Mobile (Sanduíche) -->
-            <button class="menu-toggle" aria-label="Abrir menu" aria-expanded="false">
+            <button type="button" class="menu-toggle" aria-label="Abrir menu" aria-expanded="false" aria-controls="nav-principal">
                 <span class="hamburger"></span>
             </button>
 
             <!-- Navegação Desktop & Mobile Drawer -->
-            <nav class="nav-principal">
+            <nav id="nav-principal" class="nav-principal">
                 <div class="nav-header-mobile">
                     <span class="titulo-menu">Menu</span>
-                    <button class="fechar-menu" aria-label="Fechar menu">
+                    <button type="button" class="fechar-menu" aria-label="Fechar menu">
                         <i class="ph ph-x"></i>
                     </button>
                 </div>
@@ -57,16 +112,16 @@
                 </ul>
 
                 <div class="nav-acoes-mobile">
-                    <a href="#" class="botao botao--outline-branco">Área do Cliente</a>
-                    <a href="https://rodogarcia.eslcloud.com.br/recipient_tracking" target="_blank"
+                    <a href="https://rodogarcia.eslcloud.com.br/recipient_tracking" target="_blank" rel="noopener noreferrer" class="botao botao--outline-branco">Área do Cliente</a>
+                    <a href="https://rodogarcia.eslcloud.com.br/recipient_tracking" target="_blank" rel="noopener noreferrer"
                         class="botao botao--secundario">Rastrear</a>
                 </div>
             </nav>
 
             <!-- Ações Desktop -->
             <div class="cabecalho__acoes-desktop">
-                <a href="#" class="botao botao--texto-branco">Entrar</a>
-                <a href="https://rodogarcia.eslcloud.com.br/recipient_tracking" target="_blank"
+                <a href="https://rodogarcia.eslcloud.com.br/recipient_tracking" target="_blank" rel="noopener noreferrer" class="botao botao--texto-branco">Entrar</a>
+                <a href="https://rodogarcia.eslcloud.com.br/recipient_tracking" target="_blank" rel="noopener noreferrer"
                     class="botao botao--branco">Criar Conta</a>
             </div>
         </div>
@@ -254,7 +309,7 @@
                             <span><i class="ph ph-check-circle"></i> Rápido e fácil</span>
                             <span><i class="ph ph-check-circle"></i> Acompanhamento</span>
                         </div>
-                        <a href="#" target="_blank" class="botao-opcao">
+                        <a href="mailto:rh@rodogarcia.com.br?subject=Candidatura%20-%20Formulario%20Online" class="botao-opcao">
                             Acessar Formulário
                             <i class="ph ph-arrow-right"></i>
                         </a>
@@ -269,12 +324,12 @@
     <footer id="contato" class="rodape">
         <div class="container grid-rodape">
             <div class="col-rodape">
-                <img src="/public/logo.png" alt="Rodogarcia" class="logo-rodape">
+                <img src="/public/logo.png" alt="Rodogarcia" class="logo-rodape" loading="lazy" decoding="async" width="231" height="43">
                 <p class="texto-rodape">Conectando o Brasil com eficiência e tecnologia.</p>
                 <div class="social-links">
-                    <a href="#"><i class="ph ph-instagram-logo"></i></a>
-                    <a href="#"><i class="ph ph-linkedin-logo"></i></a>
-                    <a href="#"><i class="ph ph-facebook-logo"></i></a>
+                    <a href="#contato" aria-label="Contato Rodogarcia"><i class="ph ph-instagram-logo"></i></a>
+                    <a href="#contato" aria-label="Contato Rodogarcia"><i class="ph ph-linkedin-logo"></i></a>
+                    <a href="#contato" aria-label="Contato Rodogarcia"><i class="ph ph-facebook-logo"></i></a>
                 </div>
             </div>
             <div class="col-rodape">
@@ -283,30 +338,30 @@
                     <li><a href="index.html#inicio">Início</a></li>
                     <li><a href="sobre.html">Quem somos</a></li>
                     <li><a href="trabalhe-conosco.html">Trabalhe Conosco</a></li>
-                    <li><a href="#">Imprensa</a></li>
+                    <li><a href="sobre.html">Imprensa</a></li>
                 </ul>
             </div>
             <div class="col-rodape">
                 <h4>Serviços</h4>
                 <ul>
-                    <li><a href="#">Para você</a></li>
-                    <li><a href="#">Para empresas</a></li>
-                    <li><a href="#">Transportadoras</a></li>
-                    <li><a href="#">Entregadores</a></li>
+                    <li><a href="servicos.html">Para voce</a></li>
+                    <li><a href="servicos.html">Para empresas</a></li>
+                    <li><a href="servicos.html">Transportadoras</a></li>
+                    <li><a href="servicos.html">Entregadores</a></li>
                 </ul>
             </div>
             <div class="col-rodape">
                 <h4>Ajuda</h4>
                 <ul>
-                    <li><a href="#">Central de Ajuda</a></li>
-                    <li><a href="#">Fale Conosco</a></li>
-                    <li><a href="#">Termos de Uso</a></li>
+                    <li><a href="cotacao.html">Central de Ajuda</a></li>
+                    <li><a href="cotacao.html#contato">Fale Conosco</a></li>
+                    <li><a href="sobre.html">Termos de Uso</a></li>
                 </ul>
             </div>
         </div>
         <div class="rodape-bottom container">
             <p>&copy; 2025 Rodogarcia Transportes. Todos os direitos reservados. Desenvolvido por <a
-                    href="https://www.linkedin.com/in/dev-lucasandrade/" target="_blank">Lucas Andrade ❤️</a></p>
+                    href="https://www.linkedin.com/in/dev-lucasandrade/" target="_blank" rel="noopener noreferrer">Lucas Andrade ❤️</a></p>
         </div>
     </footer>
 

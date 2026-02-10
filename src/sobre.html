@@ -4,25 +4,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description"
-        content="Sobre Nós - Rodogarcia Transportes. Conheça nossa história, valores e compromisso com a excelência em logística desde 1989.">
-    <title>Sobre Nós - Rodogarcia Transportes</title>
+    <meta name="description" content="Conheca a historia, os valores e o compromisso da Rodogarcia com excelencia em logistica desde 1989.">
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+    <title>Sobre a Rodogarcia - Logistica Nacional</title>
+    <link rel="canonical" href="https://rodogarcia.com.br/sobre.html">
+    <meta property="og:locale" content="pt_BR">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Rodogarcia Transportes">
+    <meta property="og:title" content="Sobre a Rodogarcia - Logistica Nacional">
+    <meta property="og:description" content="Conheca a historia, os valores e o compromisso da Rodogarcia com excelencia em logistica desde 1989.">
+    <meta property="og:url" content="https://rodogarcia.com.br/sobre.html">
+    <meta property="og:image" content="https://rodogarcia.com.br/public/caminhoneiro1.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Sobre a Rodogarcia - Logistica Nacional">
+    <meta name="twitter:description" content="Conheca a historia, os valores e o compromisso da Rodogarcia com excelencia em logistica desde 1989.">
+    <meta name="twitter:image" content="https://rodogarcia.com.br/public/caminhoneiro1.png">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
     <link rel="shortcut icon" type="image/x-icon" href="/public/favicon.ico">
     <link rel="manifest" href="/public/manifest.json">
 
     <!-- Fontes Google (Inter) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
-        rel="stylesheet">
+    <link rel="preconnect" href="https://unpkg.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
-    <!-- Phosphor Icons (Ícones Modernos) -->
-    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <!-- Phosphor Icons -->
+    <script defer src="https://unpkg.com/@phosphor-icons/web"></script>
+    <!-- CSS (carregamento direto para evitar cadeia de @import) -->
+    <link rel="stylesheet" href="/src/css/base/variables.css">
+    <link rel="stylesheet" href="/src/css/base/base.css">
+    <link rel="stylesheet" href="/src/css/base/animations.css">
+    <link rel="stylesheet" href="/src/css/base/responsive.css">
+    <link rel="stylesheet" href="/src/css/components/buttons.css">
+    <link rel="stylesheet" href="/src/css/components/cards.css">
+    <link rel="stylesheet" href="/src/css/components/icons.css">
+    <link rel="stylesheet" href="/src/css/components/mapa.css">
+    <link rel="stylesheet" href="/src/css/layout/header.css">
+    <link rel="stylesheet" href="/src/css/layout/footer.css">
+    <link rel="stylesheet" href="/src/css/pages/sobre/sections/hero-sobre.css">
+    <link rel="stylesheet" href="/src/css/pages/sobre/sections/historia.css">
+    <link rel="stylesheet" href="/src/css/pages/sobre/sections/valores.css">
+    <link rel="stylesheet" href="/src/css/pages/sobre/sections/certificacoes-sobre.css">
+    <link rel="stylesheet" href="/src/css/pages/sobre/sections/cta-sobre.css">
+    <link rel="stylesheet" href="/src/css/pages/sobre/sections/responsive-sobre.css">
 
-    <!-- CSS Base (genérico) -->
-    <link rel="stylesheet" href="/src/css/main.css">
-    <!-- CSS Específico da Página -->
-    <link rel="stylesheet" href="/src/css/pages/sobre/sobre.css">
+    <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+  "@type": "Organization",
+  "@id": "https://rodogarcia.com.br/#organization",
+  "name": "Rodogarcia Transportes",
+  "url": "https://rodogarcia.com.br/",
+  "logo": "https://rodogarcia.com.br/public/logo.png",
+  "telephone": "+55 14 0800-591-4557",
+  "email": "gerente.financeiro@rodogarcia.com.br"
+},
+    {
+      "@type": "BreadcrumbList",
+      "@id": "https://rodogarcia.com.br/sobre.html#breadcrumb",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Inicio",
+          "item": "https://rodogarcia.com.br/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Sobre",
+          "item": "https://rodogarcia.com.br/sobre.html"
+        }
+      ]
+    }
+  ]
+}
+</script>
 </head>
 
 <body>
@@ -31,19 +91,19 @@
         <div class="container cabecalho__container">
             <a href="index.html" class="cabecalho__logo">
                 <!-- Logo Branco para fundo azul -->
-                <img src="/public/logo.png" alt="Rodogarcia Logística" class="logo-img">
+                <img src="/public/logo.png" alt="Rodogarcia Logistica" class="logo-img" loading="eager" decoding="async" fetchpriority="high" width="231" height="43">
             </a>
 
             <!-- Botão Menu Mobile (Sanduíche) -->
-            <button class="menu-toggle" aria-label="Abrir menu" aria-expanded="false">
+            <button type="button" class="menu-toggle" aria-label="Abrir menu" aria-expanded="false" aria-controls="nav-principal">
                 <span class="hamburger"></span>
             </button>
 
             <!-- Navegação Desktop & Mobile Drawer -->
-            <nav class="nav-principal">
+            <nav id="nav-principal" class="nav-principal">
                 <div class="nav-header-mobile">
                     <span class="titulo-menu">Menu</span>
-                    <button class="fechar-menu" aria-label="Fechar menu">
+                    <button type="button" class="fechar-menu" aria-label="Fechar menu">
                         <i class="ph ph-x"></i>
                     </button>
                 </div>
@@ -57,16 +117,16 @@
                 </ul>
 
                 <div class="nav-acoes-mobile">
-                    <a href="#" class="botao botao--outline-branco">Área do Cliente</a>
-                    <a href="https://rodogarcia.eslcloud.com.br/recipient_tracking" target="_blank"
+                    <a href="https://rodogarcia.eslcloud.com.br/recipient_tracking" target="_blank" rel="noopener noreferrer" class="botao botao--outline-branco">Área do Cliente</a>
+                    <a href="https://rodogarcia.eslcloud.com.br/recipient_tracking" target="_blank" rel="noopener noreferrer"
                         class="botao botao--secundario">Rastrear</a>
                 </div>
             </nav>
 
             <!-- Ações Desktop -->
             <div class="cabecalho__acoes-desktop">
-                <a href="#" class="botao botao--texto-branco">Entrar</a>
-                <a href="https://rodogarcia.eslcloud.com.br/recipient_tracking" target="_blank"
+                <a href="https://rodogarcia.eslcloud.com.br/recipient_tracking" target="_blank" rel="noopener noreferrer" class="botao botao--texto-branco">Entrar</a>
+                <a href="https://rodogarcia.eslcloud.com.br/recipient_tracking" target="_blank" rel="noopener noreferrer"
                     class="botao botao--branco">Criar Conta</a>
             </div>
         </div>
@@ -100,7 +160,7 @@
                 </div>
 
                 <div class="hero-sobre__imagem">
-                    <img src="/public/caminhoneiro1.png" alt="História Rodogarcia" class="img-hero-sobre">
+                    <img src="/public/caminhoneiro1.png" alt="Equipe e frota Rodogarcia" class="img-hero-sobre" loading="eager" decoding="async" fetchpriority="high" width="3168" height="1344">
                 </div>
             </div>
 
@@ -169,7 +229,7 @@
                         </div>
                     </div>
                     <div class="historia-imagem">
-                        <img src="/public/foto2.png" alt="História Rodogarcia" class="img-historia">
+                        <img src="/public/foto2.png" alt="Historia Rodogarcia" class="img-historia" loading="lazy" decoding="async" width="2816" height="1536">
                     </div>
                 </div>
             </div>
@@ -251,25 +311,25 @@
 
                 <div class="grid-certificacoes">
                     <div class="card-certificacao">
-                        <img src="/public/certificados/certificado_iso_9001.png" alt="ISO 9001">
+                        <img src="/public/certificados/certificado_iso_9001.png" alt="ISO 9001" loading="lazy" decoding="async" width="129" height="78">
                         <h4>ISO 9001</h4>
                         <p>Certificação de Gestão da Qualidade</p>
                     </div>
 
                     <div class="card-certificacao">
-                        <img src="/public/certificados/certificado_sassmaq.png" alt="SASSMAQ">
+                        <img src="/public/certificados/certificado_sassmaq.png" alt="SASSMAQ" loading="lazy" decoding="async" width="129" height="78">
                         <h4>SASSMAQ</h4>
                         <p>Segurança, Saúde e Meio Ambiente</p>
                     </div>
 
                     <div class="card-certificacao">
-                        <img src="/public/certificados/licencas_ecovadis.png" alt="EcoVadis">
+                        <img src="/public/certificados/licencas_ecovadis.png" alt="EcoVadis" loading="lazy" decoding="async" width="129" height="78">
                         <h4>EcoVadis</h4>
                         <p>Sustentabilidade e Responsabilidade Social</p>
                     </div>
 
                     <div class="card-certificacao">
-                        <img src="/public/certificados/licenca_policia_federal.png" alt="Polícia Federal">
+                        <img src="/public/certificados/licenca_policia_federal.png" alt="Polícia Federal" loading="lazy" decoding="async" width="129" height="78">
                         <h4>Licença PF</h4>
                         <p>Autorização Polícia Federal</p>
                     </div>
@@ -296,12 +356,12 @@
     <footer id="contato" class="rodape">
         <div class="container grid-rodape">
             <div class="col-rodape">
-                <img src="/public/logo.png" alt="Rodogarcia" class="logo-rodape">
+                <img src="/public/logo.png" alt="Rodogarcia" class="logo-rodape" loading="lazy" decoding="async" width="231" height="43">
                 <p class="texto-rodape">Conectando o Brasil com eficiência e tecnologia.</p>
                 <div class="social-links">
-                    <a href="#"><i class="ph ph-instagram-logo"></i></a>
-                    <a href="#"><i class="ph ph-linkedin-logo"></i></a>
-                    <a href="#"><i class="ph ph-facebook-logo"></i></a>
+                    <a href="#contato" aria-label="Contato Rodogarcia"><i class="ph ph-instagram-logo"></i></a>
+                    <a href="#contato" aria-label="Contato Rodogarcia"><i class="ph ph-linkedin-logo"></i></a>
+                    <a href="#contato" aria-label="Contato Rodogarcia"><i class="ph ph-facebook-logo"></i></a>
                 </div>
             </div>
             <div class="col-rodape">
@@ -310,7 +370,7 @@
                     <li><a href="index.html#inicio">Início</a></li>
                     <li><a href="sobre.html">Quem somos</a></li>
                     <li><a href="trabalhe-conosco.html">Trabalhe Conosco</a></li>
-                    <li><a href="#">Imprensa</a></li>
+                    <li><a href="sobre.html">Imprensa</a></li>
                 </ul>
             </div>
             <div class="col-rodape">
@@ -318,23 +378,23 @@
                 <ul>
                     <li><a href="servicos.html">Nossos Serviços</a></li>
                     <li><a href="cotacao.html">Solicitar Cotação</a></li>
-                    <li><a href="https://rodogarcia.eslcloud.com.br/recipient_tracking" target="_blank">Rastrear
+                    <li><a href="https://rodogarcia.eslcloud.com.br/recipient_tracking" target="_blank" rel="noopener noreferrer">Rastrear
                             Encomenda</a></li>
-                    <li><a href="#">Para empresas</a></li>
+                    <li><a href="servicos.html">Para empresas</a></li>
                 </ul>
             </div>
             <div class="col-rodape">
                 <h4>Ajuda</h4>
                 <ul>
-                    <li><a href="#">Central de Ajuda</a></li>
-                    <li><a href="#">Fale Conosco</a></li>
-                    <li><a href="#">Termos de Uso</a></li>
+                    <li><a href="cotacao.html">Central de Ajuda</a></li>
+                    <li><a href="cotacao.html#contato">Fale Conosco</a></li>
+                    <li><a href="sobre.html">Termos de Uso</a></li>
                 </ul>
             </div>
         </div>
         <div class="rodape-bottom container">
             <p>&copy; 2025 Rodogarcia Transportes. Todos os direitos reservados. Desenvolvido por <a
-                    href="https://www.linkedin.com/in/dev-lucasandrade/" target="_blank">Lucas Andrade ❤️</a></p>
+                    href="https://www.linkedin.com/in/dev-lucasandrade/" target="_blank" rel="noopener noreferrer">Lucas Andrade ❤️</a></p>
         </div>
     </footer>
 
