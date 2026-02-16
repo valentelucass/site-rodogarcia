@@ -10,11 +10,15 @@
     font-weight: 600;
     font-size: 1rem;
     transition: all 0.2s ease-in-out;
+    cursor: pointer;
+    text-decoration: none;
 }
 
 .botao:hover {
     transform: translateY(-2px);
 }
+
+/* --- Botões para fundos ESCUROS (Hero, CTA Dark) --- */
 
 .botao--zafir {
     background-color: var(--cor-branco);
@@ -28,6 +32,7 @@
 .botao--outline-zafir {
     border: 2px solid var(--cor-branco);
     color: var(--cor-branco);
+    background-color: transparent;
 }
 
 .botao--outline-zafir:hover {
@@ -49,6 +54,35 @@
     font-size: 0.9rem;
 }
 
+.botao--outline-branco {
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: var(--cor-branco);
+}
+
+
+/* --- Botões para fundos CLAROS (Cards, Seções brancas) --- */
+
+.botao--azul {
+    background-color: var(--cor-azul-hero);
+    color: var(--cor-branco);
+}
+
+.botao--azul:hover {
+    background-color: var(--cor-azul-escuro);
+    color: var(--cor-branco);
+}
+
+.botao--outline-azul {
+    border: 2px solid var(--cor-azul-hero);
+    color: var(--cor-azul-hero);
+    background-color: transparent;
+}
+
+.botao--outline-azul:hover {
+    background-color: var(--cor-azul-hero);
+    color: var(--cor-branco);
+}
+
 .botao--secundario {
     background-color: var(--cor-destaque);
     color: white;
@@ -58,10 +92,8 @@
     filter: brightness(0.9);
 }
 
-.botao--outline-branco {
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    color: var(--cor-branco);
-}
+
+/* --- Variantes Específicas e Pequenas --- */
 
 .botao-mini {
     display: block;

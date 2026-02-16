@@ -1,0 +1,418 @@
+﻿/* =========================================
+   PAGINAS INSTITUCIONAIS
+   ========================================= */
+
+/* --- Hero Section --- */
+.page-hero {
+    position: relative;
+    overflow: hidden;
+    background-color: var(--cor-azul-hero);
+    color: var(--cor-branco);
+    padding: 6rem 0 5rem;
+    text-align: left;
+}
+
+/* Background Pattern (Dots) */
+.page-hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: radial-gradient(circle, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+    background-size: 30px 30px;
+    opacity: 0.3;
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* Background Glow Effect */
+.page-hero::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+    border-radius: 50%;
+    filter: blur(60px);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.page-hero .container {
+    position: relative;
+    z-index: 1;
+}
+
+.page-tag {
+    display: inline-block;
+    padding: 0.5rem 1.2rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    border: none;
+    color: var(--cor-branco);
+    margin-bottom: 1.5rem;
+}
+
+.page-title {
+    font-size: clamp(2.5rem, 5vw, 3.5rem);
+    font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 1.5rem;
+    color: var(--cor-branco);
+}
+
+.page-subtitle {
+    max-width: 700px;
+    font-size: 1.2rem;
+    opacity: 0.95;
+    line-height: 1.6;
+    color: var(--cor-branco);
+    margin-bottom: 2rem;
+}
+
+/* --- Page Sections --- */
+.page-section {
+    padding: 5rem 0;
+}
+
+.page-section--alt {
+    background: var(--cor-cinza-claro);
+}
+
+.section-head {
+    margin-bottom: 3rem;
+}
+
+.section-head h2 {
+    font-size: 2rem;
+    color: var(--cor-texto-principal);
+    margin-bottom: 0.8rem;
+    font-weight: 700;
+}
+
+.section-head p {
+    color: var(--cor-texto-secundario);
+    font-size: 1.1rem;
+    line-height: 1.6;
+    max-width: 800px;
+}
+
+/* --- Cards Grid --- */
+.cards-grid {
+    display: grid;
+
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 2rem;
+}
+
+.cards-grid--2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+/* --- Info Card (Standardized) --- */
+.info-card {
+    background: var(--cor-branco);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--radius-md);
+    padding: 2.5rem;
+    box-shadow: none;
+    transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.info-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    border-color: transparent;
+}
+
+.info-card h3 {
+    color: var(--cor-texto-principal);
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+.info-card p,
+.info-card li {
+    color: var(--cor-texto-secundario);
+    font-size: 1rem;
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+}
+
+.info-card .actions-row {
+    margin-top: auto;
+}
+
+.info-card ul {
+    list-style: none;
+    padding-left: 0;
+    display: grid;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.info-card ul li {
+    position: relative;
+    padding-left: 1.5rem;
+}
+
+.info-card ul li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.6em;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--cor-destaque);
+}
+
+.info-card strong {
+    color: var(--cor-texto-principal);
+    font-weight: 600;
+}
+
+/* --- Actions & Buttons --- */
+.actions-row {
+    margin-top: 2rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.actions-row .botao {
+    min-width: 190px;
+    text-align: center;
+}
+
+/* --- FAQ List --- */
+.faq-list {
+    display: grid;
+    gap: 1rem;
+    width: 100%;
+    margin: 0 auto;
+}
+
+.faq-item {
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--radius-md);
+    background: var(--cor-branco);
+    overflow: hidden;
+    transition: box-shadow 0.3s;
+}
+
+.faq-item:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+.faq-item summary {
+    list-style: none;
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--cor-texto-principal);
+    padding: 1.25rem 1.5rem;
+    padding-right: 3rem;
+    position: relative;
+    font-size: 1.1rem;
+}
+
+.faq-item summary::-webkit-details-marker {
+    display: none;
+}
+
+.faq-item summary::after {
+    content: '+';
+    position: absolute;
+    right: 1.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--cor-azul-hero);
+    font-size: 1.5rem;
+    font-weight: 400;
+    transition: transform 0.3s;
+}
+
+.faq-item[open] summary::after {
+    transform: translateY(-50%) rotate(45deg);
+    content: '+';
+    /* Keeping '+' but rotating it is smoother usually, but CSS content change works too */
+}
+
+/* If we want to change content instead of rotate: */
+.faq-item[open] summary::after {
+    content: '-';
+    transform: translateY(-50%) rotate(0deg);
+}
+
+
+.faq-item p {
+    padding: 0 1.5rem 1.5rem;
+    color: var(--cor-texto-secundario);
+    line-height: 1.6;
+}
+
+/* --- Legal Box --- */
+.legal-box {
+    background: var(--cor-branco);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--radius-md);
+    padding: 2.5rem;
+    margin-bottom: 2rem;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.legal-box:hover {
+    box-shadow: 0 8px 25px rgba(26, 22, 77, 0.06);
+}
+
+.legal-box+.legal-box {
+    margin-top: 1.5rem;
+}
+
+.legal-box h2 {
+    color: var(--cor-texto-principal);
+    font-size: 1.4rem;
+    margin-bottom: 1rem;
+    font-weight: 700;
+}
+
+.legal-box p,
+.legal-box li {
+    color: var(--cor-texto-secundario);
+    line-height: 1.7;
+    margin-bottom: 1rem;
+}
+
+.legal-box ul {
+    list-style: none;
+    padding-left: 0;
+    display: grid;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+
+/* --- CTA Strip --- */
+.cta-strip {
+    margin-top: 3rem;
+    padding: 2.5rem;
+    border-radius: var(--radius-md);
+    background: linear-gradient(135deg, var(--cor-azul-hero), var(--cor-azul-medio));
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.cta-strip::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 200px;
+    height: 100%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    background-size: 20px 20px;
+    pointer-events: none;
+}
+
+.cta-strip h3 {
+    margin-bottom: 0.5rem;
+    color: var(--cor-branco);
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.cta-strip p {
+    color: rgba(255, 255, 255, 0.9);
+    max-width: 800px;
+    font-size: 1.1rem;
+}
+
+/* --- Meta Row (Dates, Tags) --- */
+.meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+    margin-top: 1.5rem;
+}
+
+.meta-pill {
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    font-size: 0.85rem;
+    color: var(--cor-branco);
+    backdrop-filter: blur(5px);
+}
+
+/* --- Responsive --- */
+@media (max-width: 968px) {
+
+    .cards-grid,
+    .cards-grid--2 {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .page-hero {
+        padding: 5rem 0 4rem;
+    }
+
+    .page-title {
+        font-size: 2.5rem;
+    }
+}
+
+@media (max-width: 720px) {
+
+    .cards-grid,
+    .cards-grid--2 {
+        grid-template-columns: 1fr;
+    }
+
+    .page-hero {
+        padding: 4rem 0 3rem;
+    }
+
+    .page-title {
+        font-size: 2rem;
+    }
+
+    .page-subtitle {
+        font-size: 1.1rem;
+    }
+
+    .actions-row .botao {
+        width: 100%;
+        min-width: 100%;
+    }
+
+    .page-section {
+        padding: 3rem 0;
+    }
+
+    .info-card,
+    .legal-box {
+        padding: 1.5rem;
+    }
+
+    .faq-item summary {
+        padding: 1rem 1.25rem;
+        padding-right: 3rem;
+    }
+}

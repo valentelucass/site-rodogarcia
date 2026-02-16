@@ -14,7 +14,12 @@ const routeMap = new Map([
     ['/servicos.html', '/src/servicos.html'],
     ['/sobre.html', '/src/sobre.html'],
     ['/cotacao.html', '/src/cotacao.html'],
-    ['/trabalhe-conosco.html', '/src/trabalhe-conosco.html']
+    ['/trabalhe-conosco.html', '/src/trabalhe-conosco.html'],
+    ['/imprensa.html', '/src/imprensa.html'],
+    ['/para-empresas.html', '/src/para-empresas.html'],
+    ['/central-ajuda.html', '/src/central-ajuda.html'],
+    ['/fale-conosco.html', '/src/fale-conosco.html'],
+    ['/termos-de-uso.html', '/src/termos-de-uso.html']
 ]);
 
 const mimeTypes = {

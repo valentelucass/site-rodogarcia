@@ -7,10 +7,11 @@
 }
 
 .box-rastreio-wide {
-    background: var(--cor-texto-principal);
-    color: white;
+    background: linear-gradient(135deg, rgba(46, 40, 130, 0.08), rgba(80, 141, 202, 0.2));
+    color: var(--cor-texto-principal);
     padding: 3rem;
     border-radius: var(--radius-md);
+    border: 1px solid rgba(46, 40, 130, 0.12);
     display: flex;
     justify-content: space-between;
     align-items: center;
