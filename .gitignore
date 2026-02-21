@@ -30,4 +30,11 @@ Thumbs.db
 .vercelignore
 
 # Backups
-backups/*.zip
+backups/
+backup/
+*.bak
+*.backup
+*.old
+*.orig
+*.tmp
+*.temp

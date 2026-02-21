@@ -1,9 +1,0 @@
-{
-  "github.copilot.chat.localeOverride": "pt-br",
-  "github.copilot.chat.commitMessageGeneration.instructions": [
-    {
-      "text": "Gere sempre mensagens de commit em portugues do Brasil (pt-BR), com titulo objetivo e descricao curta."
-    }
-  ],
-  "git.terminalAuthentication": true
-}
