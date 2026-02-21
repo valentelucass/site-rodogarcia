@@ -4,6 +4,81 @@
       "source": "/index.html",
       "destination": "/",
       "permanent": true
+    },
+    {
+      "source": "/inicio",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/institucional",
+      "destination": "/sobre.html",
+      "permanent": true
+    },
+    {
+      "source": "/quem-somos",
+      "destination": "/sobre.html",
+      "permanent": true
+    },
+    {
+      "source": "/trabalhe-conosco",
+      "destination": "/trabalhe-conosco.html",
+      "permanent": true
+    },
+    {
+      "source": "/imprensa",
+      "destination": "/imprensa.html",
+      "permanent": true
+    },
+    {
+      "source": "/servicos",
+      "destination": "/servicos.html",
+      "permanent": true
+    },
+    {
+      "source": "/nossos-servicos",
+      "destination": "/servicos.html",
+      "permanent": true
+    },
+    {
+      "source": "/solicitar-cotacao",
+      "destination": "/cotacao.html",
+      "permanent": true
+    },
+    {
+      "source": "/rastrear-encomenda",
+      "destination": "https://rodogarcia.eslcloud.com.br/recipient_tracking",
+      "permanent": false
+    },
+    {
+      "source": "/para-empresas",
+      "destination": "/para-empresas.html",
+      "permanent": true
+    },
+    {
+      "source": "/ajuda",
+      "destination": "/central-ajuda.html",
+      "permanent": true
+    },
+    {
+      "source": "/central-ajuda",
+      "destination": "/central-ajuda.html",
+      "permanent": true
+    },
+    {
+      "source": "/central-de-ajuda",
+      "destination": "/central-ajuda.html",
+      "permanent": true
+    },
+    {
+      "source": "/fale-conosco",
+      "destination": "/fale-conosco.html",
+      "permanent": true
+    },
+    {
+      "source": "/termos-de-uso",
+      "destination": "/termos-de-uso.html",
+      "permanent": true
     }
   ],
   "headers": [
@@ -88,6 +163,26 @@
     {
       "source": "/trabalhe-conosco.html",
       "destination": "/src/trabalhe-conosco.html"
+    },
+    {
+      "source": "/imprensa.html",
+      "destination": "/src/imprensa.html"
+    },
+    {
+      "source": "/para-empresas.html",
+      "destination": "/src/para-empresas.html"
+    },
+    {
+      "source": "/central-ajuda.html",
+      "destination": "/src/central-ajuda.html"
+    },
+    {
+      "source": "/fale-conosco.html",
+      "destination": "/src/fale-conosco.html"
+    },
+    {
+      "source": "/termos-de-uso.html",
+      "destination": "/src/termos-de-uso.html"
     },
     {
       "source": "/css/(.*)",
