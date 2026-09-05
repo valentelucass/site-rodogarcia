@@ -37,17 +37,17 @@ class ImprovementServiceTest {
             ))
         );
 
-        assertThat(created.path("id").asText()).matches("improvement_[0-9a-f]{32}");
-        assertThat(created.path("phone").asText()).isEmpty();
-        assertThat(created.path("branch").asText()).isEmpty();
-        assertThat(created.path("page").asText()).isEqualTo("/cotacao");
+        assertThat(created.path("id").asString()).matches("improvement_[0-9a-f]{32}");
+        assertThat(created.path("phone").asString()).isEmpty();
+        assertThat(created.path("branch").asString()).isEmpty();
+        assertThat(created.path("page").asString()).isEqualTo("/cotacao");
         ObjectNode attachment = (ObjectNode) created.path("attachments").get(0);
-        assertThat(attachment.path("id").asText()).matches("attachment_[0-9a-f]{32}");
-        assertThat(attachment.path("name").asText()).isEqualTo("evidência.csv");
-        assertThat(attachment.path("mimeType").asText()).isEqualTo("text/csv");
+        assertThat(attachment.path("id").asString()).matches("attachment_[0-9a-f]{32}");
+        assertThat(attachment.path("name").asString()).isEqualTo("evidência.csv");
+        assertThat(attachment.path("mimeType").asString()).isEqualTo("text/csv");
         assertThat(Files.readString(
             context.properties.storagePaths().improvementAttachments()
-                .resolve(attachment.path("storedName").asText())
+                .resolve(attachment.path("storedName").asString())
         )).contains("status,ok");
     }
 
@@ -92,8 +92,8 @@ class ImprovementServiceTest {
 
         ArrayNode retained = context.store.readArray(context.properties.storagePaths().improvements());
         assertThat(retained).hasSize(1);
-        assertThat(retained.get(0).path("status").asText()).isEqualTo("archived");
-        assertThat(retained.get(0).path("archivedAt").asText()).isEqualTo("2026-03-02T00:00:00.000Z");
+        assertThat(retained.get(0).path("status").asString()).isEqualTo("archived");
+        assertThat(retained.get(0).path("archivedAt").asString()).isEqualTo("2026-03-02T00:00:00.000Z");
         assertThat(attachments.resolve("attachment_old.csv")).doesNotExist();
     }
 

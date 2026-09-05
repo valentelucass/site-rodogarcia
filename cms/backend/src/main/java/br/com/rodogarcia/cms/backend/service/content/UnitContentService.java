@@ -81,12 +81,12 @@ public final class UnitContentService {
             validatePayload(payload);
             ObjectNode item = current.deepCopy();
             payload.properties().forEach(entry -> item.set(entry.getKey(), entry.getValue().deepCopy()));
-            item.put("id", current.path("id").asText());
+            item.put("id", current.path("id").asString());
             if (current.has("order")) item.set("order", current.get("order").deepCopy());
             item.put("updatedAt", ContentTime.now(clock));
             if (payload.path("isDefault").asBoolean(false)) {
                 for (JsonNode raw : collection) {
-                    if (raw.isObject() && !id.equals(raw.path("id").asText())) ((ObjectNode) raw).put("isDefault", false);
+                    if (raw.isObject() && !id.equals(raw.path("id").asString())) ((ObjectNode) raw).put("isDefault", false);
                 }
             }
             collection.set(index, item);
@@ -117,13 +117,13 @@ public final class UnitContentService {
             ArrayNode result = mapper.createArrayNode();
             Set<String> seen = new HashSet<>();
             for (JsonNode rawId : orderedIds) {
-                String id = rawId.asText();
+                String id = rawId.asString();
                 if (!seen.add(id)) continue;
                 int index = indexOf(collection, id);
                 if (index >= 0) result.add(collection.get(index).deepCopy());
             }
             for (JsonNode item : collection) {
-                if (seen.add(item.path("id").asText())) result.add(item.deepCopy());
+                if (seen.add(item.path("id").asString())) result.add(item.deepCopy());
             }
             normalizeOrders(result);
             content.set("units", result);
@@ -211,7 +211,7 @@ public final class UnitContentService {
     }
 
     private static int indexOf(ArrayNode items, String id) {
-        for (int index = 0; index < items.size(); index++) if (id.equals(items.get(index).path("id").asText())) return index;
+        for (int index = 0; index < items.size(); index++) if (id.equals(items.get(index).path("id").asString())) return index;
         return -1;
     }
 

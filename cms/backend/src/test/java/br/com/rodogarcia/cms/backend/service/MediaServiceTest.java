@@ -44,16 +44,16 @@ class MediaServiceTest {
             "Hero Rodogarcia.png", "image/png", png(32, 24), null
         );
 
-        assertThat(record.path("url").asText()).endsWith(".webp");
-        assertThat(record.path("thumbnailUrl").asText()).endsWith("-thumb.webp");
-        assertThat(record.path("mediumUrl").asText()).endsWith("-medium.webp");
-        assertThat(record.path("largeUrl").asText()).endsWith("-large.webp");
+        assertThat(record.path("url").asString()).endsWith(".webp");
+        assertThat(record.path("thumbnailUrl").asString()).endsWith("-thumb.webp");
+        assertThat(record.path("mediumUrl").asString()).endsWith("-medium.webp");
+        assertThat(record.path("largeUrl").asString()).endsWith("-large.webp");
         assertThat(record.has("originalUrl")).isFalse();
         assertThat(record.path("width").intValue()).isEqualTo(32);
         assertThat(record.path("height").intValue()).isEqualTo(24);
         assertThat(record.path("aspectRatio").doubleValue()).isEqualTo(1.3333d);
         for (String field : List.of("url", "thumbnailUrl", "mediumUrl", "largeUrl")) {
-            byte[] webp = Files.readAllBytes(uploadPath(context, record.path(field).asText()));
+            byte[] webp = Files.readAllBytes(uploadPath(context, record.path(field).asString()));
             assertThat(new String(webp, 0, 4, StandardCharsets.US_ASCII)).isEqualTo("RIFF");
             assertThat(new String(webp, 8, 4, StandardCharsets.US_ASCII)).isEqualTo("WEBP");
             BufferedImage decoded = WebPCodec.decodeImage(webp);
@@ -64,7 +64,7 @@ class MediaServiceTest {
             }
         }
         BufferedImage thumbnail = WebPCodec.decodeImage(
-            Files.readAllBytes(uploadPath(context, record.path("thumbnailUrl").asText()))
+            Files.readAllBytes(uploadPath(context, record.path("thumbnailUrl").asString()))
         );
         assertThat(thumbnail.getWidth()).isEqualTo(420);
         assertThat(thumbnail.getHeight()).isEqualTo(260);
@@ -79,7 +79,7 @@ class MediaServiceTest {
 
         JsonNode record = null;
         for (JsonNode item : context.media.listAdminImages()) {
-            if (item.path("url").asText().equals("/operacao.png")) {
+            if (item.path("url").asString().equals("/operacao.png")) {
                 record = item;
                 break;
             }
@@ -115,7 +115,7 @@ class MediaServiceTest {
             "transparente.png", "image/png", output.toByteArray(), null
         );
         BufferedImage decoded = WebPCodec.decodeImage(
-            Files.readAllBytes(uploadPath(context, record.path("url").asText()))
+            Files.readAllBytes(uploadPath(context, record.path("url").asString()))
         );
 
         assertThat(decoded.getColorModel().hasAlpha()).isTrue();
@@ -140,11 +140,11 @@ class MediaServiceTest {
             null
         );
 
-        assertThat(record.path("mediaType").asText()).isEqualTo("video");
-        assertThat(record.path("format").asText()).isEqualTo("webm");
-        assertThat(record.path("originalFormat").asText()).isEqualTo("application/ogg");
-        assertThat(record.path("url").asText()).endsWith(".webm");
-        assertThat(Files.readString(uploadPath(context, record.path("url").asText())))
+        assertThat(record.path("mediaType").asString()).isEqualTo("video");
+        assertThat(record.path("format").asString()).isEqualTo("webm");
+        assertThat(record.path("originalFormat").asString()).isEqualTo("application/ogg");
+        assertThat(record.path("url").asString()).endsWith(".webm");
+        assertThat(Files.readString(uploadPath(context, record.path("url").asString())))
             .isEqualTo("converted-webm");
         try (var files = Files.list(context.properties.uploadsDir())) {
             assertThat(files.map(path -> path.getFileName().toString()).toList())
@@ -160,7 +160,7 @@ class MediaServiceTest {
         Files.writeString(context.properties.frontendPublicDir().resolve("certificate.png"), "image");
         Files.writeString(context.properties.frontendPublicDir().resolve("certificate.mp4"), "video");
         ObjectNode body = context.mapper.createObjectNode().put("home.cert.iso", "/certificate.png");
-        assertThat(context.media.updateMediaSlots(body, null).path("home.cert.iso").asText())
+        assertThat(context.media.updateMediaSlots(body, null).path("home.cert.iso").asString())
             .isEqualTo("/certificate.png");
 
         assertThatThrownBy(() -> context.media.updateMediaSlots(
@@ -201,27 +201,27 @@ class MediaServiceTest {
 
         context.media.replaceReferences("/from.png", "/to.png", null);
 
-        assertThat(context.store.readObject(context.properties.storagePaths().siteTexts()).path("asset").asText())
+        assertThat(context.store.readObject(context.properties.storagePaths().siteTexts()).path("asset").asString())
             .isEqualTo("/to.png");
-        assertThat(context.store.readObject(context.properties.storagePaths().mediaSlots()).path("home.cert.iso").asText())
+        assertThat(context.store.readObject(context.properties.storagePaths().mediaSlots()).path("home.cert.iso").asString())
             .isEqualTo("/to.png");
         assertThat(context.properties.storagePaths().mediaReplaceTransaction()).doesNotExist();
 
         ObjectNode uploaded = context.media.save("em-uso.png", "image/png", png(32, 24), null);
         context.store.write(
             context.properties.storagePaths().mediaSlots(),
-            context.mapper.createObjectNode().put("home.cert.iso", uploaded.path("url").asText())
+            context.mapper.createObjectNode().put("home.cert.iso", uploaded.path("url").asString())
         );
-        assertThatThrownBy(() -> context.media.delete(uploaded.path("url").asText(), false, null))
+        assertThatThrownBy(() -> context.media.delete(uploaded.path("url").asString(), false, null))
             .isInstanceOf(ApiException.class).hasMessageContaining("Confirme a exclusão");
 
-        ObjectNode deleted = context.media.delete(uploaded.path("url").asText(), true, null);
+        ObjectNode deleted = context.media.delete(uploaded.path("url").asString(), true, null);
         assertThat(deleted.path("referenceCount").intValue()).isEqualTo(1);
         for (String field : List.of("url", "thumbnailUrl", "mediumUrl", "largeUrl")) {
-            assertThat(uploadPath(context, uploaded.path(field).asText())).doesNotExist();
+            assertThat(uploadPath(context, uploaded.path(field).asString())).doesNotExist();
         }
         assertThat(context.store.readObject(context.properties.storagePaths().mediaSlots())
-            .path("home.cert.iso").asText()).isEmpty();
+            .path("home.cert.iso").asString()).isEmpty();
     }
 
     private static Path uploadPath(MediaTestContext context, String url) {

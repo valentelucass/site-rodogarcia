@@ -27,7 +27,6 @@ import br.com.rodogarcia.cms.backend.utils.Sanitizers;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Service;
 import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
 
 @Service
@@ -90,15 +89,15 @@ public class AuditService {
         int limit = parseSliceLimit(filters.get("limit"), 120, 1, 500);
         List<JsonNode> result = new ArrayList<>();
         collections.read(paths.auditLog()).forEach(entry -> {
-            long timestamp = parseDate(entry.path("createdAt").asText());
+            long timestamp = parseDate(entry.path("createdAt").asString());
             if (!action.isEmpty()
-                && !entry.path("action").asText().toLowerCase(Locale.ROOT).contains(action)) return;
+                && !entry.path("action").asString().toLowerCase(Locale.ROOT).contains(action)) return;
             if (timestamp != Long.MIN_VALUE && from != Long.MIN_VALUE && timestamp < from) return;
             if (timestamp != Long.MIN_VALUE && to != Long.MIN_VALUE && timestamp > to) return;
             result.add(entry.deepCopy());
         });
         result.sort(Comparator.comparing(
-            entry -> entry.path("createdAt").asText(),
+            entry -> entry.path("createdAt").asString(),
             Comparator.reverseOrder()
         ));
         return result.stream().limit(limit).toList();

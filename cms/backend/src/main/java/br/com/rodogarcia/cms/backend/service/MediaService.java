@@ -4,15 +4,12 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.format.DateTimeParseException;
 import java.text.Collator;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -175,13 +172,13 @@ public final class MediaService {
 
         Collator collator = Collator.getInstance();
         result.sort((left, right) -> {
-            Instant leftDate = instant(left.path("uploadedAt").asText());
-            Instant rightDate = instant(right.path("uploadedAt").asText());
+            Instant leftDate = instant(left.path("uploadedAt").asString());
+            Instant rightDate = instant(right.path("uploadedAt").asString());
             if (leftDate != null && rightDate != null) {
                 int date = rightDate.compareTo(leftDate);
                 if (date != 0) return date;
             }
-            return collator.compare(left.path("name").asText(), right.path("name").asText());
+            return collator.compare(left.path("name").asString(), right.path("name").asString());
         });
         ArrayNode output = store.mapper().createArrayNode();
         result.forEach(output::add);
@@ -378,7 +375,7 @@ public final class MediaService {
         audit.record(
             request,
             "media.upload",
-            record.path("url").asText(),
+            record.path("url").asString(),
             Map.of(
                 "fileName", fileName,
                 "originalSize", String.valueOf(bytes.length),
@@ -447,7 +444,7 @@ public final class MediaService {
         audit.record(
             request,
             "media.upload",
-            record.path("url").asText(),
+            record.path("url").asString(),
             Map.of("fileName", fileName, "originalSize", String.valueOf(bytes.length), "mediaType", "video")
         );
         return record;
@@ -499,7 +496,7 @@ public final class MediaService {
 
     private JsonNode replace(JsonNode value, String from, String to) {
         if (value == null) return store.mapper().nullNode();
-        if (value.isTextual()) {
+        if (value.isString()) {
             return sanitizedUrl(value).equals(from) ? StringNode.valueOf(to) : value.deepCopy();
         }
         if (value.isArray()) {
@@ -527,7 +524,7 @@ public final class MediaService {
 
     private void collectReferences(JsonNode value, Map<String, Integer> references) {
         if (value == null) return;
-        if (value.isTextual()) {
+        if (value.isString()) {
             String sanitized = sanitizedUrl(value);
             if (!sanitized.isEmpty()
                 && MediaValidationService.MEDIA_EXTENSIONS.contains(extension(sanitized))) {
@@ -617,7 +614,7 @@ public final class MediaService {
         record.put("source", source);
         record.put("mediaType", mediaTypeFromUrl(url));
         record.put("format", extension(url).replaceFirst("^\\.", ""));
-        enrichTechnicalMetadata(record, file, record.path("mediaType").asText());
+        enrichTechnicalMetadata(record, file, record.path("mediaType").asString());
         try {
             record.put("uploadedAt", IsoTime.format(Files.getLastModifiedTime(file).toMillis()));
         } catch (IOException error) {
@@ -753,9 +750,9 @@ public final class MediaService {
     private static long number(JsonNode value, long fallback) {
         if (value == null || value.isNull()) return fallback;
         if (value.isNumber()) return value.longValue();
-        if (value.isTextual()) {
+        if (value.isString()) {
             try {
-                double parsed = Double.parseDouble(value.asText());
+                double parsed = Double.parseDouble(value.asString());
                 return Double.isFinite(parsed) ? (long) parsed : fallback;
             } catch (NumberFormatException ignored) {
                 return fallback;
@@ -767,7 +764,7 @@ public final class MediaService {
     private static double decimal(JsonNode value, double fallback) {
         if (value == null || value.isNull()) return fallback;
         try {
-            double parsed = value.isNumber() ? value.doubleValue() : Double.parseDouble(value.asText());
+            double parsed = value.isNumber() ? value.doubleValue() : Double.parseDouble(value.asString());
             return Double.isFinite(parsed) ? parsed : fallback;
         } catch (NumberFormatException ignored) {
             return fallback;
@@ -851,8 +848,8 @@ public final class MediaService {
 
     private static String jsString(JsonNode value, String fallback) {
         if (value == null || value.isNull()) return fallback;
-        if (value.isTextual()) return value.asText();
-        if (value.isNumber() || value.isBoolean()) return value.asText();
+        if (value.isString()) return value.asString();
+        if (value.isNumber() || value.isBoolean()) return value.asString();
         return value.toString();
     }
 

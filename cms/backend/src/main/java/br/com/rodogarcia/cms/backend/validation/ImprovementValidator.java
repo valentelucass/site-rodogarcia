@@ -70,8 +70,8 @@ public final class ImprovementValidator {
         if (body != null && body.isObject()) {
             body.properties().forEach(entry -> {
                 JsonNode value = entry.getValue();
-                if (value != null && (value.isTextual() || value.isNumber())) {
-                    form.put(entry.getKey(), List.of(value.asText()));
+                if (value != null && (value.isString() || value.isNumber())) {
+                    form.put(entry.getKey(), List.of(value.asString()));
                 }
             });
         }

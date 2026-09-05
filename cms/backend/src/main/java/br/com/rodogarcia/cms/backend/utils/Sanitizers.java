@@ -19,8 +19,8 @@ public final class Sanitizers {
     }
 
     public static String text(JsonNode value, int maxLength) {
-        if (value == null || (!value.isTextual() && !value.isNumber())) return "";
-        return text(value.asText(), maxLength);
+        if (value == null || (!value.isString() && !value.isNumber())) return "";
+        return text(value.asString(), maxLength);
     }
 
     public static String text(Object value, int maxLength) {
@@ -32,8 +32,8 @@ public final class Sanitizers {
     }
 
     public static String multiline(JsonNode value, int maxLength) {
-        if (value == null || (!value.isTextual() && !value.isNumber())) return "";
-        String[] lines = value.asText().replace("\r\n", "\n").replace('\r', '\n').split("\n");
+        if (value == null || (!value.isString() && !value.isNumber())) return "";
+        String[] lines = value.asString().replace("\r\n", "\n").replace('\r', '\n').split("\n");
         StringBuilder result = new StringBuilder();
         for (String line : lines) {
             String normalized = line
@@ -111,14 +111,14 @@ public final class Sanitizers {
     }
 
     public static String digits(JsonNode value, int maxLength) {
-        String raw = value == null || value.isNull() ? "" : value.asText();
+        String raw = value == null || value.isNull() ? "" : value.asString();
         String digits = raw.replaceAll("\\D", "");
         return digits.substring(0, Math.min(digits.length(), maxLength));
     }
 
     private static Object jsonStringValue(JsonNode value) {
         if (value == null || value.isNull()) return "";
-        if (value.isTextual() || value.isNumber() || value.isBoolean()) return value.asText();
+        if (value.isString() || value.isNumber() || value.isBoolean()) return value.asString();
         return value.toString();
     }
 }

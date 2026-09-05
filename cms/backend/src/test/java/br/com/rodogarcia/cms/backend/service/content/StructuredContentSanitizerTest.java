@@ -48,13 +48,13 @@ class StructuredContentSanitizerTest {
         ArrayNode normalizedJobs = (ArrayNode) fixedSanitizer.page("careers", careers).get("jobs");
 
         assertThat(normalizedJobs).hasSize(2);
-        assertThat(normalizedJobs.get(0).path("id").asText()).matches("career_job_[0-9a-f]{32}");
-        assertThat(normalizedJobs.get(1).path("id").asText()).matches("career_job_[0-9a-f]{32}")
-            .isNotEqualTo(normalizedJobs.get(0).path("id").asText());
+        assertThat(normalizedJobs.get(0).path("id").asString()).matches("career_job_[0-9a-f]{32}");
+        assertThat(normalizedJobs.get(1).path("id").asString()).matches("career_job_[0-9a-f]{32}")
+            .isNotEqualTo(normalizedJobs.get(0).path("id").asString());
         assertThat(normalizedJobs.get(0).path("order").asInt()).isEqualTo(1);
         assertThat(normalizedJobs.get(1).path("order").asInt()).isEqualTo(2);
-        assertThat(normalizedJobs.get(0).path("createdAt").asText()).isEmpty();
-        assertThat(normalizedJobs.get(0).path("updatedAt").asText()).isEmpty();
+        assertThat(normalizedJobs.get(0).path("createdAt").asString()).isEmpty();
+        assertThat(normalizedJobs.get(0).path("updatedAt").asString()).isEmpty();
 
         ObjectNode quote = mapper.createObjectNode();
         quote.putObject("approvalChannel").put("whatsappUrl", "https://example.com/not-whatsapp");
@@ -68,21 +68,21 @@ class StructuredContentSanitizerTest {
 
         ObjectNode normalizedQuote = fixedSanitizer.page("quote", quote);
         ArrayNode normalizedChannels = (ArrayNode) normalizedQuote.get("otherChannels");
-        assertThat(normalizedQuote.path("directChannels").get(0).path("title").asText())
+        assertThat(normalizedQuote.path("directChannels").get(0).path("title").asString())
             .isEqualTo("Título editável");
-        assertThat(normalizedQuote.path("approvalChannel").path("whatsappUrl").asText())
-            .isEqualTo(ContentDefaults.page(mapper, "quote").path("approvalChannel").path("whatsappUrl").asText());
+        assertThat(normalizedQuote.path("approvalChannel").path("whatsappUrl").asString())
+            .isEqualTo(ContentDefaults.page(mapper, "quote").path("approvalChannel").path("whatsappUrl").asString());
         assertThat(normalizedChannels).hasSize(5);
-        assertThat(normalizedChannels.get(0).path("id").asText()).matches("quote_channel_[0-9a-f]{32}");
-        assertThat(normalizedChannels.get(1).path("id").asText())
-            .isNotEqualTo(normalizedChannels.get(0).path("id").asText());
-        assertThat(normalizedChannels.get(1).path("icon").asText()).isEqualTo("ChatCircleDots");
-        assertThat(normalizedChannels.get(4).path("icon").asText()).isEqualTo("WhatsappLogo");
-        assertThat(normalizedChannels.get(4).path("title").asText()).isEqualTo("WhatsApp comercial");
+        assertThat(normalizedChannels.get(0).path("id").asString()).matches("quote_channel_[0-9a-f]{32}");
+        assertThat(normalizedChannels.get(1).path("id").asString())
+            .isNotEqualTo(normalizedChannels.get(0).path("id").asString());
+        assertThat(normalizedChannels.get(1).path("icon").asString()).isEqualTo("ChatCircleDots");
+        assertThat(normalizedChannels.get(4).path("icon").asString()).isEqualTo("WhatsappLogo");
+        assertThat(normalizedChannels.get(4).path("title").asString()).isEqualTo("WhatsApp comercial");
         for (int index = 0; index < normalizedChannels.size(); index++) {
             assertThat(normalizedChannels.get(index).path("order").asInt()).isEqualTo(index + 1);
-            assertThat(normalizedChannels.get(index).path("createdAt").asText()).isEqualTo(NOW);
-            assertThat(normalizedChannels.get(index).path("updatedAt").asText()).isEqualTo(NOW);
+            assertThat(normalizedChannels.get(index).path("createdAt").asString()).isEqualTo(NOW);
+            assertThat(normalizedChannels.get(index).path("updatedAt").asString()).isEqualTo(NOW);
         }
     }
 
@@ -97,7 +97,7 @@ class StructuredContentSanitizerTest {
 
         ObjectNode missingQuote = fixedSanitizer.page("quote", mapper.createObjectNode());
         assertThat(missingQuote.path("otherChannels")).hasSize(4);
-        assertThat(missingQuote.path("otherChannels").get(0).path("createdAt").asText()).isEqualTo(NOW);
+        assertThat(missingQuote.path("otherChannels").get(0).path("createdAt").asString()).isEqualTo(NOW);
 
         ObjectNode contact = ContentDefaults.page(mapper, "contact");
         ((ObjectNode) contact.path("mainChannels").get(0)).put("title", "Não pode mudar");
@@ -123,10 +123,10 @@ class StructuredContentSanitizerTest {
         JsonNode extra = fixedSanitizer.page("about", about)
             .path("compliance").path("certifications").get(7);
 
-        assertThat(extra.path("title").asText()).isEqualTo("Certificação genérica");
-        assertThat(extra.path("description").asText()).isEqualTo("Descrição genérica");
-        assertThat(extra.path("image").path("src").asText()).isEqualTo("/fallback.webp");
-        assertThat(extra.path("certificateUrl").asText()).isEmpty();
+        assertThat(extra.path("title").asString()).isEqualTo("Certificação genérica");
+        assertThat(extra.path("description").asString()).isEqualTo("Descrição genérica");
+        assertThat(extra.path("image").path("src").asString()).isEqualTo("/fallback.webp");
+        assertThat(extra.path("certificateUrl").asString()).isEmpty();
     }
 
     @Test
@@ -148,11 +148,11 @@ class StructuredContentSanitizerTest {
 
         ObjectNode normalized = fixedSanitizer.footer(footer);
         JsonNode generatedColumn = normalized.path("footer").path("columns").get(3);
-        assertThat(generatedColumn.path("id").asText()).matches("footer_column_[0-9a-f]{32}");
-        assertThat(generatedColumn.path("links").get(0).path("id").asText()).matches("footer_link_[0-9a-f]{32}");
-        assertThat(generatedColumn.path("links").get(1).path("id").asText())
-            .isNotEqualTo(generatedColumn.path("links").get(0).path("id").asText());
-        assertThat(normalized.path("terms").path("reading").path("blocks").get(5).path("id").asText())
+        assertThat(generatedColumn.path("id").asString()).matches("footer_column_[0-9a-f]{32}");
+        assertThat(generatedColumn.path("links").get(0).path("id").asString()).matches("footer_link_[0-9a-f]{32}");
+        assertThat(generatedColumn.path("links").get(1).path("id").asString())
+            .isNotEqualTo(generatedColumn.path("links").get(0).path("id").asString());
+        assertThat(normalized.path("terms").path("reading").path("blocks").get(5).path("id").asString())
             .matches("footer_block_[0-9a-f]{32}");
 
         ObjectNode empty = mapper.createObjectNode();
@@ -174,7 +174,7 @@ class StructuredContentSanitizerTest {
     void appliesNodeFieldLimitsAndKeepsNavigationPathTextUnnormalized() {
         ObjectNode about = ContentDefaults.page(mapper, "about");
         ((ObjectNode) about.get("hero")).put("description", "x".repeat(300));
-        assertThat(fixedSanitizer.page("about", about).path("hero").path("description").asText())
+        assertThat(fixedSanitizer.page("about", about).path("hero").path("description").asString())
             .hasSize(220);
 
         ObjectNode navigation = mapper.createObjectNode();
@@ -182,7 +182,7 @@ class StructuredContentSanitizerTest {
             .put("label", "Rota")
             .put("url", "/foo//bar/../baz")
             .put("icon", "home");
-        assertThat(fixedSanitizer.navigation(navigation).path("items").get(0).path("url").asText())
+        assertThat(fixedSanitizer.navigation(navigation).path("items").get(0).path("url").asString())
             .isEqualTo("/foo//bar/../baz");
     }
 

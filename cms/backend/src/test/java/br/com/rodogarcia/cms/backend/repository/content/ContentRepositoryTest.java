@@ -45,7 +45,7 @@ class ContentRepositoryTest {
         assertThat(content.path("aboutPage").isObject()).isTrue();
         assertThat(content.path("quotePage").path("otherChannels")).hasSize(4);
         assertThat(content.path("quotePage").path("otherChannels").get(0)
-            .path("createdAt").asText()).isNotEmpty();
+            .path("createdAt").asString()).isNotEmpty();
         JsonNode persisted = mapper.readTree(properties.storagePaths().content().toFile());
         assertThat(persisted.has("improvementsPage")).isFalse();
         assertThat(repository.read()).isEqualTo(content);

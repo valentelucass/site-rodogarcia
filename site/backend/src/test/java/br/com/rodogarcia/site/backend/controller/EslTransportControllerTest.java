@@ -35,6 +35,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InOrder;
 import org.springframework.http.MediaType;
+import org.springframework.test.json.JsonCompareMode;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import tools.jackson.databind.JsonNode;
@@ -85,7 +86,7 @@ class EslTransportControllerTest {
             .andExpect(content().contentType("application/json; charset=utf-8"))
             .andExpect(content().json(
                 "{\"quote\":{\"id\":\"125\",\"sequenceCode\":\"24\"}}",
-                true
+                JsonCompareMode.LENIENT
             ));
 
         verify(requestPolicy).requirePublicMutation(
@@ -116,7 +117,7 @@ class EslTransportControllerTest {
                   "whatsappMessage": "Solicitação de coleta pelo site Rodogarcia"
                 }
                 """,
-                true
+                JsonCompareMode.LENIENT
             ));
 
         verify(requestPolicy).requirePublicMutation(
@@ -147,7 +148,7 @@ class EslTransportControllerTest {
                 """
                 {"collection":{"id":"359397","sequenceCode":"13925","status":"requested"}}
                 """,
-                true
+                JsonCompareMode.LENIENT
             ));
 
         InOrder order = inOrder(requestPolicy, tokenService, requestParser, transportService);

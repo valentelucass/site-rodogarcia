@@ -114,7 +114,7 @@ public final class MediaController {
 
     private static String jsString(JsonNode value) {
         if (value == null || value.isNull()) return "";
-        if (value.isTextual() || value.isNumber() || value.isBoolean()) return value.asText();
+        if (value.isString() || value.isNumber() || value.isBoolean()) return value.asString();
         return value.toString();
     }
 }

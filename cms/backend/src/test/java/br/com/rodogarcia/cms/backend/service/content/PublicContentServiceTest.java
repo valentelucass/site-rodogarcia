@@ -32,7 +32,7 @@ class PublicContentServiceTest {
         ObjectNode normalized = service.publicServices(input);
 
         assertThat(normalized.path("faq").path("items")).hasSize(1);
-        assertThat(normalized.path("faq").path("items").get(0).path("id").asText())
+        assertThat(normalized.path("faq").path("items").get(0).path("id").asString())
             .isEqualTo("services-faq-2");
         assertThat(normalized.path("faq").path("items").get(0).path("order").asInt())
             .isEqualTo(2);
@@ -76,11 +76,11 @@ class PublicContentServiceTest {
         ObjectNode normalized = service.publicHome(home);
 
         assertThat(normalized.path("regionalPresence").path("units")).hasSize(23);
-        assertThat(normalized.path("regionalPresence").path("units").get(22).path("id").asText())
+        assertThat(normalized.path("regionalPresence").path("units").get(22).path("id").asString())
             .isEqualTo("unit-24");
-        assertThat(normalized.path("section3").path("cards").get(0).path("badge").asText())
+        assertThat(normalized.path("section3").path("cards").get(0).path("badge").asString())
             .hasSize(60);
-        assertThat(normalized.path("section3").path("cards").get(0).path("ctaLabel").asText())
+        assertThat(normalized.path("section3").path("cards").get(0).path("ctaLabel").asString())
             .hasSize(40);
     }
 
@@ -105,7 +105,7 @@ class PublicContentServiceTest {
         ObjectNode result = serviceWith(content).publicContent();
 
         assertThat(result.path("units")).hasSize(1);
-        assertThat(result.path("units").get(0).path("id").asText()).isEqualTo("kept");
+        assertThat(result.path("units").get(0).path("id").asString()).isEqualTo("kept");
         assertThat(result.path("units").get(0).path("isDefault").asBoolean()).isFalse();
         assertThat(result.path("units").get(0).has("quoteCnpj")).isFalse();
         assertThat(result.path("units").get(0).has("genericPostalCode")).isFalse();

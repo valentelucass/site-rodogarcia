@@ -110,8 +110,8 @@ public class TrackingService {
         Map<String, Integer> byType = new LinkedHashMap<>();
         Map<String, Integer> byPage = new LinkedHashMap<>();
         for (ObjectNode event : events) {
-            byType.merge(event.path("event").asText(), 1, Integer::sum);
-            byPage.merge(event.path("page").asText(), 1, Integer::sum);
+            byType.merge(event.path("event").asString(), 1, Integer::sum);
+            byPage.merge(event.path("page").asString(), 1, Integer::sum);
         }
         List<Map<String, Object>> topPages = byPage.entrySet().stream()
             .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
@@ -164,9 +164,9 @@ public class TrackingService {
             event.put("timestamp", timestamp);
             event.put("createdAt", IsoTime.format(timestamp));
             if (!eventFilter.isEmpty() && !normalizedEvent.equals(eventFilter)) continue;
-            if (!pageFilter.isEmpty() && !event.path("page").asText().equals(pageFilter)) continue;
+            if (!pageFilter.isEmpty() && !event.path("page").asString().equals(pageFilter)) continue;
             if (!sourceFilter.isEmpty()
-                && !event.path("source").asText().toLowerCase(Locale.ROOT).contains(sourceFilter)) continue;
+                && !event.path("source").asString().toLowerCase(Locale.ROOT).contains(sourceFilter)) continue;
             if (from != Long.MIN_VALUE && timestamp < from) continue;
             if (to != Long.MIN_VALUE && timestamp > to) continue;
             result.add(event);
@@ -178,9 +178,9 @@ public class TrackingService {
 
     private long eventTime(JsonNode event) {
         if (event.path("timestamp").isNumber()) return event.path("timestamp").asLong();
-        long parsed = AuditService.parseDate(event.path("timestamp").asText());
+        long parsed = AuditService.parseDate(event.path("timestamp").asString());
         if (parsed != Long.MIN_VALUE) return parsed;
-        parsed = AuditService.parseDate(event.path("createdAt").asText());
+        parsed = AuditService.parseDate(event.path("createdAt").asString());
         return parsed == Long.MIN_VALUE ? clock.millis() : parsed;
     }
 
@@ -243,6 +243,6 @@ public class TrackingService {
             if (Double.isFinite(numeric) && numeric == Math.rint(numeric)
                 && Math.abs(numeric) < 1e21) return String.valueOf((long) numeric);
         }
-        return value.asText();
+        return value.asString();
     }
 }

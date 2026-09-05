@@ -35,7 +35,7 @@ class ConsentServiceTest {
     void normalizesUpdatesAndPersistsOnlyResolvedConsentCategories() throws Exception {
         ObjectNode defaults = service.readSettings();
         assertThat(defaults.path("categories").size()).isEqualTo(3);
-        assertThat(defaults.path("categories").get(0).path("key").asText()).isEqualTo("necessary");
+        assertThat(defaults.path("categories").get(0).path("key").asString()).isEqualTo("necessary");
 
         ObjectNode update = (ObjectNode) context.mapper.readTree("""
             {"version":2,"enabled":true,"mobile":{"position":"center-modal"},
@@ -46,8 +46,8 @@ class ConsentServiceTest {
             """);
         ObjectNode settings = service.updateSettings(update, request());
         assertThat(settings.path("version").asInt()).isEqualTo(2);
-        assertThat(settings.path("categories").get(0).path("key").asText()).isEqualTo("necessary");
-        assertThat(context.audit.list(Map.of()).getFirst().path("action").asText())
+        assertThat(settings.path("categories").get(0).path("key").asString()).isEqualTo("necessary");
+        assertThat(context.audit.list(Map.of()).getFirst().path("action").asString())
             .isEqualTo("consent.update");
 
         ObjectNode body = (ObjectNode) context.mapper.readTree("""
@@ -55,11 +55,11 @@ class ConsentServiceTest {
              "approximateLocation":"não deve persistir","categories":{"analytics":false}}
             """);
         ObjectNode recorded = service.record(body, request());
-        assertThat(recorded.path("createdAt").asText()).isEqualTo("2026-09-03T12:34:56.789Z");
+        assertThat(recorded.path("createdAt").asString()).isEqualTo("2026-09-03T12:34:56.789Z");
         assertThat(recorded.path("categories").path("necessary").asBoolean()).isTrue();
         assertThat(recorded.path("categories").path("analytics").asBoolean()).isTrue();
-        assertThat(recorded.path("approximateLocation").asText()).isEmpty();
-        assertThat(recorded.path("ipMasked").asText()).isEqualTo("127.0.0.0");
+        assertThat(recorded.path("approximateLocation").asString()).isEmpty();
+        assertThat(recorded.path("ipMasked").asString()).isEqualTo("127.0.0.0");
         assertThat(service.list(Map.of("status", "accepted")).get("total")).isEqualTo(1);
     }
 
@@ -81,13 +81,13 @@ class ConsentServiceTest {
     @Test
     void acceptsAnEmptyBodyAndKeepsLocationConsentStrictlyBoolean() throws Exception {
         ObjectNode recorded = service.record(null, request());
-        assertThat(recorded.path("decision").asText()).isEqualTo("custom");
+        assertThat(recorded.path("decision").asString()).isEqualTo("custom");
 
         ObjectNode misleadingLocation = context.mapper.createObjectNode();
         misleadingLocation.put("locationAllowed", "true");
         misleadingLocation.put("approximateLocation", "São Paulo");
         ObjectNode second = service.record(misleadingLocation, request());
-        assertThat(second.path("approximateLocation").asText()).isEmpty();
+        assertThat(second.path("approximateLocation").asString()).isEmpty();
 
         Map<String, Object> page = service.list(Map.of("page", "0", "pageSize", "0"));
         assertThat(page.get("page")).isEqualTo(1);

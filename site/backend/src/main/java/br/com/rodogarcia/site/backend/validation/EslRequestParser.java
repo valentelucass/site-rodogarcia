@@ -406,7 +406,7 @@ public class EslRequestParser {
         if (value.isObject()) {
             return "object";
         }
-        if (value.isTextual()) {
+        if (value.isString()) {
             return "string";
         }
         if (value.isNumber()) {

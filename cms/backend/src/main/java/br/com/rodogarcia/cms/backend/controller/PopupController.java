@@ -54,8 +54,8 @@ public class PopupController {
         JsonNode body = JsonBodyCompatibilityFilter.parsedBody(request);
         JsonNode lead = popup.createLead(body, request);
         Map<String, Object> leadResponse = new java.util.LinkedHashMap<>();
-        leadResponse.put("id", lead.path("id").asText());
-        leadResponse.put("createdAt", lead.path("createdAt").asText());
+        leadResponse.put("id", lead.path("id").asString());
+        leadResponse.put("createdAt", lead.path("createdAt").asString());
         Map<String, Object> response = new java.util.LinkedHashMap<>();
         response.put("message", "Lead recebido com sucesso.");
         response.put("lead", leadResponse);

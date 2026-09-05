@@ -60,7 +60,7 @@ public class ConsentService {
         for (Map.Entry<String, Integer> entry : TEXT_LIMITS.entrySet()) {
             String value = Sanitizers.text(raw.get(entry.getKey()), entry.getValue());
             normalized.put(entry.getKey(), value.isEmpty()
-                ? defaults.path(entry.getKey()).asText() : value);
+                ? defaults.path(entry.getKey()).asString() : value);
         }
         normalized.put("style", "floating");
         JsonNode behavior = raw.path("behavior");
@@ -145,7 +145,7 @@ public class ConsentService {
         entry.put("status", decision);
         entry.put("type", decision);
         entry.put("version", settings.path("version").asInt());
-        entry.put("consentTextVersion", settings.path("version").asText());
+        entry.put("consentTextVersion", settings.path("version").asString());
         entry.set("categories", categories);
         entry.put("sessionId", Sanitizers.text(input.get("sessionId"), 100));
         entry.put("userAgent", userAgent);
@@ -159,7 +159,7 @@ public class ConsentService {
         ObjectNode log = store.mapper().createObjectNode();
         log.put("at", IsoTime.format(clock.millis()));
         log.put("action", decision.equals("revoked") ? "consent.revoked" : "consent.saved");
-        log.put("version", settings.path("version").asText());
+        log.put("version", settings.path("version").asString());
         entry.putArray("logs").add(log);
         store.withWriteLock(List.of(paths.cookieConsents()), () -> {
             ArrayNode values = store.readArray(paths.cookieConsents());
@@ -181,17 +181,17 @@ public class ConsentService {
             first(filters, "pageSize", "limit"), 50), 1, 250);
         List<JsonNode> filtered = new ArrayList<>();
         for (JsonNode entry : store.readArray(paths.cookieConsents())) {
-            long createdAt = AuditService.parseDate(entry.path("createdAt").asText());
+            long createdAt = AuditService.parseDate(entry.path("createdAt").asString());
             String itemStatus = entry.has("status")
-                ? entry.path("status").asText() : entry.path("decision").asText();
+                ? entry.path("status").asString() : entry.path("decision").asString();
             if (!status.isEmpty() && !itemStatus.toLowerCase(Locale.ROOT).equals(status)) continue;
-            if (!device.isEmpty() && !entry.path("device").asText().toLowerCase(Locale.ROOT).equals(device)) continue;
+            if (!device.isEmpty() && !entry.path("device").asString().toLowerCase(Locale.ROOT).equals(device)) continue;
             if (createdAt != Long.MIN_VALUE && from != Long.MIN_VALUE && createdAt < from) continue;
             if (createdAt != Long.MIN_VALUE && to != Long.MIN_VALUE && createdAt > to) continue;
             filtered.add(entry.deepCopy());
         }
         filtered.sort(Comparator.comparing(
-            item -> item.path("createdAt").asText(), Comparator.reverseOrder()));
+            item -> item.path("createdAt").asString(), Comparator.reverseOrder()));
         long requestedStart = Math.max(0L, ((long) page - 1L) * pageSize);
         int start = (int) Math.min(filtered.size(), requestedStart);
         int end = Math.min(filtered.size(), start + pageSize);
@@ -242,7 +242,7 @@ public class ConsentService {
         for (JsonNode candidate : source) {
             if (!candidate.isObject()) continue;
             ObjectNode normalized = normalizeCategory(candidate);
-            values.putIfAbsent(normalized.path("key").asText(), normalized);
+            values.putIfAbsent(normalized.path("key").asString(), normalized);
         }
         if (!values.containsKey("necessary")) {
             values.put("necessary", normalizeCategory(defaultSettings().path("categories").get(0)));
@@ -274,7 +274,7 @@ public class ConsentService {
         Map<String, Boolean> requested = booleanMap(input);
         ObjectNode result = store.mapper().createObjectNode();
         for (JsonNode category : settings.path("categories")) {
-            String key = category.path("key").asText();
+            String key = category.path("key").asString();
             boolean enabled = category.path("required").asBoolean()
                 || decision.equals("accepted")
                 || (!(decision.equals("rejected") || decision.equals("revoked"))
@@ -366,10 +366,10 @@ public class ConsentService {
             if (value.size() != 1) return Double.NaN;
             JsonNode item = value.get(0);
             if (item == null || item.isNull()) return 0d;
-            if (item.isTextual() || item.isNumber()) return AuditService.jsNumber(item.asText());
+            if (item.isString() || item.isNumber()) return AuditService.jsNumber(item.asString());
             return Double.NaN;
         }
-        return AuditService.jsNumber(value.asText());
+        return AuditService.jsNumber(value.asString());
     }
 
     private static String first(Map<String, String> values, String primary, String fallback) {

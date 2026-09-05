@@ -38,8 +38,8 @@ class SessionServiceTest {
         String persisted = Files.readString(context.properties.storagePaths().sessions());
         assertThat(persisted).doesNotEndWith("\n");
         var value = context.mapper.readTree(persisted).path(created.getId());
-        assertThat(value.path("id").asText()).isEqualTo(created.getId());
-        assertThat(value.path("userId").asText()).isEqualTo("usr_test");
+        assertThat(value.path("id").asString()).isEqualTo(created.getId());
+        assertThat(value.path("userId").asString()).isEqualTo("usr_test");
         assertThat(value.path("expiresAt").asLong()).isEqualTo(renewed.getExpiresAt());
 
         clock.advance(Duration.ofHours(9));

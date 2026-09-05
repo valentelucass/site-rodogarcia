@@ -38,7 +38,7 @@ public class FormsController {
         JsonNode entry = forms.createContact(body, request);
         Map<String, Object> response = new java.util.LinkedHashMap<>();
         response.put("message", "Mensagem recebida com sucesso.");
-        response.put("id", entry.path("id").asText());
+        response.put("id", entry.path("id").asString());
         return ResponseEntity.status(201).body(response);
     }
 
@@ -55,7 +55,7 @@ public class FormsController {
         JsonNode entry = forms.createQuote(body, request);
         Map<String, Object> response = new java.util.LinkedHashMap<>();
         response.put("message", "Solicitação de cotação recebida.");
-        response.put("id", entry.path("id").asText());
+        response.put("id", entry.path("id").asString());
         return ResponseEntity.status(201).body(response);
     }
 }

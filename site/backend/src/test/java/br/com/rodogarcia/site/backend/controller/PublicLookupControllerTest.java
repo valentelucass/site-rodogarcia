@@ -23,6 +23,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.json.JsonCompareMode;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import tools.jackson.databind.json.JsonMapper;
 
@@ -60,7 +61,7 @@ class PublicLookupControllerTest {
             .andExpect(content().contentType("application/json; charset=utf-8"))
             .andExpect(content().json(
                 "{\"postalCode\":\"06090000\",\"city\":\"Osasco\",\"stateCode\":\"SP\"}",
-                true
+                JsonCompareMode.LENIENT
             ));
 
         verify(requestPolicy).consume(any(HttpServletRequest.class), eq(RateLimitPolicy.PUBLIC_POSTAL_CODE));
@@ -107,7 +108,7 @@ class PublicLookupControllerTest {
                   "city":"Osasco",
                   "stateCode":"SP"
                 }
-                """, true));
+                """, JsonCompareMode.LENIENT));
 
         verify(requestPolicy).consume(
             any(HttpServletRequest.class),

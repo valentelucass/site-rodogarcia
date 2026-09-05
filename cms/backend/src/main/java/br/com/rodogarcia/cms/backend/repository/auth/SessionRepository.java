@@ -2,7 +2,6 @@ package br.com.rodogarcia.cms.backend.repository.auth;
 
 import java.nio.file.Path;
 import java.time.Clock;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -135,7 +134,7 @@ public class SessionRepository {
 
     private static String text(JsonNode node, String field) {
         JsonNode value = node == null ? null : node.get(field);
-        return value != null && value.isString() ? value.asText() : null;
+        return value != null && value.isString() ? value.asString() : null;
     }
 
     private static long number(JsonNode node, String field) {

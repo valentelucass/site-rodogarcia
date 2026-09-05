@@ -43,8 +43,8 @@ public final class ContentJson {
     }
 
     public static String text(JsonNode value, int maxLength) {
-        if (value == null || (!value.isTextual() && !value.isNumber())) return "";
-        String normalized = WHITESPACE.matcher(CONTROL.matcher(value.asText()).replaceAll(" "))
+        if (value == null || (!value.isString() && !value.isNumber())) return "";
+        String normalized = WHITESPACE.matcher(CONTROL.matcher(value.asString()).replaceAll(" "))
             .replaceAll(" ").trim();
         return truncate(normalized, maxLength);
     }
@@ -54,8 +54,8 @@ public final class ContentJson {
     }
 
     public static String multiline(JsonNode value, int maxLength) {
-        if (value == null || (!value.isTextual() && !value.isNumber())) return "";
-        String[] lines = value.asText().replace("\r\n", "\n").replace('\r', '\n').split("\n", -1);
+        if (value == null || (!value.isString() && !value.isNumber())) return "";
+        String[] lines = value.asString().replace("\r\n", "\n").replace('\r', '\n').split("\n", -1);
         StringBuilder result = new StringBuilder();
         for (String line : lines) {
             String clean = HORIZONTAL_WHITESPACE.matcher(

@@ -43,6 +43,6 @@ class SeoServiceTest {
             return defaults.deepCopy();
         });
         ObjectNode missingFileDefaults = service.readSettings();
-        assertThat(missingFileDefaults.path("updatedAt").asText()).isEqualTo(NOW);
+        assertThat(missingFileDefaults.path("updatedAt").asString()).isEqualTo(NOW);
     }
 }

@@ -22,7 +22,6 @@ class CmsContentServiceTest {
     private final JsonMapper mapper = JsonMapper.builder().build();
 
     @Test
-    @SuppressWarnings("unchecked")
     void updatesAllTwentyThreePageSectionContractsFromCanonicalPayloads() {
         AtomicReference<ObjectNode> state = new AtomicReference<>(ContentDefaults.content(mapper));
         ContentRepository repository = mock(ContentRepository.class);

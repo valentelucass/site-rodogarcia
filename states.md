@@ -20,6 +20,7 @@
 
 - Não há import de runtime entre `site/backend`, `cms/backend` e `landing-builder/backend`. Código realmente agnóstico pertence a `shared/`.
 - Controllers traduzem HTTP, services concentram regra de negócio e repositories são os únicos responsáveis por leitura/escrita JSON atômica.
+- Os backends usam as APIs não obsoletas do Jackson 3 (`asString`, `isString` e `stringValue`) e dos builders HTTP/Test do Spring 7, preservando valores e envelopes já publicados. A configuração pública de rotas mantém a compatibilidade Express para `;` literal por meio da implementação legada do Spring, com supressão localizada e documentada: o parser novo transforma esses caminhos e violaria o contrato HTTP coberto por socket.
 - Não há banco de dados, JPA, Hibernate, Flyway ou outra persistência além de JSON local.
 - O site encaminha `/admin/*` ao CMS, rotas administrativas e `/uploads/*` à API CMS, CEP/CNPJ/ESL à API pública e assets, mídia e fallback de slug ao Builder. O navegador não recebe URLs internas ou tokens de serviço.
 - No formulário público de cotação, os blocos de dados acompanham visualmente o tipo de carga selecionado: carga fracionada usa tom e ícone verdes e carga fechada tom e ícone azuis. As camadas de cor fazem crossfade suave e escalonado, respeitam redução de movimento e não alteram campos, cálculo ou envio.
@@ -166,6 +167,7 @@
 - Após aplicar desfoque à camada decorativa do fundo escuro do CMS, `cms/frontend` passou em `npm run typecheck` e no build isolado com `NEXT_BUILD_DIST_DIR=.next.test`.
 - Após reduzir o desfoque do fundo escuro do CMS para `2px`, `cms/frontend` passou em `npm run typecheck` e no build isolado com `NEXT_BUILD_DIST_DIR=.next.test`.
 - Após aplicar o mesmo desfoque de `2px` ao fundo escuro da tela de login, `cms/frontend` passou em `npm run typecheck` e no build isolado com `NEXT_BUILD_DIST_DIR=.next.test`.
+- Após atualizar as APIs obsoletas indicadas pelo Java para Jackson 3 e Spring 7, `cms/backend` passou em `mvnw.cmd -B clean verify` com 188 testes e `site/backend` passou no mesmo comando com 154 testes; a exceção de compatibilidade de rotas com `;` foi preservada e confirmada pela suíte HTTP/socket.
 - `node scripts/tests/test-production-operations.js` passou, inclusive a guarda contra retorno de `call :rótulo`, a recusa do DEV ativo e a propagação correta do `EPERM -4048` do npm no `iniciar-prod.bat`; os helpers PowerShell e a promoção de artefatos também foram validados estaticamente.
 - A guarda real do `cmd` com listeners DEV ativos retornou `1` e bloqueou antes do build. A preparação isolada dos três frontends foi exercitada em fixture; no site, o build em `.next.test` e o preparo produziram `dist-prod.test` sem alterar `dist-prod`.
 - O hardening isolado de site/CMS passou integralmente com JARs e storage temporários. Ele não usou portas ou artefatos de produção.

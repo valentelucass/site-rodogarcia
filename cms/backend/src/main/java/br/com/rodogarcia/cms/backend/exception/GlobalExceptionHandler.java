@@ -38,7 +38,7 @@ public class GlobalExceptionHandler {
         Exception ignored
     ) {
         return org.springframework.http.ResponseEntity
-            .status(HttpStatus.PAYLOAD_TOO_LARGE)
+            .status(HttpStatus.CONTENT_TOO_LARGE)
             .body(Map.of("error", "Arquivo ou payload excede o limite permitido."));
     }
 
@@ -56,7 +56,7 @@ public class GlobalExceptionHandler {
         MultipartException ignored
     ) {
         return org.springframework.http.ResponseEntity
-            .unprocessableEntity()
+            .unprocessableContent()
             .body(Map.of("error", "Upload multipart inválido."));
     }
 
@@ -65,7 +65,7 @@ public class GlobalExceptionHandler {
         MissingServletRequestParameterException error
     ) {
         return org.springframework.http.ResponseEntity
-            .unprocessableEntity()
+            .unprocessableContent()
             .body(Map.of("error", "Parâmetro obrigatório ausente: " + error.getParameterName() + "."));
     }
 

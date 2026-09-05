@@ -48,10 +48,10 @@ class ContentMigrationServiceTest {
 
         assertThat(first.shouldPersist()).isTrue();
         assertThat(first.content().path("homePage").path("regionalPresence").path("units").get(0)
-            .path("additionalEmail").asText()).isEqualTo("comercial.agu@rodogarcia.com.br");
+            .path("additionalEmail").asString()).isEqualTo("comercial.agu@rodogarcia.com.br");
         assertThat(first.content().path("homePage").path("socialProof").path("feedbacks").get(0)
-            .path("testimonial").asText()).isEqualTo("Entrega previsível");
-        assertThat(first.content().path("units").get(0).path("quoteCnpj").asText())
+            .path("testimonial").asString()).isEqualTo("Entrega previsível");
+        assertThat(first.content().path("units").get(0).path("quoteCnpj").asString())
             .isEqualTo("60960473000162");
         assertThat(first.content().path("aboutPage").isObject()).isTrue();
 
@@ -92,23 +92,23 @@ class ContentMigrationServiceTest {
             raw, texts, mediaSlots);
 
         assertThat(migrated.content().path("contactPage").path("mainChannels").get(1)
-            .path("button").path("url").asText())
+            .path("button").path("url").asString())
             .isEqualTo("mailto:gerente.financeiro@rodogarcia.com.br");
         assertThat(migrated.content().path("contactPage").path("finalCta").path("buttons").get(0)
-            .path("label").asText()).isEqualTo("CTA legado");
+            .path("label").asString()).isEqualTo("CTA legado");
         assertThat(migrated.content().path("contactPage").path("finalCta").path("buttons").get(0)
-            .path("url").asText()).isEqualTo("/destino-legado");
+            .path("url").asString()).isEqualTo("/destino-legado");
         assertThat(migrated.content().path("careersPage").path("jobs")).hasSize(3);
-        assertThat(migrated.content().path("careersPage").path("jobs").get(0).path("id").asText())
+        assertThat(migrated.content().path("careersPage").path("jobs").get(0).path("id").asString())
             .isEqualTo("career-job-1");
         assertThat(migrated.content().path("careersPage").path("jobs").toString())
             .doesNotContain("legacy-custom");
         assertThat(migrated.content().path("quotePage").path("otherChannels").get(0)
-            .path("createdAt").asText()).isEqualTo(NOW);
+            .path("createdAt").asString()).isEqualTo(NOW);
         assertThat(migrated.content().path("quotePage").path("otherChannels").get(0)
-            .path("updatedAt").asText()).isEqualTo(NOW);
+            .path("updatedAt").asString()).isEqualTo(NOW);
         assertThat(migrated.content().path("aboutPage").path("hero").path("media")
-            .path("src").asText()).isEqualTo("/legacy-about.webp");
+            .path("src").asString()).isEqualTo("/legacy-about.webp");
 
         ContentMigrationService.MigrationResult second = fixedMigrations.migrate(
             migrated.content(), texts, mediaSlots);
@@ -127,8 +127,8 @@ class ContentMigrationServiceTest {
             missingHome, mapper.createObjectNode(), mapper.createObjectNode()).content();
 
         assertThat(normalizedMissing.path("homePage").path("regionalPresence").path("units")).isEmpty();
-        assertThat(normalizedMissing.path("units").get(0).path("id").asText()).isEqualTo("unit-z");
-        assertThat(normalizedMissing.path("units").get(1).path("id").asText()).isEqualTo("unit-a");
+        assertThat(normalizedMissing.path("units").get(0).path("id").asString()).isEqualTo("unit-z");
+        assertThat(normalizedMissing.path("units").get(1).path("id").asString()).isEqualTo("unit-a");
         List<String> keys = new ArrayList<>();
         keys.addAll(normalizedMissing.propertyNames());
         assertThat(keys).containsExactly(
@@ -146,7 +146,7 @@ class ContentMigrationServiceTest {
         assertThat(normalizedPresent.path("homePage").path("regionalPresence").path("units"))
             .hasSize(2);
         assertThat(normalizedPresent.path("homePage").path("regionalPresence").path("units").get(0)
-            .path("id").asText()).isEqualTo("unit-a");
+            .path("id").asString()).isEqualTo("unit-a");
     }
 
     @Test

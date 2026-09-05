@@ -166,7 +166,7 @@ class LandingBuilderServiceTest {
             new byte[] {'{', '"', 'x', '"', ':', '"', (byte) 0xff, '"', '}'},
             Map.of("Content-Type", "application/json; charset=iso-8859-1")));
 
-        assertThat(service.listPages().path("x").asText()).isEqualTo("�");
+        assertThat(service.listPages().path("x").asString()).isEqualTo("�");
     }
 
     @Test

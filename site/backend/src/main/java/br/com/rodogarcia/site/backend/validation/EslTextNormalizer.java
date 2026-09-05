@@ -31,8 +31,8 @@ public final class EslTextNormalizer {
      */
     public static String sanitizeText(JsonNode value, int maxLength) {
         String text;
-        if (value != null && value.isTextual()) {
-            text = value.textValue();
+        if (value != null && value.isString()) {
+            text = value.stringValue();
         } else if (value != null && value.isNumber()) {
             text = EcmaScriptNumberFormatter.format(value.doubleValue());
         } else {
@@ -78,8 +78,8 @@ public final class EslTextNormalizer {
         if (value.isNumber()) {
             return value.doubleValue();
         }
-        if (value.isTextual()) {
-            return parseJsNumber(value.textValue());
+        if (value.isString()) {
+            return parseJsNumber(value.stringValue());
         }
         if (value.isArray()) {
             return parseJsNumber(jsArrayToString(value));
@@ -130,8 +130,8 @@ public final class EslTextNormalizer {
             }
             if (item.isArray()) {
                 result.append(jsArrayToString(item));
-            } else if (item.isTextual()) {
-                result.append(item.textValue());
+            } else if (item.isString()) {
+                result.append(item.stringValue());
             } else if (item.isNumber()) {
                 result.append(EcmaScriptNumberFormatter.format(item.doubleValue()));
             } else if (item.isBoolean()) {

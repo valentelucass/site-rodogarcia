@@ -149,13 +149,13 @@ public class CmsAccessProfileRepository {
 
     private static String text(JsonNode node, String field) {
         JsonNode value = node == null ? null : node.get(field);
-        return value != null && value.isString() ? value.asText() : null;
+        return value != null && value.isString() ? value.asString() : null;
     }
 
     private static List<String> strings(JsonNode node) {
         if (node == null || !node.isArray()) return null;
         List<String> values = new ArrayList<>();
-        for (JsonNode value : node) if (value.isString()) values.add(value.asText());
+        for (JsonNode value : node) if (value.isString()) values.add(value.asString());
         return values;
     }
 

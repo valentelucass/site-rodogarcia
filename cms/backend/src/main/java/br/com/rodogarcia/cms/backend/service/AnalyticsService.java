@@ -3,7 +3,6 @@ package br.com.rodogarcia.cms.backend.service;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -75,15 +74,15 @@ public class AnalyticsService {
         JsonNode ga4 = config.path("providers").path("ga4");
         ObjectNode publicGa4 = providers.putObject("ga4");
         boolean ga4Enabled = ga4.path("enabled").asBoolean(false)
-            && !ga4.path("measurementId").asText().isEmpty();
+            && !ga4.path("measurementId").asString().isEmpty();
         publicGa4.put("enabled", ga4Enabled);
-        publicGa4.put("measurementId", ga4Enabled ? ga4.path("measurementId").asText() : "");
+        publicGa4.put("measurementId", ga4Enabled ? ga4.path("measurementId").asString() : "");
         JsonNode clarity = config.path("providers").path("clarity");
         ObjectNode publicClarity = providers.putObject("clarity");
         boolean clarityEnabled = clarity.path("enabled").asBoolean(false)
-            && !clarity.path("projectId").asText().isEmpty();
+            && !clarity.path("projectId").asString().isEmpty();
         publicClarity.put("enabled", clarityEnabled);
-        publicClarity.put("projectId", clarityEnabled ? clarity.path("projectId").asText() : "");
+        publicClarity.put("projectId", clarityEnabled ? clarity.path("projectId").asString() : "");
         return result;
     }
 
@@ -136,12 +135,12 @@ public class AnalyticsService {
         int successfulForms = 0;
 
         for (ObjectNode event : events) {
-            String name = event.path("event").asText();
+            String name = event.path("event").asString();
             eventCounts.merge(name, 1, Integer::sum);
-            String sessionId = event.path("sessionId").asText();
-            String sessionKey = sessionId.isEmpty() ? "anonymous-" + event.path("id").asText() : sessionId;
+            String sessionId = event.path("sessionId").asString();
+            String sessionKey = sessionId.isEmpty() ? "anonymous-" + event.path("id").asString() : sessionId;
             bySession.computeIfAbsent(sessionKey, ignored -> new ArrayList<>()).add(event);
-            if (name.equals("page_view")) pageCounts.merge(event.path("page").asText(), 1, Integer::sum);
+            if (name.equals("page_view")) pageCounts.merge(event.path("page").asString(), 1, Integer::sum);
             if (name.equals("form_success")
                 && !Sanitizers.text(event.get("element"), 120).equals("exit-intent-popup")) successfulForms++;
             if (name.equals("scroll")) {
@@ -158,7 +157,7 @@ public class AnalyticsService {
 
         int sessions = bySession.size();
         long bounced = bySession.values().stream().filter(items ->
-            items.stream().filter(item -> item.path("event").asText().equals("page_view")).count() <= 1
+            items.stream().filter(item -> item.path("event").asString().equals("page_view")).count() <= 1
         ).count();
         double averageDuration = average(bySession.values().stream()
             .map(this::sessionDuration).map(Long::doubleValue).toList()) / 1_000d;
@@ -191,11 +190,11 @@ public class AnalyticsService {
         heatmap.put("topClickAreas", topCounts(clickCounts, "area", null, "total", 8));
         List<Map<String, Object>> recent = events.stream().limit(80).map(event -> {
             Map<String, Object> item = new LinkedHashMap<>();
-            item.put("id", event.path("id").asText());
-            item.put("event", event.path("event").asText());
-            item.put("type", event.path("type").asText());
-            item.put("page", event.path("page").asText());
-            item.put("sessionId", event.path("sessionId").asText());
+            item.put("id", event.path("id").asString());
+            item.put("event", event.path("event").asString());
+            item.put("type", event.path("type").asString());
+            item.put("page", event.path("page").asString());
+            item.put("sessionId", event.path("sessionId").asString());
             item.put("timestamp", event.path("timestamp").asLong());
             item.put("createdAt", IsoTime.format(event.path("timestamp").asLong()));
             return item;
@@ -254,9 +253,9 @@ public class AnalyticsService {
         if (timestamp != null && timestamp.isNumber() && Double.isFinite(timestamp.doubleValue())) {
             return timestamp.asLong();
         }
-        long parsed = AuditService.parseDate(timestamp == null ? "" : timestamp.asText());
+        long parsed = AuditService.parseDate(timestamp == null ? "" : timestamp.asString());
         if (parsed != Long.MIN_VALUE) return parsed;
-        parsed = AuditService.parseDate(event.path("createdAt").asText());
+        parsed = AuditService.parseDate(event.path("createdAt").asString());
         return parsed == Long.MIN_VALUE ? 0 : parsed;
     }
 
@@ -411,8 +410,8 @@ public class AnalyticsService {
     private static void copyString(JsonNode source, ObjectNode target, String name, int limit) {
         if (!source.has(name)) return;
         JsonNode value = source.get(name);
-        if (!value.isTextual() || value.asText().length() > limit) invalidConfig();
-        target.put(name, value.asText());
+        if (!value.isString() || value.asString().length() > limit) invalidConfig();
+        target.put(name, value.asString());
     }
 
     private static boolean isInteger(JsonNode value, int min, int max) {
@@ -434,7 +433,7 @@ public class AnalyticsService {
         if (value.isNull()) parsed = 0d;
         else if (value.isNumber()) parsed = value.doubleValue();
         else if (value.isBoolean()) parsed = value.asBoolean() ? 1d : 0d;
-        else if (value.isTextual()) parsed = AuditService.jsNumber(value.asText());
+        else if (value.isString()) parsed = AuditService.jsNumber(value.asString());
         else if (value.isArray()) parsed = arrayNumber(value);
         else parsed = Double.NaN;
         return Double.isFinite(parsed) ? parsed : null;
@@ -470,7 +469,7 @@ public class AnalyticsService {
             if (Double.isFinite(numeric) && numeric == Math.rint(numeric)
                 && Math.abs(numeric) < 1e21) return String.valueOf((long) numeric);
         }
-        return value.asText();
+        return value.asString();
     }
 
     private static double arrayNumber(JsonNode value) {

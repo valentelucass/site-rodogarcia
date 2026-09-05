@@ -54,7 +54,7 @@ public final class ImprovementController {
         ObjectNode improvement = improvements.create(parsed.input(), parsed.attachments());
         return ResponseEntity.status(201).body(Map.of(
             "message", "Sua sugestão foi recebida. Obrigado por contribuir.",
-            "id", improvement.path("id").asText()
+            "id", improvement.path("id").asString()
         ));
     }
 
@@ -72,12 +72,12 @@ public final class ImprovementController {
         audit.record(
             request,
             "improvement.create",
-            improvement.path("id").asText(),
-            Map.of("profile", "employee", "category", improvement.path("category").asText())
+            improvement.path("id").asString(),
+            Map.of("profile", "employee", "category", improvement.path("category").asString())
         );
         return ResponseEntity.status(201).body(Map.of(
             "message", "Sua sugestão interna foi registrada para triagem.",
-            "id", improvement.path("id").asText()
+            "id", improvement.path("id").asString()
         ));
     }
 

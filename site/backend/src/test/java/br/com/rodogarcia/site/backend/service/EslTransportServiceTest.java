@@ -15,6 +15,7 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
+import java.util.List;
 
 import br.com.rodogarcia.site.backend.dto.request.CancellationReason;
 import br.com.rodogarcia.site.backend.dto.request.CityRequest;
@@ -86,7 +87,7 @@ class EslTransportServiceTest {
         @SuppressWarnings("unchecked")
         Map<String, Object> price = (Map<String, Object>) result.get("price");
         assertThat(((Number) price.get("total")).doubleValue()).isEqualTo(900D);
-        assertThat(price.get("stretches")).asList().hasSize(2);
+        assertThat((List<?>) price.get("stretches")).hasSize(2);
 
         ArgumentCaptor<String> query = ArgumentCaptor.forClass(String.class);
         @SuppressWarnings({ "rawtypes", "unchecked" })

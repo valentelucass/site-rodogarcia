@@ -107,12 +107,12 @@ public final class ImprovementService {
         String status = Sanitizers.text(rawStatus, 20);
         List<JsonNode> result = new ArrayList<>();
         repository.read().forEach(item -> {
-            if (status.isEmpty() || item.path("status").asText().equals(status)) {
+            if (status.isEmpty() || item.path("status").asString().equals(status)) {
                 result.add(item.deepCopy());
             }
         });
         result.sort(Comparator.comparing(
-            item -> item.path("createdAt").asText(),
+            item -> item.path("createdAt").asString(),
             Comparator.reverseOrder()
         ));
         return result;
@@ -152,7 +152,7 @@ public final class ImprovementService {
         String attachmentId = Sanitizers.text(rawAttachmentId, 100);
         JsonNode improvement = null;
         for (JsonNode item : repository.read()) {
-            if (item.path("id").asText().equals(id)) {
+            if (item.path("id").asString().equals(id)) {
                 improvement = item;
                 break;
             }
@@ -183,13 +183,13 @@ public final class ImprovementService {
                     continue;
                 }
                 ObjectNode item = (ObjectNode) source;
-                if (item.path("status").asText().equals("archived")
+                if (item.path("status").asString().equals("archived")
                     && dateIsOlderThan(firstDate(item, "archivedAt", "updatedAt"), now)) {
                     deleteAttachments(item);
                     changed = true;
                     continue;
                 }
-                if (item.path("status").asText().equals("completed")
+                if (item.path("status").asString().equals("completed")
                     && dateIsOlderThan(firstDate(item, "completedAt", "updatedAt"), now)) {
                     ObjectNode archived = item.deepCopy();
                     archived.put("status", "archived");
@@ -271,14 +271,14 @@ public final class ImprovementService {
         JsonNode values = item.path("attachments");
         if (!values.isArray()) return result;
         for (JsonNode value : values) {
-            if (!value.isObject() || !value.path("id").isTextual()
-                || !value.path("name").isTextual() || !value.path("storedName").isTextual()
+            if (!value.isObject() || !value.path("id").isString()
+                || !value.path("name").isString() || !value.path("storedName").isString()
                 || !value.path("size").isNumber()
-                || !ATTACHMENT_MIME_TYPES.contains(value.path("mimeType").asText())) continue;
+                || !ATTACHMENT_MIME_TYPES.contains(value.path("mimeType").asString())) continue;
             result.add(new AttachmentEntry(
-                value.path("id").asText(), value.path("name").asText(),
-                value.path("mimeType").asText(), value.path("size").longValue(),
-                value.path("storedName").asText(), (ObjectNode) value.deepCopy()
+                value.path("id").asString(), value.path("name").asString(),
+                value.path("mimeType").asString(), value.path("size").longValue(),
+                value.path("storedName").asString(), (ObjectNode) value.deepCopy()
             ));
         }
         return result;
@@ -382,13 +382,13 @@ public final class ImprovementService {
     private static String firstDate(ObjectNode item, String first, String second) {
         JsonNode preferred = item.get(first);
         return preferred == null || preferred.isNull()
-            ? item.path(second).asText()
-            : preferred.asText();
+            ? item.path(second).asString()
+            : preferred.asString();
     }
 
     private static int indexOf(ArrayNode items, String id) {
         for (int index = 0; index < items.size(); index++) {
-            if (items.get(index).path("id").asText().equals(id)) return index;
+            if (items.get(index).path("id").asString().equals(id)) return index;
         }
         return -1;
     }

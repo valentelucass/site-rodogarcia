@@ -72,7 +72,7 @@ class ContentControllerContractTest {
 
         ArgumentCaptor<JsonNode> path = ArgumentCaptor.forClass(JsonNode.class);
         verify(seo).publicPage(path.capture());
-        assertThat(path.getValue().asText()).isEqualTo("/");
+        assertThat(path.getValue().asString()).isEqualTo("/");
     }
 
     @Test

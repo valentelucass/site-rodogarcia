@@ -21,7 +21,6 @@ import br.com.rodogarcia.cms.backend.utils.Sanitizers;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Service;
 import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.JsonNodeFactory;
 import tools.jackson.databind.node.ObjectNode;
 
@@ -135,8 +134,8 @@ public class PopupService {
         ), () -> {
             long now = clock.millis();
             for (JsonNode existing : collections.read(paths.popupLeads())) {
-                if (!email.isEmpty() && email.equals(existing.path("email").asText())) {
-                    long createdAt = AuditService.parseDate(existing.path("createdAt").asText());
+                if (!email.isEmpty() && email.equals(existing.path("email").asString())) {
+                    long createdAt = AuditService.parseDate(existing.path("createdAt").asString());
                     if (createdAt != Long.MIN_VALUE && now - createdAt < 10 * 60_000L) {
                         throw new ApiException(
                             409,
@@ -180,7 +179,7 @@ public class PopupService {
         List<JsonNode> result = new ArrayList<>();
         collections.read(paths.popupLeads()).forEach(item -> result.add(item.deepCopy()));
         result.sort(Comparator.comparing(
-            item -> item.path("createdAt").asText(), Comparator.reverseOrder()
+            item -> item.path("createdAt").asString(), Comparator.reverseOrder()
         ));
         return result;
     }
@@ -224,9 +223,9 @@ public class PopupService {
         });
         ObjectNode trackingEvent = JsonNodeFactory.instance.objectNode();
         trackingEvent.put("event", name);
-        trackingEvent.put("page", entry.path("pagePath").asText());
-        trackingEvent.put("source", valueOr(entry.path("source").asText(), "exit-intent-popup"));
-        trackingEvent.put("sessionId", entry.path("sessionId").asText());
+        trackingEvent.put("page", entry.path("pagePath").asString());
+        trackingEvent.put("source", valueOr(entry.path("source").asString(), "exit-intent-popup"));
+        trackingEvent.put("sessionId", entry.path("sessionId").asString());
         trackingEvent.put("device", entry.path("mobile").asBoolean() ? "mobile" : "desktop");
         if (entry.has("metadata")) trackingEvent.set("metadata", entry.get("metadata").deepCopy());
         tracking.record(trackingEvent, request);
@@ -237,7 +236,7 @@ public class PopupService {
         List<JsonNode> events = new ArrayList<>();
         collections.read(paths.popupEvents()).forEach(value -> events.add(value.deepCopy()));
         events.sort((left, right) -> compareDates(
-            left.path("createdAt").asText(), right.path("createdAt").asText()));
+            left.path("createdAt").asString(), right.path("createdAt").asString()));
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("events", events.stream().limit(200).toList());
         response.put("analytics", summarize(events, days));
@@ -257,8 +256,8 @@ public class PopupService {
         int last7Shown = 0;
         int last7Submitted = 0;
         for (JsonNode event : events) {
-            long time = date(event.path("createdAt").asText());
-            String name = event.path("event").asText();
+            long time = date(event.path("createdAt").asString());
+            String name = event.path("event").asString();
             if (time >= last7From) {
                 last7Events++;
                 if (name.equals("popup_shown")) last7Shown++;
@@ -266,7 +265,7 @@ public class PopupService {
             }
             if (time < from) continue;
             if (totals.containsKey(name)) totals.merge(name, 1, Integer::sum);
-            pages.merge(valueOr(event.path("pagePath").asText(), "/"), 1, Integer::sum);
+            pages.merge(valueOr(event.path("pagePath").asString(), "/"), 1, Integer::sum);
         }
         int shown = totals.get("popup_shown");
         int submitted = totals.get("popup_submitted");
@@ -303,15 +302,15 @@ public class PopupService {
         ObjectNode mobileConfig = input.path("mobile").isObject() ? (ObjectNode) input.path("mobile") : JsonNodeFactory.instance.objectNode();
         ObjectNode result = JsonNodeFactory.instance.objectNode();
         result.put("enabled", bool(input.get("enabled"), true));
-        result.put("title", textOr(input.get("title"), 120, defaults.path("title").asText()));
-        result.put("description", textOr(input.get("description"), 280, defaults.path("description").asText()));
+        result.put("title", textOr(input.get("title"), 120, defaults.path("title").asString()));
+        result.put("description", textOr(input.get("description"), 280, defaults.path("description").asString()));
         result.put("enableName", bool(input.get("enableName"), true));
         result.put("enableEmail", bool(input.get("enableEmail"), true));
         result.put("enablePhone", bool(input.get("enablePhone"), true));
-        result.put("buttonText", textOr(input.get("buttonText"), 60, defaults.path("buttonText").asText()));
-        result.put("closeText", textOr(input.get("closeText"), 40, defaults.path("closeText").asText()));
-        result.put("successMessage", textOr(input.get("successMessage"), 280, defaults.path("successMessage").asText()));
-        result.put("badgeText", textOr(input.get("badgeText"), 60, defaults.path("badgeText").asText()));
+        result.put("buttonText", textOr(input.get("buttonText"), 60, defaults.path("buttonText").asString()));
+        result.put("closeText", textOr(input.get("closeText"), 40, defaults.path("closeText").asString()));
+        result.put("successMessage", textOr(input.get("successMessage"), 280, defaults.path("successMessage").asString()));
+        result.put("badgeText", textOr(input.get("badgeText"), 60, defaults.path("badgeText").asString()));
         String image = image(input.get("image"), "Popup: imagem padrão", strictMedia);
         result.put("image", image);
         putImagePresentation(result, input.get("imagePresentation"), image);
@@ -321,18 +320,18 @@ public class PopupService {
         result.put("mobileScrollTrigger", bool(input.get("mobileScrollTrigger"), true));
         result.put("mobileBackButtonTrigger", bool(input.get("mobileBackButtonTrigger"), true));
         ObjectNode outputDesktop = result.putObject("desktop");
-        outputDesktop.put("title", textOr(desktop.get("title"), 120, textOr(input.get("title"), 120, defaults.path("desktop").path("title").asText())));
-        outputDesktop.put("description", textOr(desktop.get("description"), 280, textOr(input.get("description"), 280, defaults.path("desktop").path("description").asText())));
+        outputDesktop.put("title", textOr(desktop.get("title"), 120, textOr(input.get("title"), 120, defaults.path("desktop").path("title").asString())));
+        outputDesktop.put("description", textOr(desktop.get("description"), 280, textOr(input.get("description"), 280, defaults.path("desktop").path("description").asString())));
         String desktopImage = image(desktop.get("image"), "Popup: imagem desktop", strictMedia);
         outputDesktop.put("image", desktopImage);
         putImagePresentation(outputDesktop, desktop.get("imagePresentation"), desktopImage);
         ObjectNode outputMobile = result.putObject("mobile");
-        outputMobile.put("title", textOr(mobileConfig.get("title"), 120, textOr(input.get("title"), 120, defaults.path("mobile").path("title").asText())));
-        outputMobile.put("description", textOr(mobileConfig.get("description"), 280, textOr(input.get("description"), 280, defaults.path("mobile").path("description").asText())));
+        outputMobile.put("title", textOr(mobileConfig.get("title"), 120, textOr(input.get("title"), 120, defaults.path("mobile").path("title").asString())));
+        outputMobile.put("description", textOr(mobileConfig.get("description"), 280, textOr(input.get("description"), 280, defaults.path("mobile").path("description").asString())));
         String mobileImage = image(mobileConfig.get("image"), "Popup: imagem mobile", strictMedia);
         outputMobile.put("image", mobileImage);
         putImagePresentation(outputMobile, mobileConfig.get("imagePresentation"), mobileImage);
-        outputMobile.put("sheetTitle", textOr(mobileConfig.get("sheetTitle"), 80, defaults.path("mobile").path("sheetTitle").asText()));
+        outputMobile.put("sheetTitle", textOr(mobileConfig.get("sheetTitle"), 80, defaults.path("mobile").path("sheetTitle").asString()));
         return result;
     }
 
@@ -408,7 +407,7 @@ public class PopupService {
     }
 
     private static double number(JsonNode value, double fallback, double min, double max) {
-        if (value == null || value.isNull() || value.isTextual() && value.asText().isEmpty()) {
+        if (value == null || value.isNull() || value.isString() && value.asString().isEmpty()) {
             return fallback;
         }
         double parsed = jsNumber(value);
@@ -468,7 +467,7 @@ public class PopupService {
             if (value.size() != 1) return Double.NaN;
             return AuditService.jsNumber(jsString(value.get(0)));
         }
-        return AuditService.jsNumber(value.asText());
+        return AuditService.jsNumber(value.asString());
     }
 
     private static Map<String, String> metadata(
@@ -501,7 +500,7 @@ public class PopupService {
             if (Double.isFinite(numeric) && numeric == Math.rint(numeric)
                 && Math.abs(numeric) < 1e21) return String.valueOf((long) numeric);
         }
-        return value.asText();
+        return value.asString();
     }
 
     private static void requireObject(JsonNode body) {

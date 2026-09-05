@@ -62,19 +62,19 @@ public class FormsService {
         entry.put("subject", Sanitizers.text(body.get("subject"), 120));
         entry.put("message", Sanitizers.text(body.get("message"), 2_000));
         entry.put("userAgent", Sanitizers.text(request.getHeader("User-Agent"), 240));
-        if (entry.path("name").asText().isEmpty() || entry.path("email").asText().isEmpty()
-            || entry.path("message").asText().isEmpty()) {
+        if (entry.path("name").asString().isEmpty() || entry.path("email").asString().isEmpty()
+            || entry.path("message").asString().isEmpty()) {
             throw new ApiException(422, "Nome, e-mail e mensagem são obrigatórios.");
         }
         append(paths.contacts(), entry);
         ObjectNode metadata = JsonNodeFactory.instance.objectNode();
-        metadata.put("subject", entry.path("subject").asText());
-        metadata.put("contactId", entry.path("id").asText());
+        metadata.put("subject", entry.path("subject").asString());
+        metadata.put("contactId", entry.path("id").asString());
         leads.create(
-            entry.path("id").asText(), request, "contact-form", JsonNodeFactory.instance.stringNode("/fale-conosco"),
+            entry.path("id").asString(), request, "contact-form", JsonNodeFactory.instance.stringNode("/fale-conosco"),
             entry.get("name"), entry.get("email"), entry.get("phone"), null, null, metadata
         );
-        recordFormSubmit("/fale-conosco", "contact-form", "contactId", entry.path("id").asText(), request);
+        recordFormSubmit("/fale-conosco", "contact-form", "contactId", entry.path("id").asString(), request);
         return entry;
     }
 
@@ -97,20 +97,20 @@ public class FormsService {
         entry.put("weight", Sanitizers.text(body.get("weight"), 40));
         entry.put("notes", Sanitizers.text(body.get("notes"), 1_000));
         entry.put("userAgent", Sanitizers.text(request.getHeader("User-Agent"), 240));
-        if (entry.path("name").asText().isEmpty() || entry.path("email").asText().isEmpty()
-            || entry.path("origin").asText().isEmpty() || entry.path("destination").asText().isEmpty()) {
+        if (entry.path("name").asString().isEmpty() || entry.path("email").asString().isEmpty()
+            || entry.path("origin").asString().isEmpty() || entry.path("destination").asString().isEmpty()) {
             throw new ApiException(422, "Nome, e-mail, origem e destino são obrigatórios.");
         }
         append(paths.quotes(), entry);
         ObjectNode metadata = JsonNodeFactory.instance.objectNode();
-        metadata.put("origin", entry.path("origin").asText());
-        metadata.put("destination", entry.path("destination").asText());
-        metadata.put("quoteId", entry.path("id").asText());
+        metadata.put("origin", entry.path("origin").asString());
+        metadata.put("destination", entry.path("destination").asString());
+        metadata.put("quoteId", entry.path("id").asString());
         leads.create(
-            entry.path("id").asText(), request, "quote-form", JsonNodeFactory.instance.stringNode("/cotacao"),
+            entry.path("id").asString(), request, "quote-form", JsonNodeFactory.instance.stringNode("/cotacao"),
             entry.get("name"), entry.get("email"), entry.get("phone"), entry.get("company"), null, metadata
         );
-        recordFormSubmit("/cotacao", "quote-form", "quoteId", entry.path("id").asText(), request);
+        recordFormSubmit("/cotacao", "quote-form", "quoteId", entry.path("id").asString(), request);
         return entry;
     }
 
@@ -133,7 +133,7 @@ public class FormsService {
         List<JsonNode> result = new ArrayList<>();
         collections.read(path).forEach(value -> result.add(value.deepCopy()));
         result.sort(Comparator.comparing(
-            value -> value.path("createdAt").asText(), Comparator.reverseOrder()
+            value -> value.path("createdAt").asString(), Comparator.reverseOrder()
         ));
         return result;
     }

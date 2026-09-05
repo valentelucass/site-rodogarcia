@@ -137,7 +137,7 @@ public final class TomcatWireCompatibility {
             org.apache.coyote.Response coyoteResponse,
             Response response
         ) throws IOException, ServletException {
-            String method = coyoteRequest.method().toString();
+            String method = coyoteRequest.getMethod();
             if (containsLowercaseAscii(method)) {
                 coyoteResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 coyoteResponse.setMessage("Bad Request");
@@ -171,7 +171,7 @@ public final class TomcatWireCompatibility {
             org.apache.coyote.Request request,
             MessageBytes requestUri
         ) {
-            if (!"OPTIONS".equals(request.method().toString())
+            if (!"OPTIONS".equals(request.getMethod())
                 || requestUri.getType() != MessageBytes.T_BYTES) {
                 return null;
             }

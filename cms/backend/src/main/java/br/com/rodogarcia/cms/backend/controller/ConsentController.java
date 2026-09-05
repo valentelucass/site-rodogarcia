@@ -51,9 +51,9 @@ public class ConsentController {
         JsonNode body = JsonBodyCompatibilityFilter.parsedBody(request);
         JsonNode entry = consent.record(body, request);
         Map<String, Object> summary = new LinkedHashMap<>();
-        summary.put("id", entry.path("id").asText());
-        summary.put("createdAt", entry.path("createdAt").asText());
-        summary.put("status", entry.path("status").asText());
+        summary.put("id", entry.path("id").asString());
+        summary.put("createdAt", entry.path("createdAt").asString());
+        summary.put("status", entry.path("status").asString());
         summary.put("version", entry.path("version").asInt());
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("message", "Consentimento registrado.");

@@ -16,7 +16,6 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
-import tools.jackson.databind.node.StringNode;
 
 @Service
 public final class SeoService {
@@ -73,7 +72,7 @@ public final class SeoService {
         ArrayNode rawPages = ContentJson.array(raw.get("pages"));
         ObjectNode byPath = mapper.createObjectNode();
         for (JsonNode page : rawPages) {
-            if (page.isObject()) byPath.set(page.path("path").asText(), page);
+            if (page.isObject()) byPath.set(page.path("path").asString(), page);
         }
         ArrayNode pages = mapper.createArrayNode();
         for (Route route : ROUTES) {
@@ -90,7 +89,7 @@ public final class SeoService {
         String path = ContentJson.path(rawPath);
         if (path.isEmpty()) path = "/";
         for (JsonNode page : ContentJson.array(readSettings().get("pages"))) {
-            if (path.equals(page.path("path").asText())) return (ObjectNode) page.deepCopy();
+            if (path.equals(page.path("path").asString())) return (ObjectNode) page.deepCopy();
         }
         return null;
     }
@@ -117,7 +116,7 @@ public final class SeoService {
             ObjectNode current = null;
             int index = -1;
             for (int currentIndex = 0; currentIndex < pages.size(); currentIndex++) {
-                if (path.equals(pages.get(currentIndex).path("path").asText())) {
+                if (path.equals(pages.get(currentIndex).path("path").asString())) {
                     current = ContentJson.object(pages.get(currentIndex));
                     index = currentIndex;
                     break;
@@ -127,10 +126,10 @@ public final class SeoService {
             body.properties().forEach(entry -> merged.set(entry.getKey(), entry.getValue().deepCopy()));
             merged.put("updatedAt", ContentTime.now(clock));
             ObjectNode normalized = normalizePage(merged, current, true);
-            if (normalized.path("title").asText().length() < 8) {
+            if (normalized.path("title").asString().length() < 8) {
                 throw new ApiException(422, "Título SEO muito curto.");
             }
-            if (normalized.path("description").asText().length() < 40) {
+            if (normalized.path("description").asString().length() < 40) {
                 throw new ApiException(422, "Descrição SEO muito curta.");
             }
             if (index >= 0) pages.set(index, normalized); else pages.add(normalized);
@@ -141,14 +140,14 @@ public final class SeoService {
         });
         ObjectNode updatedPage = null;
         for (JsonNode page : ContentJson.array(next.get("pages"))) {
-            if (path.equals(page.path("path").asText())) updatedPage = ContentJson.object(page);
+            if (path.equals(page.path("path").asString())) updatedPage = ContentJson.object(page);
         }
         ContentAuditTrail audit = auditTrail.getIfAvailable();
         if (audit != null) audit.record(
             request,
             "seo.update",
             path,
-            Map.of("title", updatedPage == null ? "" : updatedPage.path("title").asText(),
+            Map.of("title", updatedPage == null ? "" : updatedPage.path("title").asString(),
                 "index", updatedPage == null ? "true" : String.valueOf(updatedPage.path("index").asBoolean(true)))
         );
         return next;
@@ -158,16 +157,16 @@ public final class SeoService {
         ObjectNode input = ContentJson.object(value);
         ObjectNode fallback = fallbackValue == null ? mapper.createObjectNode() : fallbackValue;
         String path = ContentJson.path(input.get("path"));
-        if (path.isEmpty()) path = fallback.path("path").asText("/");
+        if (path.isEmpty()) path = fallback.path("path").asString("/");
         String title = ContentJson.text(input.get("title"), 90);
-        if (title.isEmpty()) title = fallback.path("title").asText("Rodogarcia Transportes");
+        if (title.isEmpty()) title = fallback.path("title").asString("Rodogarcia Transportes");
         String description = ContentJson.text(input.get("description"), 180);
-        if (description.isEmpty()) description = fallback.path("description").asText(DESCRIPTION);
+        if (description.isEmpty()) description = fallback.path("description").asString(DESCRIPTION);
         String canonical = canonical(input.get("canonical"), path);
         ObjectNode result = mapper.createObjectNode();
         result.put("path", path);
         String label = ContentJson.text(input.get("label"), 80);
-        result.put("label", label.isEmpty() ? fallback.path("label").asText(path) : label);
+        result.put("label", label.isEmpty() ? fallback.path("label").asString(path) : label);
         result.put("title", title);
         result.put("description", description);
         result.put("metaTags", ContentJson.multiline(input.get("metaTags"), 1000));
@@ -181,7 +180,7 @@ public final class SeoService {
         result.put("ogTitle", ogTitle.isEmpty() ? title : ogTitle);
         String ogDescription = ContentJson.text(input.get("ogDescription"), 220);
         result.put("ogDescription", ogDescription.isEmpty() ? description : ogDescription);
-        result.put("ogImage", normalizeImage(input.get("ogImage"), fallback.path("ogImage").asText(OG_IMAGE), strictMedia));
+        result.put("ogImage", normalizeImage(input.get("ogImage"), fallback.path("ogImage").asString(OG_IMAGE), strictMedia));
         if (input.has("updatedAt")) result.set("updatedAt", input.get("updatedAt").deepCopy());
         return result;
     }

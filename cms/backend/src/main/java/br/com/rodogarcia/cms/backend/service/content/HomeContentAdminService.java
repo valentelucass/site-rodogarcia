@@ -247,12 +247,12 @@ public final class HomeContentAdminService {
             }
             ObjectNode input = ContentJson.object(sourceButtons.get(index));
             ObjectNode button = mapper.createObjectNode();
-            button.put("label", textOr(input.get("label"), 40, defaultButton.path("label").asText()));
+            button.put("label", textOr(input.get("label"), 40, defaultButton.path("label").asString()));
             String url = ContentJson.url(input.get("url"));
-            button.put("url", url.isEmpty() ? defaultButton.path("url").asText() : url);
+            button.put("url", url.isEmpty() ? defaultButton.path("url").asString() : url);
             button.put("enabled", ContentJson.strictBoolean(input.get("enabled"), true));
             String color = ContentJson.hex(input.get("color"));
-            button.put("color", color.isEmpty() ? defaultButton.path("color").asText("#1d4ed8") : color);
+            button.put("color", color.isEmpty() ? defaultButton.path("color").asString("#1d4ed8") : color);
             button.put("variant", "outline".equals(ContentJson.text(input.get("variant"), 20)) ? "outline" : "solid");
             buttons.add(button);
         }
@@ -383,7 +383,7 @@ public final class HomeContentAdminService {
             ObjectNode slide = ContentJson.object(raw);
             String prefix = "Hero " + slide.path("order").asInt();
             validateMedia(ContentJson.object(slide.get("media")), prefix);
-            String mode = slide.path("mode").asText();
+            String mode = slide.path("mode").asString();
             if (!mode.equals("media-only") && (!hasText(slide, "title") || !hasText(slide, "description"))) {
                 throw new ApiException(422, prefix + ": título e descrição são obrigatórios neste modo.");
             }
@@ -411,7 +411,7 @@ public final class HomeContentAdminService {
             if (!hasText(item, "title") || !hasText(item, "description")) {
                 throw new ApiException(422, "Seção 1: título e descrição dos 3 itens são obrigatórios.");
             }
-            if (wordCount(item.path("title").asText()) > 5) {
+            if (wordCount(item.path("title").asString()) > 5) {
                 throw new ApiException(422, "Seção 1: cada título deve ter no máximo 5 palavras.");
             }
             validateMedia(ContentJson.object(item.get("media")), "Seção 1 item " + item.path("order").asInt());
@@ -444,7 +444,7 @@ public final class HomeContentAdminService {
                 || !hasText(card, "ctaLabel") || !hasText(card, "ctaUrl")) {
                 throw new ApiException(422, "Seção 3: todos os campos dos cards são obrigatórios.");
             }
-            if (wordCount(card.path("title").asText()) > 2) {
+            if (wordCount(card.path("title").asString()) > 2) {
                 throw new ApiException(422, "Seção 3: título de cada card deve ter no máximo 2 palavras.");
             }
             validateMedia(ContentJson.object(card.get("media")), "Seção 3 card " + card.path("order").asInt());
@@ -459,7 +459,7 @@ public final class HomeContentAdminService {
                 || !hasText(unit, "address") || !hasText(unit, "contactUrl") || !hasText(unit, "additionalEmail")) {
                 throw new ApiException(422, "Presença Regional: nome, UF, descrição, endereço, e-mail adicional e link do botão são obrigatórios em unidades ativas.");
             }
-            if (!UFS.contains(unit.path("state").asText())) {
+            if (!UFS.contains(unit.path("state").asString())) {
                 throw new ApiException(422, "Presença Regional: selecione uma UF válida.");
             }
         }
@@ -491,14 +491,14 @@ public final class HomeContentAdminService {
         for (JsonNode raw : actions) {
             ObjectNode action = ContentJson.object(raw);
             String prefix = "Atalho " + (++index);
-            if (!hasText(action, "label") || !QUICK_ICONS.contains(action.path("icon").asText())) {
+            if (!hasText(action, "label") || !QUICK_ICONS.contains(action.path("icon").asString())) {
                 throw new ApiException(422, prefix + ": texto e ícone válido são obrigatórios.");
             }
             if (!action.path("enabled").asBoolean(true)) continue;
-            String type = action.path("type").asText("link");
+            String type = action.path("type").asString("link");
             String target = type.equals("download")
-                ? textOr(action.get("downloadFile"), 600, action.path("href").asText())
-                : action.path("href").asText();
+                ? textOr(action.get("downloadFile"), 600, action.path("href").asString())
+                : action.path("href").asString();
             if (target.isEmpty()) throw new ApiException(422, prefix + ": informe um destino ou desative o atalho.");
             if (type.equals("modal") && !target.startsWith("#")) throw new ApiException(422, prefix + ": ações de âncora devem usar um destino iniciado por #.");
             if (type.equals("external") && !target.matches("(?i)^(?:https?:|mailto:|tel:).*$")) throw new ApiException(422, prefix + ": links externos devem usar HTTP(S), mailto: ou tel:.");
@@ -508,19 +508,19 @@ public final class HomeContentAdminService {
 
     private void validateMedia(ObjectNode media, String label) {
         if (!hasText(media, "src")) throw new ApiException(422, label + ": mídia obrigatória.");
-        if (media.path("type").asText().equals("video") && !media.path("src").asText().matches("(?i).*\\.(mp4|webm|ogg)$")) {
+        if (media.path("type").asString().equals("video") && !media.path("src").asString().matches("(?i).*\\.(mp4|webm|ogg)$")) {
             throw new ApiException(422, label + ": vídeo deve usar MP4, WebM ou Ogg.");
         }
-        if (media.path("type").asText().equals("video")) validateVideoPlayback(media, label);
+        if (media.path("type").asString().equals("video")) validateVideoPlayback(media, label);
     }
 
     private void validateVideoPlayback(ObjectNode media, String label) {
         ObjectNode presentation = ContentJson.object(media.get("presentation"));
         ObjectNode desktop = ContentJson.object(presentation.get("desktop"));
-        String desktopSource = firstNonEmpty(media.path("desktopSrc").asText(), media.path("src").asText());
+        String desktopSource = firstNonEmpty(media.path("desktopSrc").asString(), media.path("src").asString());
         validatePlayback(desktop, desktopSource, label + " (desktop)");
 
-        String mobileSource = firstNonEmpty(media.path("mobileSrc").asText(), desktopSource);
+        String mobileSource = firstNonEmpty(media.path("mobileSrc").asString(), desktopSource);
         ObjectNode mobile = presentation.path("mobile").isObject()
             ? ContentJson.object(presentation.get("mobile")) : desktop;
         validatePlayback(mobile, mobileSource, label + " (celular)");

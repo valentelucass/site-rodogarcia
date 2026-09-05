@@ -275,7 +275,7 @@ public class JsonFileStore {
             tryDelete(journalPath);
             return;
         }
-        boolean committed = "committed".equals(journal.path("phase").asText());
+        boolean committed = "committed".equals(journal.path("phase").asString());
         List<RecoveryEntry> values = recoveryEntries(entries, journalPath);
         if (!committed) java.util.Collections.reverse(values);
         for (RecoveryEntry value : values) {
@@ -331,20 +331,20 @@ public class JsonFileStore {
         List<RecoveryEntry> result = new ArrayList<>();
         for (JsonNode value : entries) {
             if (!value.isObject()
-                || !value.path("filePath").isTextual()
-                || value.path("filePath").asText().isEmpty()
-                || !value.path("tempPath").isTextual()
-                || value.path("tempPath").asText().isEmpty()
-                || !value.path("backupPath").isTextual()
-                || value.path("backupPath").asText().isEmpty()
+                || !value.path("filePath").isString()
+                || value.path("filePath").asString().isEmpty()
+                || !value.path("tempPath").isString()
+                || value.path("tempPath").asString().isEmpty()
+                || !value.path("backupPath").isString()
+                || value.path("backupPath").asString().isEmpty()
                 || !value.path("hadOriginal").isBoolean()) {
                 throw invalidJournal(journalPath);
             }
             try {
                 result.add(new RecoveryEntry(
-                    normalize(Path.of(value.path("filePath").asText())),
-                    normalize(Path.of(value.path("tempPath").asText())),
-                    normalize(Path.of(value.path("backupPath").asText())),
+                    normalize(Path.of(value.path("filePath").asString())),
+                    normalize(Path.of(value.path("tempPath").asString())),
+                    normalize(Path.of(value.path("backupPath").asString())),
                     value.path("hadOriginal").asBoolean()
                 ));
             } catch (RuntimeException error) {

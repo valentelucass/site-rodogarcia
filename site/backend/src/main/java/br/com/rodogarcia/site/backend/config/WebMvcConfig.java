@@ -10,6 +10,7 @@ import org.springframework.web.util.UrlPathHelper;
 public class WebMvcConfig implements WebMvcConfigurer {
 
     @Override
+    @SuppressWarnings("removal") // O parser novo elimina ';' e quebra o contrato HTTP compatível com Express.
     public void configurePathMatch(PathMatchConfigurer configurer) {
         UrlPathHelper pathHelper = new UrlPathHelper() {
             @Override

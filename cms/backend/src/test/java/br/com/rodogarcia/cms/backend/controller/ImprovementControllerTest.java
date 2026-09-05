@@ -91,7 +91,7 @@ class ImprovementControllerTest {
                 .value("Sua sugestão foi recebida. Obrigado por contribuir."))
             .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
 
-        String improvementId = context.mapper.readTree(body).path("id").asText();
+        String improvementId = context.mapper.readTree(body).path("id").asString();
         assertThat(context.improvements.list("")).hasSize(2);
         assertThat(improvementId).matches("improvement_[0-9a-f]{32}");
         mvc.perform(get("/api/admin/improvements")
@@ -122,9 +122,9 @@ class ImprovementControllerTest {
                 .value("Sua sugestão interna foi registrada para triagem."))
             .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
 
-        String improvementId = context.mapper.readTree(response).path("id").asText();
+        String improvementId = context.mapper.readTree(response).path("id").asString();
         JsonNode saved = context.improvements.list("").getFirst();
-        String attachmentId = saved.path("attachments").get(0).path("id").asText();
+        String attachmentId = saved.path("attachments").get(0).path("id").asString();
         String path = "/api/admin/improvements/" + improvementId
             + "/attachments/" + attachmentId;
         byte[] expected = "coluna,valor\nstatus,ok".getBytes(StandardCharsets.UTF_8);

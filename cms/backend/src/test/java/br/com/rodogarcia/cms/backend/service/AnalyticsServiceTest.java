@@ -47,7 +47,7 @@ class AnalyticsServiceTest {
                           "sentry":{"enabled":true,"dsn":"private"}}}
             """);
         ObjectNode stored = service.updateConfig(valid);
-        assertThat(stored.path("providers").path("ga4").path("measurementId").asText())
+        assertThat(stored.path("providers").path("ga4").path("measurementId").asString())
             .isEqualTo("G-ABCD1234");
         ObjectNode publicConfig = service.readPublicConfig();
         assertThat(publicConfig.has("siteUrl")).isFalse();

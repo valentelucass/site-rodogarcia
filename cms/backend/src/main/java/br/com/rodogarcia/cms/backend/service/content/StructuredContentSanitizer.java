@@ -152,8 +152,8 @@ public final class StructuredContentSanitizer {
             ObjectNode item = mapper.createObjectNode();
             item.put("id", fallbackText(raw.get("id"), defaultItem.get("id"), 80, "nav-item-" + (index + 1)));
             item.put("order", index + 1);
-            item.put("group", raw.has("group") && raw.get("group").isTextual()
-                && "principal".equals(raw.get("group").asText()) ? "principal" : "explorar");
+            item.put("group", raw.has("group") && raw.get("group").isString()
+                && "principal".equals(raw.get("group").asString()) ? "principal" : "explorar");
             item.put("label", fallbackText(raw.get("label"), defaultItem.get("label"), 60, "Item de navegação"));
             item.put("url", url.isEmpty() ? "/" : url);
             item.put("icon", NAVIGATION_ICONS.contains(icon)
@@ -162,8 +162,8 @@ public final class StructuredContentSanitizer {
             String highlight = ContentJson.text(raw.get("highlightLabel"), 24);
             if (!highlight.isEmpty()) {
                 item.put("highlightLabel", highlight);
-                String tone = raw.has("highlightTone") && raw.get("highlightTone").isTextual()
-                    ? raw.get("highlightTone").asText() : "";
+                String tone = raw.has("highlightTone") && raw.get("highlightTone").isString()
+                    ? raw.get("highlightTone").asString() : "";
                 item.put("highlightTone", NAVIGATION_TONES.contains(tone) ? tone : "blue");
             }
             items.add(item);
@@ -241,7 +241,7 @@ public final class StructuredContentSanitizer {
             JsonNode value;
             if (fallbackItem.isObject()) {
                 value = sanitizeDynamicObject(inputItem, (ObjectNode) fallbackItem, path + "[]", index);
-            } else if (fallbackItem.isTextual()) {
+            } else if (fallbackItem.isString()) {
                 String clean = ContentJson.text(inputItem, 220);
                 if (clean.isEmpty() && !supplied) clean = ContentJson.text(fallbackItem, 220);
                 if (clean.isEmpty() && supplied) continue;
@@ -383,7 +383,7 @@ public final class StructuredContentSanitizer {
         ObjectNode source = ContentJson.object(ContentJson.object(value).get("approvalChannel"));
         String candidate = ContentJson.url(source.get("whatsappUrl"));
         if (!candidate.matches("(?i)^https://(?:wa\\.me|api\\.whatsapp\\.com)/.*")) {
-            candidate = defaults.path("approvalChannel").path("whatsappUrl").asText();
+            candidate = defaults.path("approvalChannel").path("whatsappUrl").asString();
         }
         ContentJson.object(page.get("approvalChannel")).put("whatsappUrl", candidate);
     }
@@ -399,7 +399,7 @@ public final class StructuredContentSanitizer {
             String icon = index < rawActions.size()
                 ? ContentJson.text(ContentJson.object(rawActions.get(index)).get("icon"), 40) : "";
             ContentJson.object(actions.get(index)).put("icon", HELP_ICONS.contains(icon)
-                ? icon : fallback.get(index).path("icon").asText());
+                ? icon : fallback.get(index).path("icon").asString());
         }
     }
 

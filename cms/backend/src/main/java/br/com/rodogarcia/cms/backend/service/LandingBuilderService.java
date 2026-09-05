@@ -430,7 +430,7 @@ public class LandingBuilderService {
 
     private static String javascriptString(JsonNode value) {
         if (value == null || value.isNull()) return "null";
-        if (value.isTextual()) return value.asText();
+        if (value.isString()) return value.asString();
         if (value.isBoolean()) return value.booleanValue() ? "true" : "false";
         if (value.isNumber()) return formatEcmaNumber(value.doubleValue());
         if (value.isArray()) {
@@ -471,8 +471,8 @@ public class LandingBuilderService {
                 appendJson(json, value.get(index));
             }
             json.append(']');
-        } else if (value.isTextual()) {
-            appendJsonString(json, value.asText());
+        } else if (value.isString()) {
+            appendJsonString(json, value.asString());
         } else if (value.isBoolean()) {
             json.append(value.booleanValue());
         } else if (value.isNumber()) {

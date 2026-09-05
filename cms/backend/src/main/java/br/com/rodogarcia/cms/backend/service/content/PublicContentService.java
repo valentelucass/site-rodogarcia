@@ -213,7 +213,7 @@ public final class PublicContentService {
             publicImage.put("alt", ContentJson.text(firstNonNull(image.get("alt"), item.get("imageAlt")), 160));
             publicImage.put("position", ContentJson.text(image.get("position"), 60));
             publicImage.set("presentation", MediaPresentation.normalize(
-                mapper, image.get("presentation"), false, publicImage.path("position").asText()
+                mapper, image.get("presentation"), false, publicImage.path("position").asString()
             ));
             output.set("image", publicImage);
             output.put("eyebrow", ContentJson.text(item.get("eyebrow"), 80));
@@ -257,7 +257,7 @@ public final class PublicContentService {
             output.put("answer", answer);
             faqItems.add(output);
         }
-        if (faqOutput.path("title").asText().isEmpty() || faqItems.isEmpty()) {
+        if (faqOutput.path("title").asString().isEmpty() || faqItems.isEmpty()) {
             faqOutput.put("title", "");
             faqItems.removeAll();
         }
@@ -350,12 +350,12 @@ public final class PublicContentService {
             ObjectNode button = mapper.createObjectNode();
             button.put("label", fallbackText(input, defaultButton, "label", 40));
             String url = ContentJson.url(input.get("url"));
-            button.put("url", url.isEmpty() ? defaultButton.path("url").asText() : url);
+            button.put("url", url.isEmpty() ? defaultButton.path("url").asString() : url);
             button.put("enabled", !input.has("enabled") || input.path("enabled").asBoolean());
             String color = ContentJson.hex(input.get("color"));
-            button.put("color", color.isEmpty() ? defaultButton.path("color").asText() : color);
+            button.put("color", color.isEmpty() ? defaultButton.path("color").asString() : color);
             JsonNode variant = firstNonNull(input.get("variant"), defaultButton.get("variant"));
-            button.put("variant", variant != null && variant.isTextual() && "outline".equals(variant.asText())
+            button.put("variant", variant != null && variant.isString() && "outline".equals(variant.asString())
                 ? "outline" : "solid");
             buttons.add(button);
         }
@@ -519,14 +519,14 @@ public final class PublicContentService {
     }
 
     private static String nullableString(JsonNode value) {
-        return value == null || value.isNull() ? "" : value.asText();
+        return value == null || value.isNull() ? "" : value.asString();
     }
 
     private static boolean truthy(JsonNode value) {
         if (value == null || value.isNull() || value.isMissingNode()) return false;
         if (value.isBoolean()) return value.booleanValue();
         if (value.isNumber()) return value.doubleValue() != 0 && !Double.isNaN(value.doubleValue());
-        if (value.isTextual()) return !value.asText().isEmpty();
+        if (value.isString()) return !value.asString().isEmpty();
         return true;
     }
 

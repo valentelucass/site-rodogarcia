@@ -46,8 +46,8 @@ class EndpointManifestCoverageTest {
         assertThat(manifest.path("endpoints")).hasSize(95);
 
         for (JsonNode endpoint : manifest.path("endpoints")) {
-            String path = concretePath(endpoint.path("path").asText());
-            RequestMethod method = RequestMethod.valueOf(endpoint.path("method").asText());
+            String path = concretePath(endpoint.path("path").asString());
+            RequestMethod method = RequestMethod.valueOf(endpoint.path("method").asString());
             boolean found = mappings.getHandlerMethods().entrySet().stream().anyMatch(entry -> {
                 if (entry.getValue().getBeanType().equals(FallbackController.class)) return false;
                 var methods = entry.getKey().getMethodsCondition().getMethods();
@@ -57,7 +57,7 @@ class EndpointManifestCoverageTest {
                     .anyMatch(pattern -> pattern.matches(PathContainer.parsePath(path)));
             });
             assertThat(found)
-                .as("%s %s (%s)", method, path, endpoint.path("id").asText())
+                .as("%s %s (%s)", method, path, endpoint.path("id").asString())
                 .isTrue();
         }
     }

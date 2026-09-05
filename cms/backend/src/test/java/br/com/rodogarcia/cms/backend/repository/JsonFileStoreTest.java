@@ -64,7 +64,7 @@ class JsonFileStoreTest {
             '{', '"', 'v', 'a', 'l', 'u', 'e', '"', ':', '"', (byte) 0xc3, '"', '}'
         });
 
-        assertThat(store.readObject(file).path("value").asText()).isEqualTo("\uFFFD");
+        assertThat(store.readObject(file).path("value").asString()).isEqualTo("\uFFFD");
         try (var files = Files.list(root)) {
             assertThat(files.map(path -> path.getFileName().toString()).toList())
                 .noneMatch(name -> name.startsWith(".replacement.json.invalid-"));
@@ -178,7 +178,7 @@ class JsonFileStoreTest {
             assertThat(executor.awaitTermination(5, TimeUnit.SECONDS)).isTrue();
         }
 
-        assertThat(store.readObject(first).path("value").asText()).isEqualTo("concurrent");
+        assertThat(store.readObject(first).path("value").asString()).isEqualTo("concurrent");
         assertThat(store.readObject(second).path("transaction").asBoolean()).isTrue();
         assertThat(journal).doesNotExist();
     }
@@ -216,7 +216,7 @@ class JsonFileStoreTest {
 
         store.recoverTransaction(journal);
 
-        assertThat(store.readObject(existing).path("value").asText()).isEqualTo("old");
+        assertThat(store.readObject(existing).path("value").asString()).isEqualTo("old");
         assertThat(created).doesNotExist();
         assertThat(List.of(journal, existingTemporary, existingBackup, createdTemporary, createdBackup))
             .allMatch(path -> !Files.exists(path));
@@ -235,7 +235,7 @@ class JsonFileStoreTest {
 
         store.recoverTransaction(journal);
 
-        assertThat(store.readObject(file).path("value").asText()).isEqualTo("old");
+        assertThat(store.readObject(file).path("value").asString()).isEqualTo("old");
         assertThat(List.of(journal, temporary, backup)).allMatch(path -> !Files.exists(path));
     }
 
@@ -265,8 +265,8 @@ class JsonFileStoreTest {
 
         store.recoverTransaction(journal);
 
-        assertThat(store.readObject(first).path("value").asText()).isEqualTo("old-first");
-        assertThat(store.readObject(second).path("value").asText()).isEqualTo("old-second");
+        assertThat(store.readObject(first).path("value").asString()).isEqualTo("old-first");
+        assertThat(store.readObject(second).path("value").asString()).isEqualTo("old-second");
         assertThat(created).doesNotExist();
         assertThat(List.of(journal, firstTemporary, firstBackup, secondTemporary,
             secondBackup, createdTemporary, createdBackup))
@@ -286,7 +286,7 @@ class JsonFileStoreTest {
 
         store.recoverTransaction(journal);
 
-        assertThat(store.readObject(file).path("value").asText()).isEqualTo("new");
+        assertThat(store.readObject(file).path("value").asString()).isEqualTo("new");
         assertThat(List.of(journal, temporary, backup)).allMatch(path -> !Files.exists(path));
     }
 

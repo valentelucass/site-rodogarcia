@@ -178,7 +178,7 @@ public final class ContentMigrationService {
 
     private void migrateLegacyContact(ObjectNode page, ObjectNode siteTexts) {
         String phone = fallback(siteTexts, "contactPhoneNumber", "0800 591 4557");
-        String hours = fallback(siteTexts, "contactPhoneHours", page.path("info").path("hours").asText());
+        String hours = fallback(siteTexts, "contactPhoneHours", page.path("info").path("hours").asString());
         String email = fallback(siteTexts, "contactEmailAddress", "gerente.financeiro@rodogarcia.com.br");
         String whatsapp = ContentJson.url(siteTexts.get("contactWhatsappUrl"));
         if (whatsapp.isEmpty()) whatsapp = "https://wa.me/5511993139536";
@@ -193,8 +193,8 @@ public final class ContentMigrationService {
         if (items.size() >= 4) {
             ContentJson.object(items.get(0)).put("title", phone).put("description", hours);
             ContentJson.object(items.get(1)).put("title", email)
-                .put("description", fallback(siteTexts, "contactEmailResponse", items.get(1).path("description").asText()));
-            ContentJson.object(items.get(2)).put("title", fallback(siteTexts, "contactWhatsappLabel", items.get(2).path("title").asText()))
+                .put("description", fallback(siteTexts, "contactEmailResponse", items.get(1).path("description").asString()));
+            ContentJson.object(items.get(2)).put("title", fallback(siteTexts, "contactWhatsappLabel", items.get(2).path("title").asString()))
                 .put("description", whatsapp);
             String line = fallback(siteTexts, "contactAddressLine", "Rua Pedro Carmine Deo, 156, Agudos - SP");
             String zip = fallback(siteTexts, "contactAddressZip", "17123-210");
@@ -207,7 +207,7 @@ public final class ContentMigrationService {
         ArrayNode buttons = ContentJson.array(finalCta.get("buttons"));
         if (!buttons.isEmpty()) {
             ObjectNode first = ContentJson.object(buttons.get(0));
-            first.put("label", fallback(siteTexts, "contactCtaLabel", first.path("label").asText()));
+            first.put("label", fallback(siteTexts, "contactCtaLabel", first.path("label").asString()));
             String url = ContentJson.url(siteTexts.get("contactCtaUrl"));
             if (!url.isEmpty()) first.put("url", url);
         }
@@ -224,7 +224,7 @@ public final class ContentMigrationService {
             if (email.isEmpty()) email = UNIT_EMAILS.getOrDefault(id, "");
             if (!email.isEmpty()) {
                 resolved.put(id, email);
-                if (!email.equals(unit.path("additionalEmail").asText())) {
+                if (!email.equals(unit.path("additionalEmail").asString())) {
                     unit.put("additionalEmail", email);
                     changed = true;
                 }
@@ -248,7 +248,7 @@ public final class ContentMigrationService {
             String email = ContentJson.email(unit.get("additionalEmail"));
             if (email.isEmpty()) email = resolved.getOrDefault(linked.isEmpty() ? id : linked, "");
             if (email.isEmpty()) email = UNIT_EMAILS.getOrDefault(linked.isEmpty() ? id : linked, "");
-            if (!email.isEmpty() && !email.equals(unit.path("additionalEmail").asText())) {
+            if (!email.isEmpty() && !email.equals(unit.path("additionalEmail").asString())) {
                 unit.put("additionalEmail", email);
                 changed = true;
             }
@@ -346,7 +346,7 @@ public final class ContentMigrationService {
     private static int roundedNumber(JsonNode value, int fallback) {
         if (value == null) return fallback;
         try {
-            double number = value.isNumber() ? value.doubleValue() : Double.parseDouble(value.asText());
+            double number = value.isNumber() ? value.doubleValue() : Double.parseDouble(value.asString());
             return Double.isFinite(number) ? (int) Math.round(number) : fallback;
         } catch (NumberFormatException ignored) {
             return fallback;

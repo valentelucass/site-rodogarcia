@@ -64,9 +64,9 @@ class PublicModulesParityTest {
         assertThat(context.store.readArray(context.properties.storagePaths().contacts())).hasSize(1);
         assertThat(context.store.readArray(context.properties.storagePaths().leads())).hasSize(1);
         assertThat(context.store.readArray(context.properties.storagePaths().trackingEvents()))
-            .extracting(item -> item.path("event").asText())
+            .extracting(item -> item.path("event").asString())
             .containsExactly("lead_created", "form_submit");
-        assertThat(contact.path("email").asText()).isEqualTo("pessoa@example.com");
+        assertThat(contact.path("email").asString()).isEqualTo("pessoa@example.com");
     }
 
     @Test
@@ -87,9 +87,9 @@ class PublicModulesParityTest {
         metadata.putArray("values").add(1).addNull().add(true);
         ObjectNode saved = context.tracking.createPublic(body, request);
 
-        assertThat(saved.path("page").asText()).isEqualTo("/servicos/");
-        assertThat(saved.path("metadata").path("nested").asText()).isEqualTo("[object Object]");
-        assertThat(saved.path("metadata").path("values").asText()).isEqualTo("1,,true");
+        assertThat(saved.path("page").asString()).isEqualTo("/servicos/");
+        assertThat(saved.path("metadata").path("nested").asString()).isEqualTo("[object Object]");
+        assertThat(saved.path("metadata").path("values").asString()).isEqualTo("1,,true");
         assertThat(saved.path("metadata").has("empty")).isFalse();
         assertThat(context.tracking.list(Map.of("limit", "0"))).hasSize(1);
         assertThat(AuditService.parseSliceLimit("1.9", 120, 1, 500)).isEqualTo(1);
@@ -109,7 +109,7 @@ class PublicModulesParityTest {
         event.put("pagePath", "/cotacao/");
         event.put("mobile", "true");
         ObjectNode saved = popup.createEvent(event, request);
-        assertThat(saved.path("pagePath").asText()).isEqualTo("/cotacao/");
+        assertThat(saved.path("pagePath").asString()).isEqualTo("/cotacao/");
         assertThat(saved.path("mobile").asBoolean()).isFalse();
 
         ObjectNode landing = context.mapper.createObjectNode();
@@ -127,8 +127,8 @@ class PublicModulesParityTest {
 
         ArrayNode arrayPatch = context.mapper.createArrayNode().add("ignored");
         ObjectNode config = popup.updateConfig(arrayPatch, request);
-        assertThat(config.path("title").asText()).isEqualTo("Antes de sair...");
-        assertThat(context.audit.list(Map.of()).getFirst().path("action").asText())
+        assertThat(config.path("title").asString()).isEqualTo("Antes de sair...");
+        assertThat(context.audit.list(Map.of()).getFirst().path("action").asString())
             .isEqualTo("popup.update");
     }
 
@@ -229,7 +229,7 @@ class PublicModulesParityTest {
         assertThat(result.get("pageSize")).isEqualTo(50);
         @SuppressWarnings("unchecked")
         var values = (java.util.List<ObjectNode>) result.get("leads");
-        assertThat(values.getFirst().path("id").asText()).isEmpty();
+        assertThat(values.getFirst().path("id").asString()).isEmpty();
     }
 
     @Test
@@ -244,7 +244,7 @@ class PublicModulesParityTest {
         assertThat(context.audit.list(Map.of("limit", "0"))).hasSize(2);
         ObjectNode first = (ObjectNode) context.store.readArray(
             context.properties.storagePaths().auditLog()).get(0);
-        assertThat(first.path("metadata").path("object").asText()).isEqualTo("[object Object]");
+        assertThat(first.path("metadata").path("object").asString()).isEqualTo("[object Object]");
         assertThat(first.path("metadata").has("empty")).isFalse();
     }
 

@@ -79,13 +79,13 @@ public class LeadService {
         });
         ObjectNode event = JsonNodeFactory.instance.objectNode();
         event.put("event", "lead_created");
-        event.put("page", saved.path("pagePath").asText());
-        event.put("source", saved.path("source").asText());
-        event.put("sessionId", saved.path("sessionId").asText());
-        event.put("device", saved.path("device").asText());
+        event.put("page", saved.path("pagePath").asString());
+        event.put("source", saved.path("source").asString());
+        event.put("sessionId", saved.path("sessionId").asString());
+        event.put("device", saved.path("device").asString());
         ObjectNode eventMetadata = event.putObject("metadata");
-        eventMetadata.put("leadId", saved.path("id").asText());
-        eventMetadata.put("hasEmail", String.valueOf(!saved.path("email").asText().isEmpty()));
+        eventMetadata.put("leadId", saved.path("id").asString());
+        eventMetadata.put("hasEmail", String.valueOf(!saved.path("email").asString().isEmpty()));
         tracking.record(event, request);
         return saved;
     }
@@ -109,23 +109,23 @@ public class LeadService {
         Map<String, ObjectNode> unique = new LinkedHashMap<>();
         for (ObjectNode lead : candidates) unique.putIfAbsent(identity(lead), lead);
         List<ObjectNode> result = unique.values().stream().filter(lead -> {
-            long createdAt = AuditService.parseDate(lead.path("createdAt").asText());
+            long createdAt = AuditService.parseDate(lead.path("createdAt").asString());
             String haystack = String.join(" ",
-                lead.path("name").asText(), lead.path("email").asText(),
-                lead.path("phone").asText(), lead.path("company").asText(),
-                lead.path("pagePath").asText(), lead.path("source").asText()
+                lead.path("name").asString(), lead.path("email").asString(),
+                lead.path("phone").asString(), lead.path("company").asString(),
+                lead.path("pagePath").asString(), lead.path("source").asString()
             ).toLowerCase(Locale.ROOT);
             if (!query.isEmpty() && !haystack.contains(query)) return false;
-            if (!source.isEmpty() && !lead.path("source").asText().toLowerCase(Locale.ROOT).contains(source)) return false;
-            if (!status.isEmpty() && !lead.path("status").asText().toLowerCase(Locale.ROOT).equals(status)) return false;
+            if (!source.isEmpty() && !lead.path("source").asString().toLowerCase(Locale.ROOT).contains(source)) return false;
+            if (!status.isEmpty() && !lead.path("status").asString().toLowerCase(Locale.ROOT).equals(status)) return false;
             if (createdAt != Long.MIN_VALUE && from != Long.MIN_VALUE && createdAt < from) return false;
             return createdAt == Long.MIN_VALUE || to == Long.MIN_VALUE || createdAt <= to;
         }).sorted(Comparator.comparing(
-            lead -> lead.path("createdAt").asText(), Comparator.reverseOrder()
+            lead -> lead.path("createdAt").asString(), Comparator.reverseOrder()
         )).toList();
         Map<String, Integer> sourceTotals = new LinkedHashMap<>();
         result.forEach(lead -> sourceTotals.merge(
-            lead.path("source").asText().isEmpty() ? "sem-origem" : lead.path("source").asText(),
+            lead.path("source").asString().isEmpty() ? "sem-origem" : lead.path("source").asString(),
             1,
             Integer::sum
         ));
@@ -177,20 +177,20 @@ public class LeadService {
     }
 
     private static String identity(ObjectNode lead) {
-        String source = lead.path("source").asText();
+        String source = lead.path("source").asString();
         JsonNode metadata = lead.path("metadata");
         String sourceRecordId = source.equals("contact-form")
             ? Sanitizers.text(metadata.get("contactId"), 100)
             : source.equals("quote-form") ? Sanitizers.text(metadata.get("quoteId"), 100) : "";
-        String id = lead.path("id").asText();
+        String id = lead.path("id").asString();
         String rawSourceId = source.equals("contact-form") && id.startsWith("contact_")
             || source.equals("quote-form") && id.startsWith("quote_") ? id : "";
         String sourceIdentity = valueOr(sourceRecordId, rawSourceId);
         if (!sourceIdentity.isEmpty()) return source + ":" + sourceIdentity;
         if ((source.equals("contact-form") || source.equals("quote-form"))
-            && (!lead.path("email").asText().isEmpty() || !lead.path("phone").asText().isEmpty())) {
-            String contact = valueOr(lead.path("email").asText(), lead.path("phone").asText());
-            String created = lead.path("createdAt").asText();
+            && (!lead.path("email").asString().isEmpty() || !lead.path("phone").asString().isEmpty())) {
+            String contact = valueOr(lead.path("email").asString(), lead.path("phone").asString());
+            String created = lead.path("createdAt").asString();
             return source + ":" + contact + ":" + created.substring(0, Math.min(19, created.length()));
         }
         return id;
@@ -222,6 +222,6 @@ public class LeadService {
             if (Double.isFinite(numeric) && numeric == Math.rint(numeric)
                 && Math.abs(numeric) < 1e21) return String.valueOf((long) numeric);
         }
-        return value.asText();
+        return value.asString();
     }
 }

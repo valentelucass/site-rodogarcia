@@ -33,8 +33,6 @@ import tools.jackson.databind.JsonNode;
 
 class AuthControllerTest {
 
-    private static final String PASSWORD = "SenhaTeste123";
-
     @TempDir
     Path root;
 
@@ -102,7 +100,7 @@ class AuthControllerTest {
         assertThat(setCookie).contains("Path=/", "HttpOnly", "SameSite=Strict").doesNotContain("Max-Age");
         String sid = setCookie.substring("sid=".length(), setCookie.indexOf(';'));
         JsonNode loginBody = context.mapper.readTree(login.getResponse().getContentAsString());
-        String csrf = loginBody.path("csrfToken").asText();
+        String csrf = loginBody.path("csrfToken").asString();
 
         mvc.perform(get("/api/auth/session").cookie(new Cookie("sid", sid)))
             .andExpect(status().isOk())
@@ -167,7 +165,7 @@ class AuthControllerTest {
                     """))
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.createdUser.passwordChangeRequired").value(true));
-        assertThat(context.audit.list(java.util.Map.of()).getFirst().path("action").asText())
+        assertThat(context.audit.list(java.util.Map.of()).getFirst().path("action").asString())
             .isEqualTo("user.create");
 
         MvcResult delegatedLogin = mvc.perform(post("/api/auth/login")
@@ -265,7 +263,7 @@ class AuthControllerTest {
             .andExpect(status().isCreated())
             .andReturn();
         String userId = context.mapper.readTree(createdUser.getResponse().getContentAsString())
-            .path("createdUser").path("id").asText();
+            .path("createdUser").path("id").asString();
 
         mvc.perform(put("/api/admin/users/{id}", userId)
                 .cookie(owner.cookie())
@@ -289,7 +287,7 @@ class AuthControllerTest {
             .andExpect(status().isCreated())
             .andReturn();
         String profileId = context.mapper.readTree(createdProfile.getResponse().getContentAsString())
-            .path("profile").path("id").asText();
+            .path("profile").path("id").asString();
 
         mvc.perform(put("/api/admin/access-profiles/{id}", profileId)
                 .cookie(owner.cookie())
@@ -305,7 +303,7 @@ class AuthControllerTest {
             .andExpect(status().isNoContent());
 
         List<JsonNode> logs = context.audit.list(java.util.Map.of("limit", "10"));
-        assertThat(logs).extracting(log -> log.path("action").asText()).containsExactly(
+        assertThat(logs).extracting(log -> log.path("action").asString()).containsExactly(
             "user.create",
             "user.update",
             "user.delete",
@@ -313,10 +311,10 @@ class AuthControllerTest {
             "access.profile_update",
             "access.profile_delete"
         );
-        assertThat(logs.get(0).path("target").asText()).isEqualTo("operador@rodogarcia.com.br");
-        assertThat(logs.get(0).path("metadata").path("role").asText()).isEqualTo("user");
-        assertThat(logs.get(1).path("metadata").path("role").asText()).isEqualTo("user");
-        assertThat(logs.get(1).path("metadata").path("active").asText()).isEqualTo("false");
+        assertThat(logs.get(0).path("target").asString()).isEqualTo("operador@rodogarcia.com.br");
+        assertThat(logs.get(0).path("metadata").path("role").asString()).isEqualTo("user");
+        assertThat(logs.get(1).path("metadata").path("role").asString()).isEqualTo("user");
+        assertThat(logs.get(1).path("metadata").path("active").asString()).isEqualTo("false");
         assertThat(logs.subList(2, 6)).allSatisfy(log ->
             assertThat(log.has("metadata")).isFalse());
     }
@@ -344,7 +342,7 @@ class AuthControllerTest {
         String header = login.getResponse().getHeader("Set-Cookie");
         String sid = header.substring("sid=".length(), header.indexOf(';'));
         String csrf = context.mapper.readTree(login.getResponse().getContentAsString())
-            .path("csrfToken").asText();
+            .path("csrfToken").asString();
         return new SessionCredentials(new Cookie("sid", sid), csrf);
     }
 

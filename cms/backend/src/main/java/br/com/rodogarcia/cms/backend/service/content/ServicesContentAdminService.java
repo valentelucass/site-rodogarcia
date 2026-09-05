@@ -64,7 +64,7 @@ public final class ServicesContentAdminService {
             String position = ContentJson.text(rawImage.get("position"), 60);
             image.put("position", IMAGE_POSITIONS.contains(position) ? position : "");
             image.set("presentation", MediaPresentation.normalize(
-                mapper, rawImage.get("presentation"), false, image.path("position").asText()
+                mapper, rawImage.get("presentation"), false, image.path("position").asString()
             ));
 
             ObjectNode item = mapper.createObjectNode();

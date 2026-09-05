@@ -175,8 +175,8 @@ public class EslGraphqlClient {
         List<String> errors = new ArrayList<>();
         for (JsonNode item : value) {
             JsonNode message = item.isObject() ? item.get("message") : null;
-            if (message != null && message.isTextual() && !message.textValue().isEmpty()) {
-                errors.add(message.textValue());
+            if (message != null && message.isString() && !message.stringValue().isEmpty()) {
+                errors.add(message.stringValue());
             }
         }
         return errors;

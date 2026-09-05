@@ -26,7 +26,6 @@ class UnitContentServiceTest {
     private UnitContentService units;
 
     @BeforeEach
-    @SuppressWarnings("unchecked")
     void setUp() {
         ObjectNode initial = mapper.createObjectNode();
         initial.set("units", mapper.createArrayNode());
@@ -51,15 +50,15 @@ class UnitContentServiceTest {
         ObjectNode first = valid("Matriz", "SP", true);
         UnitContentService.MutationResult created = units.create(first);
 
-        assertThat(created.item().path("id").asText()).startsWith("units_");
-        assertThat(created.item().path("state").asText()).isEqualTo("sp");
-        assertThat(created.item().path("additionalEmail").asText()).isEqualTo("operacao@example.com");
-        assertThat(created.item().path("createdAt").asText()).isEqualTo("2026-09-03T12:00:00.000Z");
+        assertThat(created.item().path("id").asString()).startsWith("units_");
+        assertThat(created.item().path("state").asString()).isEqualTo("sp");
+        assertThat(created.item().path("additionalEmail").asString()).isEqualTo("operacao@example.com");
+        assertThat(created.item().path("createdAt").asString()).isEqualTo("2026-09-03T12:00:00.000Z");
 
         UnitContentService.MutationResult second = units.create(valid("Filial", "RJ", false));
-        ArrayNode ids = mapper.createArrayNode().add(second.item().path("id").asText());
+        ArrayNode ids = mapper.createArrayNode().add(second.item().path("id").asString());
         ArrayNode reordered = units.reorder(ids);
-        assertThat(reordered.get(0).path("name").asText()).isEqualTo("Filial");
+        assertThat(reordered.get(0).path("name").asString()).isEqualTo("Filial");
         assertThat(reordered.get(0).path("order").asInt()).isEqualTo(1);
         assertThat(reordered.get(1).path("order").asInt()).isEqualTo(2);
     }
