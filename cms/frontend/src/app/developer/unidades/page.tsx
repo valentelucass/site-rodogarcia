@@ -75,6 +75,7 @@ const BRAZILIAN_STATE_CODES = [
   "ac", "al", "ap", "am", "ba", "ce", "df", "es", "go", "ma", "mt", "ms", "mg",
   "pa", "pb", "pr", "pe", "pi", "rj", "rn", "rs", "ro", "rr", "sc", "sp", "se", "to",
 ] as const;
+const compactUnitInputClassName = `${developerInputClassName} py-2`;
 
 function normalizeUnit(item: Record<string, unknown>): UnitItem {
   return {
@@ -229,157 +230,180 @@ export default function UnidadesPage() {
             description="Use UF com duas letras; depois selecione este registro na Presença Regional da Página Inicial para publicar um snapshot no mapa."
           />
 
-          <form className="space-y-5" onSubmit={handleSubmit}>
-            <div className="grid gap-4 sm:grid-cols-3">
-              <DeveloperField label="Nome da unidade" required>
-                <input
-                  required
-                  value={form.name}
-                  onChange={(event) =>
-                    setForm((current) => ({ ...current, name: event.target.value }))
-                  }
-                  maxLength={120}
-                  className={developerInputClassName}
-                />
-              </DeveloperField>
+          <form className="space-y-4" onSubmit={handleSubmit}>
+            <fieldset className="space-y-3 border-b border-[var(--border)]/75 pb-4">
+              <legend className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-muted-raw)]">
+                Identificação e localização
+              </legend>
 
-              <DeveloperField label="Tipo" required>
-                <select
-                  required
-                  value={form.type}
-                  onChange={(event) =>
-                    setForm((current) => ({ ...current, type: event.target.value }))
-                  }
-                  className={developerInputClassName}
-                >
-                  {UNIT_TYPES.map((type) => (
-                    <option key={type} value={type}>
-                      {type}
-                    </option>
-                  ))}
-                </select>
-              </DeveloperField>
-            </div>
+              <div className="grid gap-x-4 gap-y-3 md:grid-cols-12">
+                <DeveloperField label="Nome da unidade" required className="md:col-span-8">
+                  <input
+                    required
+                    value={form.name}
+                    onChange={(event) =>
+                      setForm((current) => ({ ...current, name: event.target.value }))
+                    }
+                    maxLength={120}
+                    className={compactUnitInputClassName}
+                  />
+                </DeveloperField>
 
-            <div className="grid gap-4 sm:grid-cols-[120px_minmax(0,1fr)]">
-              <DeveloperField label="UF" required>
-                <select
-                  required
-                  value={form.state}
-                  onChange={(event) =>
-                    setForm((current) => ({ ...current, state: event.target.value }))
-                  }
-                  className={developerInputClassName}
-                >
-                  <option value="">Selecione</option>
-                  {BRAZILIAN_STATE_CODES.map((state) => (
-                    <option key={state} value={state}>{state.toUpperCase()}</option>
-                  ))}
-                </select>
-              </DeveloperField>
+                <DeveloperField label="Tipo" required className="md:col-span-4">
+                  <select
+                    required
+                    value={form.type}
+                    onChange={(event) =>
+                      setForm((current) => ({ ...current, type: event.target.value }))
+                    }
+                    className={compactUnitInputClassName}
+                  >
+                    {UNIT_TYPES.map((type) => (
+                      <option key={type} value={type}>
+                        {type}
+                      </option>
+                    ))}
+                  </select>
+                </DeveloperField>
 
-              <DeveloperField label="Cidade">
-                <input
-                  value={form.city}
-                  onChange={(event) =>
-                    setForm((current) => ({ ...current, city: event.target.value }))
-                  }
-                  maxLength={80}
-                  className={developerInputClassName}
-                />
-              </DeveloperField>
-            </div>
+                <DeveloperField label="UF" required className="md:col-span-2">
+                  <select
+                    required
+                    value={form.state}
+                    onChange={(event) =>
+                      setForm((current) => ({ ...current, state: event.target.value }))
+                    }
+                    className={compactUnitInputClassName}
+                  >
+                    <option value="">Selecione</option>
+                    {BRAZILIAN_STATE_CODES.map((state) => (
+                      <option key={state} value={state}>{state.toUpperCase()}</option>
+                    ))}
+                  </select>
+                </DeveloperField>
 
-            <DeveloperField label="Endereço" required>
-              <input
-                required
-                value={form.address}
-                onChange={(event) =>
-                  setForm((current) => ({ ...current, address: event.target.value }))
-                }
-                maxLength={220}
-                className={developerInputClassName}
-              />
-            </DeveloperField>
+                <DeveloperField label="Cidade" className="md:col-span-4">
+                  <input
+                    value={form.city}
+                    onChange={(event) =>
+                      setForm((current) => ({ ...current, city: event.target.value }))
+                    }
+                    maxLength={80}
+                    className={compactUnitInputClassName}
+                  />
+                </DeveloperField>
 
-            <div className="grid gap-4 sm:grid-cols-2">
-              <DeveloperField label="Telefone">
-                <input
-                  value={form.phone}
-                  onChange={(event) =>
-                    setForm((current) => ({ ...current, phone: event.target.value }))
-                  }
-                  maxLength={60}
-                  className={developerInputClassName}
-                />
-              </DeveloperField>
+                <DeveloperField label="Endereço" required className="md:col-span-6">
+                  <input
+                    required
+                    value={form.address}
+                    onChange={(event) =>
+                      setForm((current) => ({ ...current, address: event.target.value }))
+                    }
+                    maxLength={220}
+                    className={compactUnitInputClassName}
+                  />
+                </DeveloperField>
+              </div>
+            </fieldset>
 
-              <DeveloperField label="E-mail">
-                <input
-                  type="email"
-                  value={form.email}
-                  onChange={(event) =>
-                    setForm((current) => ({ ...current, email: event.target.value }))
-                  }
-                  maxLength={160}
-                  className={developerInputClassName}
-                />
-              </DeveloperField>
+            <fieldset className="space-y-3 border-b border-[var(--border)]/75 pb-4">
+              <legend className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-muted-raw)]">
+                Contato e destino
+              </legend>
 
-              <DeveloperField label="E-mail adicional" required>
-                <input
-                  type="email"
-                  required
-                  value={form.additionalEmail}
-                  onChange={(event) =>
-                    setForm((current) => ({ ...current, additionalEmail: event.target.value }))
-                  }
-                  maxLength={160}
-                  className={developerInputClassName}
-                />
-              </DeveloperField>
-            </div>
+              <div className="grid gap-x-4 gap-y-3 md:grid-cols-12">
+                <DeveloperField label="Telefone" className="md:col-span-4">
+                  <input
+                    value={form.phone}
+                    onChange={(event) =>
+                      setForm((current) => ({ ...current, phone: event.target.value }))
+                    }
+                    maxLength={60}
+                    className={compactUnitInputClassName}
+                  />
+                </DeveloperField>
 
-            <DeveloperField label="Link de contato">
-              <input
-                value={form.contactUrl}
-                onChange={(event) =>
-                  setForm((current) => ({ ...current, contactUrl: event.target.value }))
-                }
-                className={developerInputClassName}
-                maxLength={600}
-                placeholder="/fale-conosco"
-              />
-            </DeveloperField>
+                <DeveloperField label="E-mail" className="md:col-span-4">
+                  <input
+                    type="email"
+                    value={form.email}
+                    onChange={(event) =>
+                      setForm((current) => ({ ...current, email: event.target.value }))
+                    }
+                    maxLength={160}
+                    className={compactUnitInputClassName}
+                  />
+                </DeveloperField>
 
-            <DeveloperField label="Descrição">
-              <textarea
-                rows={3}
-                value={form.description}
-                onChange={(event) =>
-                  setForm((current) => ({ ...current, description: event.target.value }))
-                }
-                maxLength={220}
-                className={`${developerInputClassName} resize-none`}
-              />
-            </DeveloperField>
+                <DeveloperField label="E-mail adicional" required className="md:col-span-4">
+                  <input
+                    type="email"
+                    required
+                    value={form.additionalEmail}
+                    onChange={(event) =>
+                      setForm((current) => ({ ...current, additionalEmail: event.target.value }))
+                    }
+                    maxLength={160}
+                    className={compactUnitInputClassName}
+                  />
+                </DeveloperField>
 
-            <DeveloperField label="Informação logística">
-              <textarea
-                rows={3}
-                value={form.logisticsInfo}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    logisticsInfo: event.target.value,
-                  }))
-                }
-                maxLength={260}
-                className={`${developerInputClassName} resize-none`}
-              />
-            </DeveloperField>
+                <DeveloperField label="Link de contato" className="md:col-span-12">
+                  <input
+                    value={form.contactUrl}
+                    onChange={(event) =>
+                      setForm((current) => ({ ...current, contactUrl: event.target.value }))
+                    }
+                    className={compactUnitInputClassName}
+                    maxLength={600}
+                    placeholder="/fale-conosco"
+                  />
+                </DeveloperField>
+              </div>
+            </fieldset>
 
-            <div className="grid gap-4 sm:grid-cols-2">
+            <fieldset className="space-y-3 border-b border-[var(--border)]/75 pb-4">
+              <legend className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-muted-raw)]">
+                Informações exibidas
+              </legend>
+
+              <div className="grid items-start gap-x-4 gap-y-3 md:grid-cols-2">
+                <DeveloperField label="Descrição">
+                  <textarea
+                    rows={3}
+                    value={form.description}
+                    onChange={(event) =>
+                      setForm((current) => ({ ...current, description: event.target.value }))
+                    }
+                    maxLength={220}
+                    className={`${compactUnitInputClassName} resize-none`}
+                  />
+                </DeveloperField>
+
+                <DeveloperField label="Informação logística">
+                  <textarea
+                    rows={3}
+                    value={form.logisticsInfo}
+                    onChange={(event) =>
+                      setForm((current) => ({
+                        ...current,
+                        logisticsInfo: event.target.value,
+                      }))
+                    }
+                    maxLength={260}
+                    className={`${compactUnitInputClassName} resize-none`}
+                  />
+                </DeveloperField>
+              </div>
+            </fieldset>
+
+            <fieldset className="space-y-3">
+              <legend className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-muted-raw)]">
+                Publicação
+              </legend>
+
+              <div className="grid gap-3 sm:grid-cols-2">
               <label className="flex min-h-14 items-center gap-3 rounded-2xl border border-[var(--border)] bg-white/72 px-4 py-3 text-sm font-medium text-[var(--foreground)]">
                 <input
                   type="checkbox"
@@ -406,7 +430,8 @@ export default function UnidadesPage() {
                 />
                 Unidade ativa
               </label>
-            </div>
+              </div>
+            </fieldset>
 
             {status ? (
               <DeveloperMessage tone={status.includes("sucesso") ? "success" : "error"}>
@@ -414,7 +439,7 @@ export default function UnidadesPage() {
               </DeveloperMessage>
             ) : null}
 
-            <div className="flex flex-col gap-3 sm:flex-row">
+            <div className="flex flex-col gap-2 sm:flex-row">
               <button type="submit" disabled={saving} className={developerPrimaryButtonClassName}>
                 <CheckCircle size={18} weight="bold" />
                 {saving ? "Salvando..." : "Salvar configuracao"}

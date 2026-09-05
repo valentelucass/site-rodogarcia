@@ -21,7 +21,8 @@ public final class LandingBuilderProperties {
         "PORT",
         "LANDING_BUILDER_SERVICE_TOKEN",
         "LANDING_BUILDER_STORAGE_ROOT",
-        "FFMPEG_PATH"
+        "FFMPEG_PATH",
+        "FFPROBE_PATH"
     };
     private final boolean production;
     private final String host;
@@ -29,6 +30,7 @@ public final class LandingBuilderProperties {
     private final String serviceToken;
     private final Path storageRoot;
     private final String ffmpegPath;
+    private final String ffprobePath;
 
     @Autowired
     public LandingBuilderProperties(Environment environment) {
@@ -43,11 +45,13 @@ public final class LandingBuilderProperties {
         String configuredStorageRoot = trim(values.get("LANDING_BUILDER_STORAGE_ROOT"));
         storageRoot = Path.of(configuredStorageRoot.isEmpty() ? "storage" : configuredStorageRoot).toAbsolutePath().normalize();
         ffmpegPath = trim(values.get("FFMPEG_PATH"));
+        ffprobePath = trim(values.get("FFPROBE_PATH"));
 
         if (production && (!isStrongServiceToken(serviceToken)
             || configuredStorageRoot.isEmpty()
             || !Path.of(configuredStorageRoot).isAbsolute()
-            || !isStableFfmpeg(ffmpegPath))) {
+            || !isStableFfmpeg(ffmpegPath)
+            || !isStableFfmpeg(ffprobePath))) {
             throw new IllegalStateException("Configuração inválida do Landing Builder.");
         }
     }
@@ -58,6 +62,7 @@ public final class LandingBuilderProperties {
     public String serviceToken() { return serviceToken; }
     public Path storageRoot() { return storageRoot; }
     public String ffmpegPath() { return ffmpegPath; }
+    public String ffprobePath() { return ffprobePath; }
 
     static Map<String, String> environmentValues(Environment environment, Path workingDirectory) {
         Path directory = workingDirectory.toAbsolutePath().normalize();

@@ -17,6 +17,7 @@ import br.com.rodogarcia.cms.backend.service.AdminMediaProcessor;
 import br.com.rodogarcia.cms.backend.service.AuditService;
 import br.com.rodogarcia.cms.backend.service.ImprovementService;
 import br.com.rodogarcia.cms.backend.service.MediaService;
+import br.com.rodogarcia.cms.backend.service.MediaMetadataReader;
 import br.com.rodogarcia.cms.backend.service.MediaValidationService;
 import br.com.rodogarcia.cms.backend.service.content.ContentMigrationService;
 import br.com.rodogarcia.cms.backend.service.content.FilesystemContentMediaValidator;
@@ -59,7 +60,7 @@ public final class MediaTestContext {
         ContentRepository content = new ContentRepository(store, properties.storagePaths(), migrations);
         SiteTextsRepository siteTexts = new SiteTextsRepository(store, properties.storagePaths());
         validation = new MediaValidationService(properties);
-        MediaSettings settings = MediaSettings.defaults(properties.ffmpegPath());
+        MediaSettings settings = MediaSettings.defaults(properties.ffmpegPath(), properties.ffprobePath());
         AdminMediaProcessor processor = processorOverride == null
             ? new AdminMediaProcessor(settings)
             : processorOverride;
@@ -71,6 +72,7 @@ public final class MediaTestContext {
             siteTexts,
             validation,
             processor,
+            new MediaMetadataReader(settings),
             settings,
             audit,
             clock

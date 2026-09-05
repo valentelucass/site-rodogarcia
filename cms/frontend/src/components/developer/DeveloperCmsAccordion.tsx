@@ -61,7 +61,7 @@ export function DeveloperCmsAccordion({
               <button
                 type="button"
                 onClick={() => onOpenChange(isOpen ? null : itemIndex)}
-                className="flex min-w-0 flex-1 items-center justify-between gap-4 text-left"
+                className="min-w-0 flex-1 text-left"
                 aria-expanded={isOpen}
               >
                 <span className="min-w-0">
@@ -79,21 +79,28 @@ export function DeveloperCmsAccordion({
                     {getTitle(item, index)}
                   </span>
                 </span>
-                <span
-                  className={cn(
-                    "shrink-0 items-center justify-center rounded-2xl border bg-white transition-transform duration-300",
-                    compact ? "flex h-8 w-8" : "flex h-9 w-9",
-                    isOpen
-                      ? variant === "services"
-                        ? "rotate-180 border-[var(--primary)]/22 text-[var(--primary)] shadow-[0_6px_14px_rgba(29,78,216,0.1)]"
-                        : "rotate-180 border-[var(--border)] text-[var(--primary)]"
-                      : "border-[var(--border)] text-[var(--color-muted-raw)]"
-                  )}
-                >
-                  <CaretDown size={16} weight="bold" />
-                </span>
               </button>
-              {renderActions ? <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">{renderActions(item, index)}</div> : null}
+              {renderActions ? (
+                <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5">
+                  {renderActions(item, index)}
+                </div>
+              ) : null}
+              <button
+                type="button"
+                onClick={() => onOpenChange(isOpen ? null : itemIndex)}
+                aria-label={isOpen ? `Fechar ${getTitle(item, index)}` : `Abrir ${getTitle(item, index)}`}
+                className={cn(
+                  "shrink-0 items-center justify-center rounded-2xl border bg-white transition-transform duration-300",
+                  compact ? "flex h-8 w-8" : "flex h-9 w-9",
+                  isOpen
+                    ? variant === "services"
+                      ? "rotate-180 border-[var(--primary)]/22 text-[var(--primary)] shadow-[0_6px_14px_rgba(29,78,216,0.1)]"
+                      : "rotate-180 border-[var(--border)] text-[var(--primary)]"
+                    : "border-[var(--border)] text-[var(--color-muted-raw)]"
+                )}
+              >
+                <CaretDown size={16} weight="bold" />
+              </button>
               <DeveloperHelp label={getTitle(item, index)} kind="accordion" />
             </div>
             <div

@@ -4,7 +4,9 @@ import { useEffect, useMemo, useState } from "react";
 import { ArrowSquareOut, CheckCircle, Plus, SortAscending, Trash } from "@phosphor-icons/react";
 import { useApiRequest } from "@/hooks/useApiRequest";
 import { DeveloperMediaField, DeveloperMediaPreview } from "@/components/developer/DeveloperMediaField";
+import { MediaPlacementEditor } from "@/components/developer/MediaPlacementEditor";
 import { DeveloperCmsAccordion } from "@/components/developer/DeveloperCmsAccordion";
+import { DeveloperConfirmButton } from "@/components/developer/DeveloperConfirmButton";
 import { DeveloperResponsivePreview } from "@/components/developer/DeveloperResponsivePreview";
 import {
   DeveloperCard,
@@ -104,9 +106,9 @@ function newId(prefix: string) {
   return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`;
 }
 
-function CountHint({ value, maxLength }: { value: string; maxLength: number }) {
+function CountHint({ value, maxLength, compact = false }: { value: string; maxLength: number; compact?: boolean }) {
   return (
-    <span className="mt-1 block text-[11px] text-[var(--color-muted-raw)]">
+    <span className={compact ? "mt-0.5 block text-[10px] text-[var(--color-muted-raw)]" : "mt-1 block text-[11px] text-[var(--color-muted-raw)]"}>
       {String(value ?? "").length}/{maxLength} caracteres
     </span>
   );
@@ -142,7 +144,7 @@ function ButtonFields({
     <div
       className={cn(
         panelClassName,
-        "grid gap-5 md:grid-cols-2",
+        "grid gap-3 p-3 sm:p-3 md:grid-cols-2",
         mutedSurface && "border-slate-300/85 bg-slate-100/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]"
       )}
     >
@@ -151,17 +153,17 @@ function ButtonFields({
           key={index}
           className={cn(
             singleButtonInline && buttons.length === 1
-              ? "grid gap-x-5 gap-y-3 md:col-span-2 md:grid-cols-2"
-              : "space-y-4"
+              ? "grid gap-x-3 gap-y-2 md:col-span-2 md:grid-cols-2"
+              : "space-y-2.5"
           )}
         >
           <div className={singleButtonInline && buttons.length === 1 ? "md:col-span-2" : undefined}>
             {singleButtonInline && buttons.length === 1 ? (
-              <p className="text-base font-semibold tracking-[-0.015em] text-[var(--foreground)] sm:text-lg">
+              <p className="text-sm font-semibold tracking-[-0.015em] text-[var(--foreground)] sm:text-base">
                 {labels[index] ?? `Botão ${index + 1}`}
               </p>
             ) : (
-              <DeveloperSectionHeading title={labels[index] ?? `Botão ${index + 1}`} />
+              <DeveloperSectionHeading title={labels[index] ?? `Botão ${index + 1}`} className="mb-2" />
             )}
           </div>
           <DeveloperField label="Texto" required helpKey={helpKey ? `${helpKey}-texto` : undefined}>
@@ -174,9 +176,9 @@ function ButtonFields({
                 onChange(next);
               }}
               maxLength={40}
-              className={developerInputClassName}
+              className={`${developerInputClassName} py-2`}
             />
-            <CountHint value={button.label ?? ""} maxLength={40} />
+            <CountHint value={button.label ?? ""} maxLength={40} compact />
           </DeveloperField>
           <DeveloperField label="Link" required helpKey={helpKey ? `${helpKey}-link` : undefined}>
             <input
@@ -187,7 +189,7 @@ function ButtonFields({
                 next[index] = { ...button, url: event.target.value };
                 onChange(next);
               }}
-              className={developerInputClassName}
+              className={`${developerInputClassName} py-2`}
             />
           </DeveloperField>
         </div>
@@ -204,6 +206,9 @@ function TextInput({
   textarea,
   tooltip,
   helpKey,
+  className,
+  compact = false,
+  textareaRows = 3,
 }: {
   label: string;
   value: string;
@@ -212,17 +217,20 @@ function TextInput({
   textarea?: boolean;
   tooltip?: string;
   helpKey?: string;
+  className?: string;
+  compact?: boolean;
+  textareaRows?: number;
 }) {
   return (
-    <DeveloperField label={label} required tooltip={tooltip} helpKey={helpKey}>
+    <DeveloperField label={label} required tooltip={tooltip} helpKey={helpKey} className={className}>
       {textarea ? (
         <textarea
           required
           value={value ?? ""}
           onChange={(event) => onChange(event.target.value)}
           maxLength={maxLength}
-          rows={3}
-          className={`${developerInputClassName} resize-none`}
+          rows={textareaRows}
+          className={`${developerInputClassName} resize-none ${compact ? "py-2" : ""}`}
         />
       ) : (
         <input
@@ -230,10 +238,10 @@ function TextInput({
           value={value ?? ""}
           onChange={(event) => onChange(event.target.value)}
           maxLength={maxLength}
-          className={developerInputClassName}
+          className={`${developerInputClassName} ${compact ? "py-2" : ""}`}
         />
       )}
-      <CountHint value={value ?? ""} maxLength={maxLength} />
+      <CountHint value={value ?? ""} maxLength={maxLength} compact={compact} />
     </DeveloperField>
   );
 }
@@ -251,6 +259,8 @@ export function RoutePageCmsEditor({ pageKey }: { pageKey: PageKey }) {
   const [quoteOtherChannelsOpenIndex, setQuoteOtherChannelsOpenIndex] = useState<number | null>(null);
   const [activeAboutSection, setActiveAboutSection] = useState<AboutSectionKey>("hero");
   const [previewRevision, setPreviewRevision] = useState(0);
+  const [aboutHeroFramingOpen, setAboutHeroFramingOpen] = useState(false);
+  const [cultureFramingOpen, setCultureFramingOpen] = useState(false);
 
   useEffect(() => {
     let alive = true;
@@ -464,12 +474,24 @@ export function RoutePageCmsEditor({ pageKey }: { pageKey: PageKey }) {
               <form className="space-y-4" onSubmit={(event) => { event.preventDefault(); void saveSection("cultureImage", page.cultureImage); }}>
                 <div className="rounded-[22px] border border-slate-200 bg-slate-50/76 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.75)]">
                   <div className="grid gap-4 lg:grid-cols-[250px_minmax(0,1fr)] lg:items-start">
-                    <DeveloperMediaPreview value={page.cultureImage.src} previewAlt={page.cultureImage.alt} mediaType="image" compact />
+                    <DeveloperMediaPreview value={page.cultureImage.src} previewAlt={page.cultureImage.alt} mediaType="image" compact onFrame={() => setCultureFramingOpen(true)} />
                   <div className="space-y-4">
                     <DeveloperMediaField label="Imagem" mediaType="image" required value={page.cultureImage.src} onChange={(src) => update((draft) => { draft.cultureImage.src = src; })} previewAlt={page.cultureImage.alt} showPreview={false} />
                     <TextInput label="Texto alternativo" value={page.cultureImage.alt} maxLength={160} onChange={(value) => update((draft) => { draft.cultureImage.alt = value; })} />
                   </div>
                   </div>
+                  <MediaPlacementEditor
+                    label="a foto de cultura em /trabalhe-conosco"
+                    src={page.cultureImage.src}
+                    alt={page.cultureImage.alt}
+                    mediaType="image"
+                    value={page.cultureImage.presentation}
+                    frameAspectRatio="4:3"
+                    onChange={(presentation) => update((draft) => { draft.cultureImage.presentation = presentation; })}
+                    open={cultureFramingOpen}
+                    onOpenChange={setCultureFramingOpen}
+                    hideTrigger
+                  />
                   <div className="mt-4 flex justify-end border-t border-slate-200/80 pt-4">
                     <SaveButton saving={saving === "cultureImage"}>Salvar foto</SaveButton>
                   </div>
@@ -585,8 +607,15 @@ export function RoutePageCmsEditor({ pageKey }: { pageKey: PageKey }) {
         <form className="space-y-4" onSubmit={(event) => { event.preventDefault(); void saveSection("hero", current.hero); }}>
           <div className={priorityPanelClassName}>
             <p className="mb-3 text-sm font-semibold text-[var(--foreground)]">Mídia principal <span className="text-[var(--primary)]">*</span></p>
-            <div className="grid gap-4 xl:grid-cols-[220px_minmax(0,1fr)] xl:items-start">
-              <DeveloperMediaPreview value={current.hero.media.src} previewAlt={current.hero.media.alt} mediaType="image" compact />
+            <div className="grid gap-4 md:grid-cols-[220px_minmax(0,1fr)] md:items-start">
+              <DeveloperMediaPreview
+                value={current.hero.media.src}
+                previewAlt={current.hero.media.alt}
+                mediaType="image"
+                compact
+                align="start"
+                onFrame={() => setAboutHeroFramingOpen(true)}
+              />
               <div className="grid gap-4">
                 <DeveloperMediaField
                   label="Arquivo selecionado"
@@ -601,6 +630,17 @@ export function RoutePageCmsEditor({ pageKey }: { pageKey: PageKey }) {
                 <TextInput label="Texto alternativo" value={current.hero.media.alt} maxLength={160} onChange={(value) => update((draft) => { draft.hero.media.alt = value; })} />
               </div>
             </div>
+            <MediaPlacementEditor
+              label="o Hero de /sobre"
+              src={current.hero.media.src}
+              alt={current.hero.media.alt}
+              mediaType="image"
+              value={current.hero.media.presentation}
+              onChange={(presentation) => update((draft) => { draft.hero.media.presentation = presentation; })}
+              open={aboutHeroFramingOpen}
+              onOpenChange={setAboutHeroFramingOpen}
+              hideTrigger
+            />
           </div>
           <div className={cn(priorityPanelClassName, "grid gap-5 md:grid-cols-2")}>
             <TextInput label="Título" value={current.hero.title} maxLength={320} onChange={(value) => update((draft) => { draft.hero.title = value; })} tooltip="Máximo visual esperado: 3 linhas." />
@@ -639,26 +679,34 @@ export function RoutePageCmsEditor({ pageKey }: { pageKey: PageKey }) {
             getEyebrow={(_, index) => `Certificado ${index + 1}`}
             getTitle={(item) => item.title || "Certificado sem título"}
             variant="services"
+            renderActions={(item, index) => (
+              <>
+                <button type="button" data-cms-collection-action="up" className={developerGhostButtonClassName} onClick={() => update((draft) => { const list = draft.compliance.certifications; if (index > 0) [list[index - 1], list[index]] = [list[index], list[index - 1]]; })}><SortAscending size={16} weight="bold" />Subir</button>
+                <button type="button" data-cms-collection-action="down" className={developerGhostButtonClassName} onClick={() => update((draft) => { const list = draft.compliance.certifications; if (index < list.length - 1) [list[index + 1], list[index]] = [list[index], list[index + 1]]; })}><SortAscending size={16} weight="bold" className="rotate-180" />Descer</button>
+                <DeveloperConfirmButton actionType="remove" disabled={(current.compliance.certifications?.length ?? 0) <= 1} message="Este certificado será removido da página Sobre." onConfirm={() => update((draft) => { draft.compliance.certifications.splice(index, 1); })}><Trash size={16} weight="bold" />Remover</DeveloperConfirmButton>
+              </>
+            )}
             renderItem={(item, index) => (
               <div className="space-y-5">
-                <div className="grid gap-4 xl:grid-cols-[220px_minmax(0,1fr)] xl:items-start">
-                  <DeveloperMediaPreview value={item.image?.src ?? ""} previewAlt={item.image?.alt ?? ""} mediaType="image" compact />
+                <div className="grid gap-4 md:grid-cols-[220px_minmax(0,1fr)] md:items-start">
+                  <DeveloperMediaPreview
+                    value={item.image?.src ?? ""}
+                    previewAlt={item.image?.alt ?? ""}
+                    mediaType="image"
+                    compact
+                    align="start"
+                  />
                   <div className="grid gap-4">
                     <DeveloperMediaField label="Arquivo do certificado" mediaType="image" required value={item.image?.src ?? ""} onChange={(src) => update((draft) => { draft.compliance.certifications[index].image.src = src; })} previewAlt={item.image?.alt ?? ""} showPreview={false} equalControlWidths />
                     <TextInput label="Texto alternativo" value={item.image?.alt ?? ""} maxLength={160} onChange={(value) => update((draft) => { draft.compliance.certifications[index].image.alt = value; })} />
                   </div>
                 </div>
-                <div className="grid gap-5 md:grid-cols-2">
+                <div className="grid gap-x-5 gap-y-4 md:grid-cols-2 md:items-start">
                   <TextInput label="Título do certificado" value={item.title ?? ""} maxLength={180} onChange={(value) => update((draft) => { draft.compliance.certifications[index].title = value; })} />
-                  <TextInput label="Descrição" value={item.description ?? ""} maxLength={320} textarea onChange={(value) => update((draft) => { draft.compliance.certifications[index].description = value; })} />
-                  <DeveloperField label="Link externo do certificado">
+                  <TextInput label="Descrição" value={item.description ?? ""} maxLength={320} textarea className="md:row-span-2" onChange={(value) => update((draft) => { draft.compliance.certifications[index].description = value; })} />
+                  <DeveloperField label="Link externo do certificado" className="md:col-start-1">
                     <input value={item.certificateUrl ?? ""} onChange={(event) => update((draft) => { draft.compliance.certifications[index].certificateUrl = event.target.value; })} className={developerInputClassName} />
                   </DeveloperField>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <button type="button" className={developerGhostButtonClassName} onClick={() => update((draft) => { const list = draft.compliance.certifications; if (index > 0) [list[index - 1], list[index]] = [list[index], list[index - 1]]; })}><SortAscending size={16} weight="bold" />Subir</button>
-                  <button type="button" className={developerGhostButtonClassName} onClick={() => update((draft) => { const list = draft.compliance.certifications; if (index < list.length - 1) [list[index + 1], list[index]] = [list[index], list[index + 1]]; })}><SortAscending size={16} weight="bold" className="rotate-180" />Descer</button>
-                  <button type="button" className={developerDangerButtonClassName} disabled={(current.compliance.certifications?.length ?? 0) <= 1} onClick={() => update((draft) => { draft.compliance.certifications.splice(index, 1); })}><Trash size={16} weight="bold" />Remover</button>
                 </div>
               </div>
             )}
@@ -767,10 +815,10 @@ export function RoutePageCmsEditor({ pageKey }: { pageKey: PageKey }) {
           description="Edite o cabeçalho e as três perguntas exibidas depois do formulário desta página."
         />
         <form className="space-y-5" onSubmit={(event) => { event.preventDefault(); void saveSection("operationGuidance", guidance); }}>
-          <div className={cn(panelClassName, "grid gap-5 md:grid-cols-2")}>
-            <TextInput label="Chamada curta" value={guidance.eyebrow} maxLength={80} onChange={(value) => update((draft) => { draft.operationGuidance.eyebrow = value; })} />
-            <TextInput label="Título" value={guidance.title} maxLength={120} onChange={(value) => update((draft) => { draft.operationGuidance.title = value; })} />
-            <TextInput label="Descrição" value={guidance.description} maxLength={320} textarea onChange={(value) => update((draft) => { draft.operationGuidance.description = value; })} />
+          <div className={cn(panelClassName, "grid gap-x-4 gap-y-3 p-3 sm:p-4 md:grid-cols-2")}>
+            <TextInput label="Chamada curta" value={guidance.eyebrow} maxLength={80} compact onChange={(value) => update((draft) => { draft.operationGuidance.eyebrow = value; })} />
+            <TextInput label="Título" value={guidance.title} maxLength={120} compact onChange={(value) => update((draft) => { draft.operationGuidance.title = value; })} />
+            <TextInput label="Descrição" value={guidance.description} maxLength={320} textarea compact textareaRows={2} className="md:col-span-2" onChange={(value) => update((draft) => { draft.operationGuidance.description = value; })} />
           </div>
           <DeveloperCmsAccordion
             items={guidance.items.slice(0, 3)}
@@ -862,7 +910,7 @@ export function RoutePageCmsEditor({ pageKey }: { pageKey: PageKey }) {
     if (!page) return null;
     const current = page;
     return (
-      <DeveloperCard id="jobs" className="p-5 sm:p-6">
+      <DeveloperCard id="jobs" className="p-4 sm:p-5">
         <DeveloperSectionHeading
           eyebrow="Oportunidades abertas"
           title="Vagas"
@@ -889,7 +937,7 @@ export function RoutePageCmsEditor({ pageKey }: { pageKey: PageKey }) {
             </button>
           }
         />
-        <form className="space-y-5" onSubmit={(event) => { event.preventDefault(); void saveSection("jobs", { jobs: current.jobs }); }}>
+        <form className="space-y-4" onSubmit={(event) => { event.preventDefault(); void saveSection("jobs", { jobs: current.jobs }); }}>
           <DeveloperCmsAccordion
             items={current.jobs}
             openIndex={openIndex}
@@ -897,28 +945,33 @@ export function RoutePageCmsEditor({ pageKey }: { pageKey: PageKey }) {
             getEyebrow={(_, index) => `Vaga ${index + 1}`}
             getTitle={(item) => item.title || "Vaga sem cargo"}
             variant="services"
+            compact
+            renderActions={(item, index) => (
+              <>
+                <button type="button" data-cms-collection-action="up" className={`${developerGhostButtonClassName} min-h-9 rounded-lg px-3 py-1.5 text-xs`} onClick={() => moveArrayItem("jobs", index, -1)}><SortAscending size={15} weight="bold" />Subir</button>
+                <button type="button" data-cms-collection-action="down" className={`${developerGhostButtonClassName} min-h-9 rounded-lg px-3 py-1.5 text-xs`} onClick={() => moveArrayItem("jobs", index, 1)}><SortAscending size={15} weight="bold" className="rotate-180" />Descer</button>
+                <DeveloperConfirmButton actionType="remove" className="min-h-9 rounded-lg px-3 py-1.5" message={`A vaga “${item.title || "sem cargo"}” será removida.`} onConfirm={() => update((draft) => { draft.jobs.splice(index, 1); })}><Trash size={15} weight="bold" />Remover</DeveloperConfirmButton>
+              </>
+            )}
             renderItem={(item, index) => (
-              <div className="space-y-5">
-                <div className="grid gap-5 md:grid-cols-2">
-                  <TextInput label="Cargo" value={item.title} maxLength={90} onChange={(value) => update((draft) => { draft.jobs[index].title = value; })} />
-                  <TextInput label="Localidade" value={item.location} maxLength={90} onChange={(value) => update((draft) => { draft.jobs[index].location = value; })} />
-                  <TextInput label="Tipo" value={item.type} maxLength={40} onChange={(value) => update((draft) => { draft.jobs[index].type = value; })} />
-                  <TextInput label="Link candidatura" value={item.applyUrl} maxLength={600} onChange={(value) => update((draft) => { draft.jobs[index].applyUrl = value; })} />
-                  <TextInput label="Descrição curta" value={item.description} maxLength={220} textarea onChange={(value) => update((draft) => { draft.jobs[index].description = value; })} />
+              <div className="space-y-3">
+                <div className="grid gap-x-4 gap-y-3 md:grid-cols-2">
+                  <TextInput compact label="Cargo" value={item.title} maxLength={90} onChange={(value) => update((draft) => { draft.jobs[index].title = value; })} />
+                  <TextInput compact label="Localidade" value={item.location} maxLength={90} onChange={(value) => update((draft) => { draft.jobs[index].location = value; })} />
+                  <TextInput compact label="Tipo" value={item.type} maxLength={40} onChange={(value) => update((draft) => { draft.jobs[index].type = value; })} />
+                  <TextInput compact label="Link candidatura" value={item.applyUrl} maxLength={600} onChange={(value) => update((draft) => { draft.jobs[index].applyUrl = value; })} />
+                  <TextInput compact className="md:col-span-2" label="Descrição curta" value={item.description} maxLength={220} textarea textareaRows={2} onChange={(value) => update((draft) => { draft.jobs[index].description = value; })} />
                 </div>
-                <label className="inline-flex min-h-11 items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-[var(--foreground)]">
-                  <input
-                    type="checkbox"
-                    checked={item.active !== false}
-                    onChange={(event) => update((draft) => { draft.jobs[index].active = event.target.checked; })}
-                    className="h-4 w-4 accent-[var(--primary)]"
-                  />
-                  Vaga publicada
-                </label>
-                <div className="flex flex-wrap gap-2">
-                  <button type="button" className={developerGhostButtonClassName} onClick={() => moveArrayItem("jobs", index, -1)}><SortAscending size={16} weight="bold" />Subir</button>
-                  <button type="button" className={developerGhostButtonClassName} onClick={() => moveArrayItem("jobs", index, 1)}><SortAscending size={16} weight="bold" className="rotate-180" />Descer</button>
-                  <button type="button" className={developerDangerButtonClassName} onClick={() => update((draft) => { draft.jobs.splice(index, 1); })}><Trash size={16} weight="bold" />Remover</button>
+                <div className="flex flex-wrap items-center gap-2">
+                  <label className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-[var(--foreground)]">
+                    <input
+                      type="checkbox"
+                      checked={item.active !== false}
+                      onChange={(event) => update((draft) => { draft.jobs[index].active = event.target.checked; })}
+                      className="h-4 w-4 accent-[var(--primary)]"
+                    />
+                    Vaga publicada
+                  </label>
                 </div>
               </div>
             )}
@@ -969,6 +1022,13 @@ export function RoutePageCmsEditor({ pageKey }: { pageKey: PageKey }) {
             getEyebrow={(_, index) => `Canal ${index + 1}`}
             getTitle={(item) => item.title || "Canal sem titulo"}
             variant="services"
+            renderActions={(item, index) => (
+              <>
+                <button type="button" data-cms-collection-action="up" className={developerGhostButtonClassName} onClick={() => moveArrayItem("otherChannels", index, -1)}><SortAscending size={16} weight="bold" />Subir</button>
+                <button type="button" data-cms-collection-action="down" className={developerGhostButtonClassName} onClick={() => moveArrayItem("otherChannels", index, 1)}><SortAscending size={16} weight="bold" className="rotate-180" />Descer</button>
+                <DeveloperConfirmButton actionType="remove" message={`O canal “${item.title || "sem título"}” será removido.`} onConfirm={() => update((draft) => { draft.otherChannels.splice(index, 1); })}><Trash size={16} weight="bold" />Remover</DeveloperConfirmButton>
+              </>
+            )}
             renderItem={(item, index) => (
               <div className="space-y-4">
                 <div className="grid gap-4 md:grid-cols-2">
@@ -992,11 +1052,6 @@ export function RoutePageCmsEditor({ pageKey }: { pageKey: PageKey }) {
                   />
                   Canal publicado
                 </label>
-                <div className="flex flex-wrap gap-2">
-                  <button type="button" className={developerGhostButtonClassName} onClick={() => moveArrayItem("otherChannels", index, -1)}><SortAscending size={16} weight="bold" />Subir</button>
-                  <button type="button" className={developerGhostButtonClassName} onClick={() => moveArrayItem("otherChannels", index, 1)}><SortAscending size={16} weight="bold" className="rotate-180" />Descer</button>
-                  <button type="button" className={developerDangerButtonClassName} onClick={() => update((draft) => { draft.otherChannels.splice(index, 1); })}><Trash size={16} weight="bold" />Remover</button>
-                </div>
               </div>
             )}
           />

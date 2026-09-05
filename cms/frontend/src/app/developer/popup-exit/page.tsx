@@ -17,9 +17,14 @@ import {
 import { useCarouselPagination } from "@/hooks/useCarouselPagination";
 import { api, site, siteUrl } from "@/lib/routes";
 import { cn } from "@/lib/utils";
-import { DeveloperImageField } from "@/components/developer/DeveloperImageField";
+import {
+  DeveloperMediaField,
+  DeveloperMediaPreview,
+} from "@/components/developer/DeveloperMediaField";
+import { MediaPlacementEditor } from "@/components/developer/MediaPlacementEditor";
 import { DeveloperResponsivePreview } from "@/components/developer/DeveloperResponsivePreview";
 import { DEFAULT_POPUP_CONFIG, type PopupConfig } from "@shared/lib/popupDefaults";
+import type { ResponsiveMediaPresentation } from "@shared/types/media";
 import {
   DeveloperCard,
   DeveloperField,
@@ -90,6 +95,68 @@ function formatDateTime(value?: string) {
   }).format(parsed);
 }
 
+function PopupImageEditor({
+  label,
+  value,
+  presentation,
+  onChange,
+  onPresentationChange,
+  framingOpen,
+  onFramingOpenChange,
+  frameAspectRatio,
+  className,
+}: {
+  label: string;
+  value: string;
+  presentation?: ResponsiveMediaPresentation;
+  onChange: (value: string) => void;
+  onPresentationChange: (value: ResponsiveMediaPresentation) => void;
+  framingOpen: boolean;
+  onFramingOpenChange: (open: boolean) => void;
+  frameAspectRatio: string;
+  className?: string;
+}) {
+  const hasImage = value.trim().length > 0;
+
+  return (
+    <div className={className}>
+      <div className={cn("grid gap-3", hasImage && "md:grid-cols-[220px_minmax(0,1fr)] md:items-start")}>
+        {hasImage ? (
+          <DeveloperMediaPreview
+            value={value}
+            previewAlt={label}
+            mediaType="image"
+            compact
+            align="start"
+            onFrame={() => onFramingOpenChange(true)}
+          />
+        ) : null}
+        <DeveloperMediaField
+          label="Arquivo da imagem"
+          value={value}
+          mediaType="image"
+          helpKey="popup-exit.field.image"
+          previewAlt={label}
+          showPreview={false}
+          onChange={onChange}
+        />
+      </div>
+      <MediaPlacementEditor
+        label={label}
+        src={value}
+        alt={label}
+        mediaType="image"
+        value={presentation}
+        frameAspectRatio={frameAspectRatio}
+        onChange={onPresentationChange}
+        open={framingOpen}
+        onOpenChange={onFramingOpenChange}
+        hideTrigger
+      />
+    </div>
+  );
+}
+
 export default function PopupExitPage() {
   const { apiRequest } = useApiRequest();
   const [config, setConfig] = useState<PopupConfig>(DEFAULT_CONFIG);
@@ -97,6 +164,9 @@ export default function PopupExitPage() {
   const [status, setStatus] = useState<"" | "success" | "error">("");
   const [statusMessage, setStatusMessage] = useState("");
   const [previewRevision, setPreviewRevision] = useState(0);
+  const [defaultImageFramingOpen, setDefaultImageFramingOpen] = useState(false);
+  const [desktopImageFramingOpen, setDesktopImageFramingOpen] = useState(false);
+  const [mobileImageFramingOpen, setMobileImageFramingOpen] = useState(false);
   const {
     data: resourceData,
     loading,
@@ -379,31 +449,35 @@ export default function PopupExitPage() {
                 </DeveloperField>
               </div>
 
-              <div className={popupPrimaryPanelClassName}>
-                <div className="mb-5">
+              <div className={cn(popupPrimaryPanelClassName, "p-3 sm:p-4")}>
+                <div className="mb-3">
                   <p className="text-sm font-semibold text-[var(--foreground)]">Imagem padrão</p>
-                  <p className="mt-1 text-sm leading-6 text-[var(--color-muted-raw)]">
+                  <p className="mt-1 text-xs leading-5 text-[var(--color-muted-raw)]">
                     Imagem usada quando não houver uma versão específica para desktop ou celular.
                   </p>
                 </div>
-                <DeveloperImageField
-                  label="Arquivo da imagem"
+                <PopupImageEditor
+                  label="a imagem padrão do popup de saída"
                   value={config.image ?? ""}
-                  showPreview
                   onChange={(image) => setValue("image", image)}
+                  presentation={config.imagePresentation}
+                  frameAspectRatio="2:3 no desktop e largura total no celular"
+                  onPresentationChange={(imagePresentation) => setValue("imagePresentation", imagePresentation)}
+                  framingOpen={defaultImageFramingOpen}
+                  onFramingOpenChange={setDefaultImageFramingOpen}
                 />
               </div>
             </div>
           </DeveloperCard>
 
           <div className="grid gap-6 min-[1600px]:grid-cols-2 min-[1600px]:items-start">
-            <DeveloperCard>
+            <DeveloperCard className="p-4 sm:p-4 [&>div:first-child]:mb-3 [&>div:first-child_p:last-child]:leading-5">
               <DeveloperSectionHeading
                 eyebrow="Desktop"
                 title="Layout específico"
                 description="Textos e imagem usados em telas maiores."
               />
-              <div className="space-y-4">
+              <div className="space-y-3">
                 <DeveloperField label="Título desktop">
                   <input
                     value={config.desktop?.title ?? ""}
@@ -431,28 +505,37 @@ export default function PopupExitPage() {
                     className={`${developerInputClassName} resize-none`}
                   />
                 </DeveloperField>
-                <DeveloperImageField
-                  label="Imagem desktop"
+                <PopupImageEditor
+                  label="a imagem desktop do popup de saída"
                   value={config.desktop?.image ?? ""}
-                  showPreview
                   onChange={(image) =>
                     setConfig((current) => ({
                       ...current,
                       desktop: { ...current.desktop, image },
                     }))
                   }
+                  presentation={config.desktop?.imagePresentation}
+                  frameAspectRatio="2:3 no desktop"
+                  onPresentationChange={(imagePresentation) =>
+                    setConfig((current) => ({
+                      ...current,
+                      desktop: { ...current.desktop, imagePresentation },
+                    }))
+                  }
+                  framingOpen={desktopImageFramingOpen}
+                  onFramingOpenChange={setDesktopImageFramingOpen}
                 />
               </div>
             </DeveloperCard>
 
-            <DeveloperCard>
+            <DeveloperCard className="p-4 sm:p-4 [&>div:first-child]:mb-3 [&>div:first-child_p:last-child]:leading-5">
               <DeveloperSectionHeading
                 eyebrow="Mobile"
                 title="UX própria para celular"
                 description="Usa texto, imagem e folha inferior adaptados."
                 tooltip="Configuração exclusiva do popup em celulares, com layout próprio em formato de folha inferior."
               />
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-3 sm:grid-cols-2">
                 <DeveloperField label="Título mobile">
                   <input
                     value={config.mobile?.title ?? ""}
@@ -493,10 +576,9 @@ export default function PopupExitPage() {
                     className={developerInputClassName}
                   />
                 </DeveloperField>
-                <DeveloperImageField
-                  label="Imagem mobile"
+                <PopupImageEditor
+                  label="a imagem mobile do popup de saída"
                   value={config.mobile?.image ?? ""}
-                  showPreview
                   className="sm:col-span-2"
                   onChange={(image) =>
                     setConfig((current) => ({
@@ -504,6 +586,16 @@ export default function PopupExitPage() {
                       mobile: { ...current.mobile, image },
                     }))
                   }
+                  presentation={config.mobile?.imagePresentation}
+                  frameAspectRatio="largura total, com faixa visual de 11rem"
+                  onPresentationChange={(imagePresentation) =>
+                    setConfig((current) => ({
+                      ...current,
+                      mobile: { ...current.mobile, imagePresentation },
+                    }))
+                  }
+                  framingOpen={mobileImageFramingOpen}
+                  onFramingOpenChange={setMobileImageFramingOpen}
                 />
               </div>
             </DeveloperCard>

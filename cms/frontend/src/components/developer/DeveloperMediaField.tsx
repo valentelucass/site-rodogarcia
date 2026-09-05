@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { createPortal } from "react-dom";
 import { useEffect, useId, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import {
@@ -8,6 +9,7 @@ import {
   CaretLeft,
   CaretRight,
   ImagesSquare,
+  ArrowsOutCardinal,
   MagnifyingGlassPlus,
   X,
 } from "@phosphor-icons/react";
@@ -31,6 +33,10 @@ export interface AdminMediaRecord {
   references: number;
   mediaType?: "image" | "video";
   thumbnailUrl?: string;
+  width?: number;
+  height?: number;
+  aspectRatio?: number;
+  durationSeconds?: number;
 }
 
 const MEDIA_PAGE_SIZE = 12;
@@ -43,6 +49,7 @@ interface DeveloperMediaFieldProps {
   required?: boolean;
   hint?: string;
   tooltip?: string;
+  helpKey?: string;
   previewAlt?: string;
   className?: string;
   mediaType?: "image" | "video" | "all";
@@ -60,6 +67,17 @@ function isPreviewableAsset(value: string) {
   return /\.(png|jpe?g|webp|gif|svg|avif|mp4|webm|ogg)$/i.test(value);
 }
 
+function mediaTechnicalDetails(item: AdminMediaRecord) {
+  const details: string[] = [];
+  if (item.width && item.height) details.push(`${item.width} × ${item.height} px`);
+  if (item.durationSeconds && Number.isFinite(item.durationSeconds) && item.durationSeconds > 0) {
+    const seconds = Math.round(item.durationSeconds);
+    const minutes = Math.floor(seconds / 60);
+    details.push(`${minutes}:${String(seconds % 60).padStart(2, "0")}`);
+  }
+  return details.join(" · ");
+}
+
 export function DeveloperMediaField({
   label,
   value,
@@ -67,6 +85,7 @@ export function DeveloperMediaField({
   required,
   hint,
   tooltip,
+  helpKey,
   previewAlt,
   className,
   mediaType = "all",
@@ -77,6 +96,7 @@ export function DeveloperMediaField({
 }: DeveloperMediaFieldProps) {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickerPage, setPickerPage] = useState(0);
+  const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
   const pickerId = useId();
   const { data, loading, error } = useAdminResource<AdminMediaRecord[]>({
     key: adminResourceKeys.images,
@@ -118,6 +138,10 @@ export function DeveloperMediaField({
     currentPickerPage * MEDIA_PAGE_SIZE,
     (currentPickerPage + 1) * MEDIA_PAGE_SIZE
   );
+
+  useEffect(() => {
+    setPortalTarget(document.querySelector<HTMLElement>("[data-admin-shell='true']"));
+  }, []);
 
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
@@ -221,22 +245,28 @@ export function DeveloperMediaField({
         required={required}
         hint={hint}
         tooltip={tooltip}
+        helpKey={helpKey}
         className={className}
       >
         {showPreview ? (
-          <div className="grid gap-4 lg:grid-cols-[340px_minmax(0,1fr)] lg:items-start">
-            <div className="order-2 lg:order-1">
+          <div
+            className={cn(
+              "grid gap-4",
+              stackControls ? "grid-cols-1" : "lg:grid-cols-[340px_minmax(0,1fr)] lg:items-start"
+            )}
+          >
+            <div className={cn(stackControls ? "order-1" : "order-2 lg:order-1")}>
               <DeveloperMediaPreview value={trimmedValue} previewAlt={previewAlt} mediaType={mediaType} />
             </div>
-            <div className="order-1 lg:order-2">{controls}</div>
+            <div className={cn(stackControls ? "order-2" : "order-1 lg:order-2")}>{controls}</div>
           </div>
         ) : (
           controls
         )}
       </DeveloperField>
 
-      {pickerOpen ? (
-        <div className="cms-content-dialog fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-6">
+      {pickerOpen && portalTarget ? createPortal(
+        <div data-media-library-dialog="true" className="cms-content-dialog fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-5">
           <button
             type="button"
             aria-label="Fechar biblioteca de mídias"
@@ -247,7 +277,7 @@ export function DeveloperMediaField({
             role="dialog"
             aria-modal="true"
             aria-labelledby="media-picker-title"
-            className="relative z-10 flex max-h-[calc(100vh-1.5rem)] w-full max-w-6xl flex-col overflow-hidden rounded-[24px] border border-white/20 bg-white shadow-[0_28px_90px_rgba(15,23,42,0.32)] sm:max-h-[calc(100vh-3rem)]"
+            className="media-library-dialog__surface relative z-10 flex h-[calc(100dvh-1.5rem)] max-h-[42rem] w-full max-w-6xl flex-col overflow-hidden rounded-[24px] border border-white/20 bg-white shadow-[0_28px_90px_rgba(15,23,42,0.32)]"
           >
             <header className="flex items-start justify-between gap-4 border-b border-[var(--border)] bg-slate-50/90 px-4 py-4 sm:px-5">
               <div>
@@ -272,7 +302,7 @@ export function DeveloperMediaField({
                 <button
                   type="button"
                   onClick={() => setPickerOpen(false)}
-                  className={cn(developerGhostButtonClassName, "h-9 w-9 rounded-xl p-0")}
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-xl text-[var(--foreground)] transition-colors hover:bg-slate-200/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]"
                   aria-label="Fechar biblioteca"
                 >
                   <X size={16} weight="bold" />
@@ -320,6 +350,11 @@ export function DeveloperMediaField({
                           <p className="mt-1 truncate text-[11px] text-[var(--color-muted-raw)]">
                             {item.usedInContent ? "Em uso" : item.source} - {itemType}
                           </p>
+                          {mediaTechnicalDetails(item) ? (
+                            <p className="mt-1 truncate text-[11px] text-[var(--color-muted-raw)]">
+                              {mediaTechnicalDetails(item)}
+                            </p>
+                          ) : null}
                         </div>
                       </button>
                     );
@@ -362,7 +397,8 @@ export function DeveloperMediaField({
               </footer>
             ) : null}
           </section>
-        </div>
+        </div>,
+        portalTarget
       ) : null}
     </>
   );
@@ -373,11 +409,15 @@ export function DeveloperMediaPreview({
   previewAlt,
   mediaType = "all",
   compact = false,
+  onFrame,
+  align = "center",
 }: {
   value: string;
   previewAlt?: string;
   mediaType?: "image" | "video" | "all";
   compact?: boolean;
+  onFrame?: () => void;
+  align?: "start" | "center";
 }) {
   const [previewOpen, setPreviewOpen] = useState(false);
   const trimmedValue = value.trim();
@@ -389,13 +429,14 @@ export function DeveloperMediaPreview({
   return (
     <>
       <div className="contents">
-        <div className={cn("mx-auto overflow-hidden rounded-[20px] border border-[var(--border)] bg-white shadow-[0_12px_28px_rgba(15,23,42,0.065)]", compact ? "max-w-[220px]" : "max-w-[280px]")}>
+        <div className={cn("overflow-hidden rounded-[20px] border border-[var(--border)] bg-white shadow-[0_12px_28px_rgba(15,23,42,0.065)]", align === "start" ? "mr-auto" : "mx-auto", compact ? "max-w-[220px]" : "max-w-[280px]")}>
           {hasPreview ? (
-            <button
-              type="button"
-              onClick={() => setPreviewOpen(true)}
-              className="group block w-full text-left focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
-            >
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setPreviewOpen(true)}
+                className="group block w-full text-left focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
+              >
               <div className={cn("relative overflow-hidden bg-slate-950", compact ? "h-28" : "h-40")}>
                 {currentType === "video" ? (
                   <video
@@ -418,15 +459,15 @@ export function DeveloperMediaPreview({
                   Ampliar
                 </span>
               </div>
+              </button>
+              {onFrame ? <button type="button" onClick={onFrame} className="absolute left-2 top-2 inline-flex min-h-8 items-center gap-1.5 rounded-lg bg-slate-950/78 px-2.5 py-1 text-[11px] font-bold text-white shadow-sm backdrop-blur transition-colors hover:bg-[var(--primary)] focus:outline-none focus:ring-2 focus:ring-white" aria-label={`Enquadrar ${currentType === "video" ? "vídeo" : "foto"}`}>
+                <ArrowsOutCardinal size={14} weight="bold" /> Enquadrar
+              </button> : null}
               <div className={cn("border-t border-[var(--border)] px-3", compact ? "py-2" : "py-2.5")}>
-                <p className="text-xs font-semibold text-[var(--foreground)]">
-                  Preview da mídia
-                </p>
-                <p className="mt-1 truncate text-[11px] text-[var(--color-muted-raw)]">
-                  {trimmedValue}
-                </p>
+                <p className="text-xs font-semibold text-[var(--foreground)]">Preview da mídia</p>
+                <p className="mt-1 truncate text-[11px] text-[var(--color-muted-raw)]">{trimmedValue}</p>
               </div>
-            </button>
+            </div>
           ) : (
             <div className={cn("flex flex-col items-center justify-center gap-2 px-4 text-center", compact ? "h-40" : "h-52")}>
               <span className="flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 text-slate-400">

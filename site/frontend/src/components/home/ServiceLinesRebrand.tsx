@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import type { HomeSection3 } from "@/types/content";
 import { cn } from "@/lib/utils";
+import { PresentedVideo } from "@/components/media/PresentedVideo";
+import { PresentedImage } from "@/components/media/PresentedImage";
 
 const CARDS_PER_PAGE = 2;
 const AUTO_ADVANCE_MS = 8500;
@@ -162,33 +164,16 @@ function ServiceCard({
       <div className="relative aspect-video overflow-hidden p-2 pb-0">
         <div className="relative h-full w-full overflow-hidden rounded-[24px] bg-slate-100">
           {card.media.type === "video" || /\.(mp4|webm|ogg)$/i.test(mediaSrc) ? (
-            <video
-              autoPlay
-              muted
-              loop
-              playsInline
+            <PresentedVideo
+              src={mediaSrc}
+              mobileSrc={mobileMediaSrc}
+              presentation={card.media.presentation}
               preload="metadata"
               poster={card.media.poster}
               className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.05]"
-            >
-              {mobileMediaSrc !== mediaSrc ? (
-                <source media="(max-width: 767px)" src={mobileMediaSrc} />
-              ) : null}
-              <source src={mediaSrc} />
-            </video>
+            />
           ) : (
-            <picture className="contents">
-              {mobileMediaSrc !== mediaSrc ? (
-                <source media="(max-width: 767px)" srcSet={mobileMediaSrc} />
-              ) : null}
-              <img
-                src={mediaSrc}
-                alt={card.media.alt || card.title}
-                className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.05]"
-                loading="lazy"
-                decoding="async"
-              />
-            </picture>
+            <PresentedImage src={mediaSrc} mobileSrc={mobileMediaSrc} presentation={card.media.presentation} alt={card.media.alt || card.title} className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.05]" loading="lazy" decoding="async" />
           )}
           <div className="absolute inset-0 bg-gradient-to-b from-slate-900/30 via-transparent to-transparent opacity-80" />
           <div className="absolute left-4 top-4">

@@ -31,7 +31,7 @@ public final class CmsReadinessService {
     public boolean isReady() {
         try {
             StoragePaths paths = properties.storagePaths();
-            if (!ffmpegIsReadyWhenRequired()) return false;
+            if (!mediaToolsAreReadyWhenRequired()) return false;
             if (!existingDirectoryIsReadable(paths.root())) return false;
 
             Set<Path> writeProbeDirectories = new LinkedHashSet<>();
@@ -60,9 +60,13 @@ public final class CmsReadinessService {
         }
     }
 
-    private boolean ffmpegIsReadyWhenRequired() {
+    private boolean mediaToolsAreReadyWhenRequired() {
         if (!properties.production()) return true;
-        String configured = properties.ffmpegPath();
+        return executableIsReady(properties.ffmpegPath())
+            && executableIsReady(properties.ffprobePath());
+    }
+
+    private static boolean executableIsReady(String configured) {
         if (configured == null || configured.isBlank()) return false;
         Path executable = Path.of(configured).toAbsolutePath().normalize();
         return Files.isRegularFile(executable)

@@ -7,7 +7,7 @@ type CampaignV1Hero = {
   theme: { primaryColor: string; secondaryColor: string; backgroundColor: string; textColor: string };
   hero: {
     phone: string; email: string; logo: string; backgroundImage: string; eyebrow: string; title: string;
-    description: string; ctaLabel: string; ctaUrl: string; highlights: Array<{ title: string; description: string }>;
+    description: string; ctaLabel: string; ctaUrl: string; highlights: Array<{ title: string; description: string }>; backgroundPresentation?: import("@shared/types/media").ResponsiveMediaPresentation;
   };
 };
 

@@ -104,11 +104,17 @@ class CmsReadinessServiceTest {
     void rejectsAProductionFfmpegThatDisappearsAfterStartupValidation() throws IOException {
         String executableName = System.getProperty("os.name", "")
             .toLowerCase(java.util.Locale.ROOT).contains("win") ? "ffmpeg.exe" : "ffmpeg";
+        String probeName = System.getProperty("os.name", "")
+            .toLowerCase(java.util.Locale.ROOT).contains("win") ? "ffprobe.exe" : "ffprobe";
         Path ffmpeg = root.resolve("stable-tools").resolve(executableName).toAbsolutePath();
+        Path ffprobe = root.resolve("stable-tools").resolve(probeName).toAbsolutePath();
         Files.createDirectories(ffmpeg.getParent());
         Files.write(ffmpeg, new byte[] {0});
+        Files.write(ffprobe, new byte[] {0});
         ffmpeg.toFile().setExecutable(true, false);
+        ffprobe.toFile().setExecutable(true, false);
         assertThat(Files.isExecutable(ffmpeg)).isTrue();
+        assertThat(Files.isExecutable(ffprobe)).isTrue();
 
         Map<String, String> environment = new LinkedHashMap<>();
         environment.put("NODE_ENV", "production");
@@ -116,6 +122,7 @@ class CmsReadinessServiceTest {
         environment.put("SESSION_SECRET", "session-secret-with-more-than-32-characters");
         environment.put("ADMIN_SETUP_CODE", "setup-code-2026-safe-value");
         environment.put("FFMPEG_PATH", ffmpeg.toString());
+        environment.put("FFPROBE_PATH", ffprobe.toString());
         environment.put("CMS_STORAGE_ROOT", root.resolve("production-storage").toString());
         environment.put("FRONTEND_PUBLIC_DIR", root.resolve("production-public").toString());
         CmsProperties properties = CmsProperties.from(environment, projectRoot());

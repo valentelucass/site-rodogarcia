@@ -5,6 +5,7 @@ import { X } from "@phosphor-icons/react";
 import { usePhoneMask } from "@/hooks/usePhoneMask";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
 import { api } from "@/lib/routes";
+import { mediaObjectPosition } from "@/lib/mediaPresentation";
 import { getStoredConsent, type StoredConsent } from "@/components/analytics/ConsentBanner";
 import { DEFAULT_POPUP_CONFIG, type PopupConfig } from "@shared/lib/popupDefaults";
 
@@ -438,6 +439,9 @@ export default function ExitPopup() {
   const popupTitle = modeConfig?.title || config.title;
   const popupDescription = modeConfig?.description || config.description;
   const popupImage = modeConfig?.image || config.image;
+  const popupImagePresentation = mobileLayout
+    ? (config.mobile?.image ? config.mobile.imagePresentation : config.imagePresentation)
+    : (config.desktop?.image ? config.desktop.imagePresentation : config.imagePresentation);
   const popupBadge = mobileLayout ? config.mobile?.sheetTitle || config.badgeText : config.badgeText;
   const sideBySideDetails = config.enableName && config.enablePhone;
   const cmsPreview = isCmsPopupPreview();
@@ -508,6 +512,7 @@ export default function ExitPopup() {
                 src={popupImage}
                 alt=""
                 className={`${mobileLayout ? "h-44" : "h-full min-h-[390px]"} w-full object-cover`}
+                style={{ objectPosition: mediaObjectPosition(popupImagePresentation, mobileLayout ? "mobile" : "desktop") }}
               />
             ) : (
               <div

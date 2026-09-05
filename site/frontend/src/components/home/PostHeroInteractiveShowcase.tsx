@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import type { HomeSection1 } from "@/types/content";
+import { PresentedVideo } from "@/components/media/PresentedVideo";
+import { PresentedImage } from "@/components/media/PresentedImage";
 
 interface PostHeroInteractiveShowcaseProps {
   section: HomeSection1;
@@ -109,34 +111,18 @@ export default function PostHeroInteractiveShowcase({
               }}
             >
               {isVideoAsset(mediaSrc) ? (
-                <video
+                <PresentedVideo
                   key={mediaSrc}
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
+                  src={mediaSrc}
+                  mobileSrc={mobileMediaSrc}
+                  presentation={activeItem.media.presentation}
+                  mobileBreakpoint={1023}
                   preload="metadata"
                   poster={activeItem.media.poster}
                   className="aspect-square w-full object-cover"
-                >
-                  {mobileMediaSrc !== mediaSrc ? (
-                    <source media="(max-width: 1023px)" src={mobileMediaSrc} />
-                  ) : null}
-                  <source src={mediaSrc} />
-                </video>
+                />
               ) : (
-                <picture key={mediaSrc} className="contents">
-                  {mobileMediaSrc !== mediaSrc ? (
-                    <source media="(max-width: 1023px)" srcSet={mobileMediaSrc} />
-                  ) : null}
-                  <img
-                    src={mediaSrc}
-                    alt={activeItem.media.alt || activeItem.title}
-                    className="aspect-square w-full object-cover"
-                    loading="lazy"
-                    decoding="async"
-                  />
-                </picture>
+                <PresentedImage key={mediaSrc} src={mediaSrc} mobileSrc={mobileMediaSrc} presentation={activeItem.media.presentation} mobileBreakpoint={1023} alt={activeItem.media.alt || activeItem.title} className="aspect-square w-full object-cover" loading="lazy" decoding="async" />
               )}
             </div>
           </div>

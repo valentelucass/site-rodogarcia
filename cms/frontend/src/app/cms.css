@@ -67,9 +67,10 @@ html[data-landing-preview-fullscreen="true"] [data-developer-mobile-navigation="
 
 .cms-dark-background {
   position: absolute;
-  inset: 0;
+  inset: -12px;
   z-index: 0;
   pointer-events: none;
+  filter: blur(2px);
   background:
     linear-gradient(rgba(125, 211, 252, 0.052) 1px, transparent 1px),
     linear-gradient(90deg, rgba(125, 211, 252, 0.052) 1px, transparent 1px);
@@ -267,6 +268,33 @@ html[data-landing-preview-fullscreen="true"] [data-developer-mobile-navigation="
 .cms-sidebar-item--activating .cms-sidebar-item__label { will-change: transform, opacity; animation: cms-sidebar-label-slide 400ms cubic-bezier(0.16, 1, 0.3, 1); }
 .cms-sidebar-toggle:active svg { animation: cms-sidebar-icon-pop 260ms cubic-bezier(0.16, 1, 0.3, 1); }
 
+@keyframes cms-collection-action-remove {
+  0%, 100% { transform: rotate(0); }
+  35% { transform: rotate(-9deg) scale(1.08); }
+  70% { transform: rotate(7deg) scale(1.04); }
+}
+@keyframes cms-collection-action-up {
+  0% { transform: translateY(0); }
+  55% { transform: translateY(-4px); }
+  100% { transform: translateY(-2px); }
+}
+@keyframes cms-collection-action-down {
+  0% { transform: translateY(0); }
+  55% { transform: translateY(4px); }
+  100% { transform: translateY(2px); }
+}
+[data-cms-collection-action] { will-change: transform; }
+[data-cms-collection-action] svg { transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1); }
+[data-cms-collection-action="up"]:not(:disabled):hover svg,
+[data-cms-collection-action="up"]:not(:disabled):focus-visible svg { transform: translateY(-2px); }
+[data-cms-collection-action="down"]:not(:disabled):hover svg,
+[data-cms-collection-action="down"]:not(:disabled):focus-visible svg { transform: translateY(2px); }
+[data-cms-collection-action="remove"]:not(:disabled):hover svg,
+[data-cms-collection-action="remove"]:not(:disabled):focus-visible svg { animation: cms-collection-action-remove 420ms cubic-bezier(0.16, 1, 0.3, 1); }
+[data-cms-collection-action="up"]:not(:disabled):active svg { animation: cms-collection-action-up 260ms cubic-bezier(0.16, 1, 0.3, 1); }
+[data-cms-collection-action="down"]:not(:disabled):active svg { animation: cms-collection-action-down 260ms cubic-bezier(0.16, 1, 0.3, 1); }
+[data-cms-collection-action]:active { transform: scale(0.95); }
+
 [data-admin-shell="true"] select {
   color-scheme: light;
   font-family: var(--font-body);
@@ -285,6 +313,33 @@ html[data-landing-preview-fullscreen="true"] [data-developer-mobile-navigation="
   line-height: 1.4;
 }
 [data-admin-shell="true"] select option { padding: 0.625rem 0.75rem; }
+
+/* O modal de enquadramento é renderizado no shell para herdar tema e área útil do CMS. */
+[data-admin-shell="true"]:is([data-admin-theme="dark"], .cms-dark) [data-media-placement-dialog="true"] .media-placement-dialog__surface {
+  border-color: rgba(125, 211, 252, 0.22);
+  background: #142844 !important;
+  color: #e7edf8;
+  color-scheme: dark;
+}
+
+[data-admin-shell="true"]:is([data-admin-theme="dark"], .cms-dark) [data-media-placement-dialog="true"] .media-placement-dialog__surface [class*="bg-white"] { background-color: #132b4a !important; }
+[data-admin-shell="true"]:is([data-admin-theme="dark"], .cms-dark) [data-media-placement-dialog="true"] .media-placement-dialog__surface [class*="border-slate-"] { border-color: rgba(148, 163, 184, 0.22) !important; }
+[data-admin-shell="true"]:is([data-admin-theme="dark"], .cms-dark) [data-media-placement-dialog="true"] .media-placement-dialog__surface [class*="text-slate-"] { color: #c9d5e5 !important; }
+
+/* A Biblioteca é portalizada no shell: conserva o tema e evita ser cortada pelo card que a abriu. */
+[data-admin-shell="true"]:is([data-admin-theme="dark"], .cms-dark) [data-media-library-dialog="true"] .media-library-dialog__surface {
+  border-color: rgba(125, 211, 252, 0.22);
+  background: #142844 !important;
+  color: #e7edf8;
+  color-scheme: dark;
+}
+
+[data-admin-shell="true"]:is([data-admin-theme="dark"], .cms-dark) [data-media-library-dialog="true"] .media-library-dialog__surface [class*="bg-white"] { background-color: #132b4a !important; }
+[data-admin-shell="true"]:is([data-admin-theme="dark"], .cms-dark) [data-media-library-dialog="true"] .media-library-dialog__surface [class*="bg-slate-50"] { background-color: #1a3456 !important; }
+[data-admin-shell="true"]:is([data-admin-theme="dark"], .cms-dark) [data-media-library-dialog="true"] .media-library-dialog__surface [class*="bg-slate-100"] { background-color: #213b60 !important; }
+[data-admin-shell="true"]:is([data-admin-theme="dark"], .cms-dark) [data-media-library-dialog="true"] .media-library-dialog__surface [class*="hover:bg-slate-200"]:hover { background-color: #294a73 !important; }
+[data-admin-shell="true"]:is([data-admin-theme="dark"], .cms-dark) [data-media-library-dialog="true"] .media-library-dialog__surface [class*="border-slate-"] { border-color: rgba(148, 163, 184, 0.22) !important; }
+[data-admin-shell="true"]:is([data-admin-theme="dark"], .cms-dark) [data-media-library-dialog="true"] .media-library-dialog__surface [class*="text-slate-"] { color: #c9d5e5 !important; }
 
 /* A edição rápida pertence ao CMS; a paleta configurável só deve atingir a prévia da campanha. */
 .landing-editor-dialog__surface {
@@ -339,7 +394,8 @@ html[data-landing-preview-fullscreen="true"] [data-developer-mobile-navigation="
   .cms-sidebar-item--activating::after,
   .cms-sidebar-item--activating .cms-sidebar-item__icon,
   .cms-sidebar-item--activating .cms-sidebar-item__label,
-  .cms-sidebar-toggle:active svg {
+  .cms-sidebar-toggle:active svg,
+  [data-cms-collection-action] svg {
     animation: none;
     transition-duration: 0ms;
   }

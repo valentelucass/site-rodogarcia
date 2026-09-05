@@ -51,6 +51,7 @@ class MediaServiceTest {
         assertThat(record.has("originalUrl")).isFalse();
         assertThat(record.path("width").intValue()).isEqualTo(32);
         assertThat(record.path("height").intValue()).isEqualTo(24);
+        assertThat(record.path("aspectRatio").doubleValue()).isEqualTo(1.3333d);
         for (String field : List.of("url", "thumbnailUrl", "mediumUrl", "largeUrl")) {
             byte[] webp = Files.readAllBytes(uploadPath(context, record.path(field).asText()));
             assertThat(new String(webp, 0, 4, StandardCharsets.US_ASCII)).isEqualTo("RIFF");
@@ -68,6 +69,26 @@ class MediaServiceTest {
         assertThat(thumbnail.getWidth()).isEqualTo(420);
         assertThat(thumbnail.getHeight()).isEqualTo(260);
         assertThat(context.store.readArray(context.properties.storagePaths().mediaLibrary())).hasSize(1);
+    }
+
+    @Test
+    void readsTechnicalMetadataForVersionedImagesNotYetInTheLibrary() throws Exception {
+        MediaTestContext context = new MediaTestContext(root, CLOCK);
+        Files.createDirectories(context.properties.frontendPublicDir());
+        Files.write(context.properties.frontendPublicDir().resolve("operacao.png"), png(80, 45));
+
+        JsonNode record = null;
+        for (JsonNode item : context.media.listAdminImages()) {
+            if (item.path("url").asText().equals("/operacao.png")) {
+                record = item;
+                break;
+            }
+        }
+
+        assertThat(record).isNotNull();
+        assertThat(record.path("width").intValue()).isEqualTo(80);
+        assertThat(record.path("height").intValue()).isEqualTo(45);
+        assertThat(record.path("aspectRatio").doubleValue()).isEqualTo(1.7778d);
     }
 
     @Test

@@ -1,3 +1,5 @@
+import type { ResponsiveMediaPresentation } from "./media";
+
 export type ButtonVariant = "solid" | "outline";
 export type HomeMediaType = "image" | "video";
 export type HomeHeroMode = "text-media-buttons" | "text-media" | "media-only";
@@ -21,6 +23,7 @@ export interface HomeMedia {
   poster?: string;
   desktopSrc?: string;
   mobileSrc?: string;
+  presentation?: ResponsiveMediaPresentation;
 }
 
 export interface HomeHeroButton {
@@ -150,7 +153,9 @@ export interface HomePageContent {
 export interface ServicesModuleImage {
   src: string;
   alt: string;
+  /** Mantido temporariamente para ler conteúdo legado durante a migração. */
   position?: string;
+  presentation?: ResponsiveMediaPresentation;
 }
 
 export interface ServicesModule {
@@ -197,6 +202,7 @@ export interface PageButton {
 export interface PageMedia {
   src: string;
   alt: string;
+  presentation?: ResponsiveMediaPresentation;
 }
 
 export interface PageFaqItem {
@@ -540,4 +546,3 @@ export interface OperationalUnit {
   createdAt?: string;
   updatedAt?: string;
 }
-

@@ -28,7 +28,7 @@ export const developerGhostButtonClassName =
   "inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-transparent bg-slate-100/70 px-4 py-2 text-sm font-semibold text-slate-600 transition-all duration-300 hover:bg-slate-200/80 hover:text-slate-950 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:active:scale-100";
 
 export const developerDangerButtonClassName =
-  "inline-flex items-center justify-center gap-1.5 rounded-lg border border-red-500/20 bg-red-50 px-3 py-1.5 text-xs font-bold text-red-600 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_8px_16px_rgba(239,68,68,0.15)] hover:bg-red-100 hover:border-red-500/30 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 disabled:active:scale-100";
+  "inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-red-500/20 bg-red-50 px-4 py-2 text-sm font-bold text-red-600 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_8px_16px_rgba(239,68,68,0.15)] hover:bg-red-100 hover:border-red-500/30 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 disabled:active:scale-100";
 
 export const developerSplitLayoutClassName =
   "mt-5 grid gap-5 xl:grid-cols-[minmax(420px,640px)_minmax(0,1fr)]";
@@ -98,15 +98,17 @@ export function DeveloperSectionHeading({
   description,
   action,
   tooltip,
+  className,
 }: {
   eyebrow?: string;
   title: string;
   description?: string;
   action?: ReactNode;
   tooltip?: string;
+  className?: string;
 }) {
   return (
-    <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+    <div className={cn("mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between", className)}>
       <div>
         {eyebrow ? (
           <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--primary)]">

@@ -20,6 +20,9 @@ class ContentDefaultsTest {
         assertThat(content.path("footerLinks").path("help").path("faq").path("items").size()).isEqualTo(6);
         assertThat(content.path("headerNavigation").path("items").size()).isEqualTo(10);
         assertThat(content.has("improvementsPage")).isTrue();
+        assertThat(content.path("aboutPage").path("hero").path("media")
+            .path("presentation").path("desktop").path("focalPoint").path("x").asInt())
+            .isEqualTo(50);
     }
 
     @Test

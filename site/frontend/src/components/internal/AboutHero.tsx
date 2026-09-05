@@ -4,6 +4,8 @@ import { motion } from "framer-motion";
 import { ActionLink, PageContainer, type PageAction } from "./PageContent";
 import { site } from "@/lib/routes";
 import { cn } from "@/lib/utils";
+import { PresentedImage } from "@/components/media/PresentedImage";
+import type { ResponsiveMediaPresentation } from "@shared/types/media";
 
 interface StatItem {
   value: string;
@@ -17,6 +19,7 @@ interface AboutHeroProps {
   stats: StatItem[];
   image: string;
   imageAlt?: string;
+  imagePresentation?: ResponsiveMediaPresentation;
   buttons?: PageAction[];
 }
 
@@ -27,6 +30,7 @@ export function AboutHero({
   stats,
   image,
   imageAlt,
+  imagePresentation,
   buttons,
 }: AboutHeroProps) {
   const heroButtons = buttons?.length
@@ -124,14 +128,14 @@ export function AboutHero({
 
             <div className="relative z-10 aspect-[4/3] overflow-hidden rounded-[24px] border border-white/10 bg-[#0f172a] shadow-2xl sm:aspect-[3/2] sm:rounded-[34px]">
               <div className="pointer-events-none absolute inset-0 z-20 bg-[linear-gradient(180deg,rgba(255,255,255,0.04)_0%,rgba(2,6,23,0.1)_100%)]" />
-              <motion.img
+              <motion.div
                 initial={{ scale: 1.05, filter: "blur(2px)" }}
                 animate={{ scale: 1, filter: "blur(0px)" }}
                 transition={{ duration: 1.5, ease: "easeOut" }}
-                src={image}
-                alt={imageAlt || title}
-                className="h-full w-full object-cover opacity-80 mix-blend-luminosity"
-              />
+                className="h-full w-full"
+              >
+                <PresentedImage src={image} presentation={imagePresentation} alt={imageAlt || title} className="h-full w-full object-cover opacity-80 mix-blend-luminosity" />
+              </motion.div>
               <div className="pointer-events-none absolute inset-0 z-30 bg-[url('data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMjAwIDIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZmlsdGVyIGlkPSJub2lzZUZpbHRlciI+PGZlVHVyYnVsZW5jZSB0eXBlPSJmcmFjdGFsTm9pc2UiIGJhc2VGcmVxdWVuY3k9IjAuNjUiIG51bU9jdGF2ZXM9IjMiIHN0aXRjaFRpbGVzPSJzdGl0Y2giLz48L2ZpbHRlcj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWx0ZXI9InVybCgjbm9pc2VGaWx0ZXIpIi8+PC9zdmc+')] opacity-[0.1] mix-blend-overlay" />
               <div className="absolute inset-0 z-10 bg-gradient-to-t from-[var(--foreground)] via-transparent to-transparent" />
             </div>

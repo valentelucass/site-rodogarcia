@@ -8,6 +8,7 @@ import {
   invalidateAdminResource,
 } from "@/hooks/useAdminResource";
 import { DeveloperMediaField, DeveloperMediaPreview } from "@/components/developer/DeveloperMediaField";
+import { MediaPlacementEditor } from "@/components/developer/MediaPlacementEditor";
 import { DeveloperResponsivePreview } from "@/components/developer/DeveloperResponsivePreview";
 import {
   DeveloperCard,
@@ -145,6 +146,7 @@ export default function DeveloperServicesPage() {
   const [saving, setSaving] = useState<SaveKey | "">("");
   const [status, setStatus] = useState<{ tone: "success" | "error" | "info"; text: string } | null>(null);
   const [activeModuleIndex, setActiveModuleIndex] = useState(0);
+  const [moduleFramingOpen, setModuleFramingOpen] = useState(false);
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
   const [previewRevision, setPreviewRevision] = useState(0);
 
@@ -291,7 +293,10 @@ export default function DeveloperServicesPage() {
                   <button
                     key={module.id}
                     type="button"
-                    onClick={() => setActiveModuleIndex(moduleIndex)}
+                    onClick={() => {
+                      setActiveModuleIndex(moduleIndex);
+                      setModuleFramingOpen(false);
+                    }}
                     className={cn(
                       "relative rounded-[18px] border px-4 py-3 text-left transition-all duration-200",
                       "hover:-translate-y-0.5 hover:border-[var(--primary)]/35 hover:bg-white",
@@ -333,13 +338,15 @@ export default function DeveloperServicesPage() {
                   <p className="mb-3 text-sm font-semibold text-[var(--foreground)]">
                     Imagem principal <span className="text-[var(--primary)]">*</span>
                   </p>
-                  <div className="grid gap-4 xl:grid-cols-[minmax(250px,0.8fr)_minmax(0,1.9fr)] xl:items-start">
+                  <div className="grid gap-4 md:grid-cols-[280px_minmax(0,1fr)] md:items-start">
                     <DeveloperMediaPreview
                       value={activeModule.image.src}
                       previewAlt={activeModule.image.alt || activeModule.eyebrow}
                       mediaType="image"
+                      onFrame={() => setModuleFramingOpen(true)}
+                      align="start"
                     />
-                    <div className="grid gap-4 xl:grid-cols-2 xl:items-start">
+                    <div className="grid gap-4">
                       <DeveloperMediaField
                       label="Arquivo selecionado"
                       required
@@ -367,30 +374,22 @@ export default function DeveloperServicesPage() {
                       />
                       <CountHint value={activeModule.image.alt} maxLength={160} />
                       </DeveloperField>
-                      <DeveloperField
-                      label="Enquadramento da imagem"
-                      hint="Escolha o ponto principal preservado no corte do card."
-                      className="xl:col-span-2"
-                      >
-                      <select
-                        value={activeModule.image.position ?? ""}
-                        onChange={(event) =>
-                          updateModule(activeModuleIndex, {
-                            image: { ...activeModule.image, position: event.target.value },
-                          })
-                        }
-                        className={developerInputClassName}
-                      >
-                        <option value="">Centralizado</option>
-                        <option value="object-top">Topo</option>
-                        <option value="object-bottom">Base</option>
-                        <option value="object-left">Esquerda</option>
-                        <option value="object-right">Direita</option>
-                        <option value="object-[50%_45%]">Centro levemente acima</option>
-                      </select>
-                      </DeveloperField>
                     </div>
                   </div>
+                  <MediaPlacementEditor
+                    label="a imagem deste módulo em /servicos"
+                    src={activeModule.image.src}
+                    alt={activeModule.image.alt}
+                    mediaType="image"
+                    value={activeModule.image.presentation}
+                    frameAspectRatio="5:4 no desktop"
+                    onChange={(presentation) => updateModule(activeModuleIndex, {
+                      image: { ...activeModule.image, presentation },
+                    })}
+                    open={moduleFramingOpen}
+                    onOpenChange={setModuleFramingOpen}
+                    hideTrigger
+                  />
                 </div>
 
                 <div className={cn(priorityFormGroupClassName, "mt-4 grid gap-5 lg:grid-cols-2")}>

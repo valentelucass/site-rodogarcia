@@ -10,6 +10,8 @@ import {
 } from "react";
 import Link from "next/link";
 import type { HomeHeroButton, HomeHeroSlide } from "@/types/content";
+import { PresentedVideo } from "@/components/media/PresentedVideo";
+import { PresentedImage } from "@/components/media/PresentedImage";
 
 interface HeroCarouselProps {
   slides: HomeHeroSlide[];
@@ -139,6 +141,7 @@ export default function HeroCarousel({ slides }: HeroCarouselProps) {
                     blurred={!isImageOnly}
                     priority={index === 0}
                     active={isCurrent}
+                    presentation={slide.media.presentation}
                     className="h-full w-full object-cover"
                   />
                   {isImageOnly ? (
@@ -183,6 +186,7 @@ export default function HeroCarousel({ slides }: HeroCarouselProps) {
                           alt={slide.media.alt || title}
                           active={isCurrent}
                           priority={index === 0}
+                          presentation={slide.media.presentation}
                           className="h-[260px] w-full object-contain object-top"
                         />
                       </div>
@@ -196,6 +200,7 @@ export default function HeroCarousel({ slides }: HeroCarouselProps) {
                           alt={slide.media.alt || title}
                           active={isCurrent}
                           priority={index === 0}
+                          presentation={slide.media.presentation}
                           className="relative z-10 max-h-[62vh] w-auto max-w-[min(100%,760px)] object-contain drop-shadow-[0_24px_70px_rgba(2,6,23,0.45)]"
                         />
                       </div>
@@ -251,6 +256,7 @@ function HeroMedia({
   decorative = false,
   blurred = false,
   priority = false,
+  presentation,
 }: {
   src: string;
   mobileSrc?: string;
@@ -261,6 +267,7 @@ function HeroMedia({
   decorative?: boolean;
   blurred?: boolean;
   priority?: boolean;
+  presentation?: HomeHeroSlide["media"]["presentation"];
 }) {
   const motionClass = blurred
     ? active
@@ -273,41 +280,22 @@ function HeroMedia({
 
   if (isVideoAsset(src)) {
     return (
-      <video
+      <PresentedVideo
         className={`${className} ${motionClass} ${filterClass} transition-transform duration-[1400ms] ease-[cubic-bezier(0.16,1,0.3,1)]`}
-        autoPlay
-        loop
-        muted
-        playsInline
+        src={src}
+        mobileSrc={mobileSrc}
+        presentation={presentation}
+        mobileBreakpoint={1023}
+        active={active}
         preload={priority ? "auto" : "metadata"}
         poster={poster || undefined}
         aria-hidden={decorative}
         aria-label={decorative ? undefined : alt}
-      >
-        {mobileSrc && mobileSrc !== src ? (
-          <source media="(max-width: 1023px)" src={mobileSrc} />
-        ) : null}
-        <source src={src} />
-      </video>
+      />
     );
   }
 
-  return (
-    <picture className="contents">
-      {mobileSrc && mobileSrc !== src ? (
-        <source media="(max-width: 1023px)" srcSet={mobileSrc} />
-      ) : null}
-      <img
-        src={src}
-        alt={decorative ? "" : alt}
-        aria-hidden={decorative}
-        className={`${className} ${motionClass} ${filterClass} transition-transform duration-[1400ms] ease-[cubic-bezier(0.16,1,0.3,1)]`}
-        loading={priority ? "eager" : "lazy"}
-        decoding="async"
-        fetchPriority={priority ? "high" : "auto"}
-      />
-    </picture>
-  );
+  return <PresentedImage src={src} mobileSrc={mobileSrc} presentation={presentation} mobileBreakpoint={1023} alt={decorative ? "" : alt} aria-hidden={decorative} className={`${className} ${motionClass} ${filterClass} transition-transform duration-[1400ms] ease-[cubic-bezier(0.16,1,0.3,1)]`} loading={priority ? "eager" : "lazy"} decoding="async" fetchPriority={priority ? "high" : "auto"} />;
 }
 
 function HeroActionLink({

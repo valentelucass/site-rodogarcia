@@ -7,6 +7,7 @@ import java.util.Map;
 import br.com.rodogarcia.cms.backend.model.content.ContentDefaults;
 import br.com.rodogarcia.cms.backend.model.content.ContentJson;
 import br.com.rodogarcia.cms.backend.model.content.ContentKeys;
+import br.com.rodogarcia.cms.backend.model.content.ContentMediaPresentations;
 import org.springframework.stereotype.Service;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
@@ -135,6 +136,7 @@ public final class ContentMigrationService {
         content.set("footerLinks", sanitizer.footer(content.get("footerLinks")));
         if (!content.has("headerNavigation") || !content.get("headerNavigation").isObject()) persist = true;
         content.set("headerNavigation", sanitizer.navigation(content.get("headerNavigation")));
+        persist |= ContentMediaPresentations.normalizeContent(content, mapper);
 
         ObjectNode normalized = mapper.createObjectNode();
         for (String key : CONTENT_KEYS) {

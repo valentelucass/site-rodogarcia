@@ -5,9 +5,10 @@ import {
   useEffectEvent,
   useRef,
   useState,
-  type ComponentPropsWithoutRef,
 } from "react";
 import type { HomeOperationItem, HomeSection2 } from "@/types/content";
+import { PresentedVideo } from "@/components/media/PresentedVideo";
+import { PresentedImage } from "@/components/media/PresentedImage";
 
 interface OperationsCarouselProps {
   section: HomeSection2;
@@ -21,6 +22,7 @@ interface SpotlightSlide {
   mobileAsset: string;
   alt: string;
   poster: string;
+  presentation: HomeOperationItem["media"]["presentation"];
 }
 
 const AUTO_ADVANCE_MS = 5600;
@@ -70,6 +72,7 @@ function buildSpotlightSlides(slides: HomeOperationItem[]): SpotlightSlide[] {
         mobileAsset: mobileAsset || desktopAsset,
         alt: normalizeText(slide.media.alt) || title,
         poster: resolveAssetPath(slide.media.poster),
+        presentation: slide.media.presentation,
       } satisfies SpotlightSlide;
     })
     .filter((slide): slide is SpotlightSlide => Boolean(slide));
@@ -81,30 +84,15 @@ function SpotlightMedia({
   active,
   className,
   poster,
+  presentation,
 }: {
   src: string;
   alt: string;
   active: boolean;
   className: string;
   poster?: string;
+  presentation?: HomeOperationItem["media"]["presentation"];
 }) {
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-
-  useEffect(() => {
-    if (!isVideoAsset(src)) return;
-
-    const video = videoRef.current;
-    if (!video) return;
-
-    if (active) {
-      void video.play().catch(() => {});
-      return;
-    }
-
-    video.pause();
-    video.currentTime = 0;
-  }, [active, src]);
-
   if (!src) {
     return (
       <div
@@ -116,12 +104,11 @@ function SpotlightMedia({
 
   if (isVideoAsset(src)) {
     return (
-      <video
-        ref={videoRef}
+      <PresentedVideo
         src={src}
         muted
-        loop
-        playsInline
+        active={active}
+        presentation={presentation}
         preload="metadata"
         poster={poster || undefined}
         className={className}
@@ -129,15 +116,7 @@ function SpotlightMedia({
     );
   }
 
-  const imageProps: ComponentPropsWithoutRef<"img"> = {
-    src,
-    alt,
-    className,
-    loading: "lazy",
-    decoding: "async",
-  };
-
-  return <img {...imageProps} />;
+  return <PresentedImage src={src} alt={alt} presentation={presentation} className={className} loading="lazy" decoding="async" />;
 }
 
 export default function OperationsCarousel({ section }: OperationsCarouselProps) {
@@ -319,6 +298,7 @@ export default function OperationsCarousel({ section }: OperationsCarouselProps)
                     src={slide.desktopAsset}
                     alt={slide.alt || "Operação conectada Rodogarcia"}
                     poster={slide.poster}
+                    presentation={slide.presentation}
                     active={isActive}
                     className={`h-full w-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] ${
                       isActive ? "scale-[1.02]" : "scale-100"
@@ -394,7 +374,8 @@ export default function OperationsCarousel({ section }: OperationsCarouselProps)
                     <SpotlightMedia
                       src={slide.mobileAsset}
                       alt={slide.alt || "Operação conectada Rodogarcia"}
-                      poster={slide.poster}
+                    poster={slide.poster}
+                    presentation={slide.presentation}
                       active={isActive}
                       className={`h-full w-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] ${
                         isActive ? "scale-[1.02]" : "scale-100"

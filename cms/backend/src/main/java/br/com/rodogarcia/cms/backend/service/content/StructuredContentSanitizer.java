@@ -11,6 +11,7 @@ import br.com.rodogarcia.cms.backend.model.content.ContentDefaults;
 import br.com.rodogarcia.cms.backend.model.content.ContentJson;
 import br.com.rodogarcia.cms.backend.model.content.ContentKeys;
 import br.com.rodogarcia.cms.backend.model.content.ContentTime;
+import br.com.rodogarcia.cms.backend.model.content.MediaPresentation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import tools.jackson.databind.JsonNode;
@@ -562,6 +563,9 @@ public final class StructuredContentSanitizer {
         ObjectNode result = mapper.createObjectNode();
         result.put("src", safeImage(src, ContentJson.text(fallback.get("src"), 600)));
         result.put("alt", textOr(source.get("alt"), fallback.get("alt"), 160));
+        result.set("presentation", MediaPresentation.normalize(
+            mapper, source.get("presentation"), false, ""
+        ));
         return result;
     }
 

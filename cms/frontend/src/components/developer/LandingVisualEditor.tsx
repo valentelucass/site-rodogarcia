@@ -4,6 +4,7 @@ import { useEffect, useLayoutEffect, useRef, useState, type ChangeEvent } from "
 import { createPortal } from "react-dom";
 import { ArrowsIn, ArrowsOut, Desktop, DeviceMobile, PencilSimple, Plus, Rectangle, SquaresFour, Trash, UploadSimple, X } from "@phosphor-icons/react";
 import { DeveloperHelp } from "./ui";
+import { MediaPlacementEditor } from "./MediaPlacementEditor";
 import { type CampaignV1SectionKey, type CampaignV1Sections } from "./landing-templates/CampaignV1SectionsEditor";
 import { CAMPAIGN_V1_EDIT_TARGETS, CampaignV1FocusedSectionEditor, campaignV1EditTargetTitle, type CampaignV1EditTarget } from "./landing-templates/CampaignV1FocusedSectionEditor";
 import { CampaignV1CoverageMap } from "./landing-templates/CampaignV1CoverageMap";
@@ -17,6 +18,7 @@ type LandingPreview = CampaignV1Sections & {
     email: string;
     logo: string;
     backgroundImage: string;
+    backgroundPresentation?: import("@shared/types/media").ResponsiveMediaPresentation;
     eyebrow: string;
     title: string;
     description: string;
@@ -32,6 +34,9 @@ export type LandingMedia = {
   kind: "image" | "video" | string;
   alt?: string;
   poster?: string;
+  width?: number;
+  height?: number;
+  durationSeconds?: number;
   createdAt: string;
 };
 
@@ -437,6 +442,8 @@ export function LandingVisualEditor<T extends LandingPreview>({
   const activeViewport = PREVIEW_VIEWPORTS.find((viewport) => viewport.key === previewMode);
   const activeViewportKey: IndividualPreviewMode = activeViewport?.key ?? "desktop";
   const mobileCanvas = activeViewportKey === "mobile";
+  const heroPlacement = mobileCanvas ? hero.backgroundPresentation?.mobile ?? hero.backgroundPresentation?.desktop : hero.backgroundPresentation?.desktop;
+  const heroBackgroundPosition = `${heroPlacement?.focalPoint.x ?? 50}% ${heroPlacement?.focalPoint.y ?? 50}%`;
   const tabletCanvas = activeViewportKey === "tablet";
   const heroCanvasPadding = mobileCanvas ? "px-5 pb-8" : tabletCanvas ? "px-7 pb-9" : "px-6 pb-10 sm:px-10";
   const heroContactPadding = mobileCanvas ? "-mx-5 px-5" : tabletCanvas ? "-mx-7 px-7" : "-mx-6 px-6 sm:-mx-10 sm:w-[calc(100%+5rem)] sm:px-10";
@@ -651,7 +658,7 @@ export function LandingVisualEditor<T extends LandingPreview>({
     const canvasClassName = fullscreen ? "h-full w-full max-h-none rounded-none shadow-none" : "max-h-[76vh] rounded-md shadow-2xl";
 
     return <div data-landing-preview="true" className={surfaceClassName}>{previewMode === "compare" ? <div className="grid w-full min-w-[920px] gap-3 lg:grid-cols-[minmax(0,3.7fr)_minmax(0,2fr)_minmax(190px,1fr)]">{PREVIEW_VIEWPORTS.map((viewport) => <LandingViewportReference key={viewport.key} viewport={viewport} landing={landing} backgroundImage={backgroundImage} logo={logo} />)}</div> : <div id={`${previewIdPrefix}-canvas`} className={`relative mx-auto overflow-y-auto bg-white transition-[width] duration-300 ${canvasClassName} ${activeViewport?.widthClass ?? "w-full"}`} style={{ color: theme.textColor, backgroundColor: theme.backgroundColor }}>
-      <section id={`${previewIdPrefix}-hero`} className={`relative min-h-[480px] overflow-hidden ${heroCanvasPadding}`} style={{ color: heroTextColor, backgroundColor: hasBackgroundImage ? theme.primaryColor : theme.backgroundColor, backgroundImage: hasBackgroundImage ? `linear-gradient(90deg, rgba(4,11,25,.88), rgba(4,11,25,.2)), url(${backgroundImage})` : undefined, backgroundSize: "cover", backgroundPosition: "center" }}>
+      <section id={`${previewIdPrefix}-hero`} className={`relative min-h-[480px] overflow-hidden ${heroCanvasPadding}`} style={{ color: heroTextColor, backgroundColor: hasBackgroundImage ? theme.primaryColor : theme.backgroundColor, backgroundImage: hasBackgroundImage ? `linear-gradient(90deg, rgba(4,11,25,.88), rgba(4,11,25,.2)), url(${backgroundImage})` : undefined, backgroundSize: "cover", backgroundPosition: heroBackgroundPosition }}>
         <EditControl label="Editar foto de fundo" onClick={() => openDialog("background")} className="bottom-4 right-3" />
         <div className={`${heroContactPadding} flex min-h-12 items-center gap-3 border-b py-3 text-xs`} style={{ background: hasBackgroundImage ? "rgba(0,0,0,.28)" : theme.backgroundColor, borderColor: hasBackgroundImage ? "rgba(255,255,255,.22)" : "rgba(17,17,17,.16)" }}><div className={`grid min-w-0 flex-1 gap-3 ${mobileCanvas ? "grid-cols-1" : "grid-cols-2"}`}><span className="truncate">{hero.phone || "Telefone"}</span>{mobileCanvas ? null : <span className="truncate text-right">{hero.email || "E-mail"}</span>}</div></div><EditControl label="Editar faixa de contatos" onClick={() => openDialog("contacts")} className="right-3 top-3" />
         <div className="relative mt-7 inline-flex min-h-12 items-center"><div>{logo ? <img src={logo} alt="Logo da landing page" className="h-12 w-auto max-w-52 object-contain object-left" /> : <><span className="block text-2xl font-black tracking-[0.08em]">SUA LOGO</span><span className="mt-1 block text-[8px] font-semibold tracking-[0.42em] opacity-60">IDENTIDADE DA CAMPANHA</span></>}</div><EditControl label="Editar logo" onClick={() => openDialog("logo")} className="-right-10 top-1" /></div>
@@ -670,7 +677,7 @@ export function LandingVisualEditor<T extends LandingPreview>({
       {dialog === "theme" ? <LandingThemeEditor theme={theme} onChange={(nextTheme) => onChange((current) => ({ ...current, theme: nextTheme }))} /> : null}
       {dialog === "contacts" ? <div className="grid gap-4 sm:grid-cols-2"><label className="text-sm font-semibold text-slate-700">Telefone<input value={hero.phone} onChange={(event) => editHero({ phone: event.target.value })} className={inputClass} /></label><label className="text-sm font-semibold text-slate-700">E-mail<input value={hero.email} onChange={(event) => editHero({ email: event.target.value })} className={inputClass} /></label></div> : null}
       {dialog === "logo" ? <LandingMediaPicker slot="logo" currentUrl={hero.logo} media={media} uploading={uploadingMedia} onSelect={(url) => editHero({ logo: url })} onUpload={onUploadMedia} onDelete={onDeleteMedia} /> : null}
-      {dialog === "background" ? <LandingMediaPicker slot="background" currentUrl={hero.backgroundImage} media={media} uploading={uploadingMedia} onSelect={(url) => editHero({ backgroundImage: url })} onUpload={onUploadMedia} onDelete={onDeleteMedia} /> : null}
+      {dialog === "background" ? <><LandingMediaPicker slot="background" currentUrl={hero.backgroundImage} media={media} uploading={uploadingMedia} onSelect={(url) => editHero({ backgroundImage: url })} onUpload={onUploadMedia} onDelete={onDeleteMedia} /><MediaPlacementEditor label="o Hero da campanha" src={hero.backgroundImage} mediaType="image" value={hero.backgroundPresentation} onChange={(backgroundPresentation) => editHero({ backgroundPresentation })} frameAspectRatio="amplo e responsivo" /></> : null}
       {dialog === "hero-copy" ? <div className="grid gap-4"><label className="text-sm font-semibold text-slate-700">Selo<input value={hero.eyebrow} onChange={(event) => editHero({ eyebrow: event.target.value })} className={inputClass} maxLength={80} /></label><label className="text-sm font-semibold text-slate-700">Título<input value={hero.title} onChange={(event) => editHero({ title: event.target.value })} className={inputClass} maxLength={180} /></label><label className="text-sm font-semibold text-slate-700">Descrição<textarea value={hero.description} onChange={(event) => editHero({ description: event.target.value })} className={`${inputClass} min-h-24 resize-y`} maxLength={900} /></label></div> : null}
       {dialog === "hero-cta" ? <div className="grid gap-4 sm:grid-cols-2"><label className="text-sm font-semibold text-slate-700">Botão<input value={hero.ctaLabel} onChange={(event) => editHero({ ctaLabel: event.target.value })} className={inputClass} maxLength={70} /></label><label className="text-sm font-semibold text-slate-700">Destino do botão<input value={hero.ctaUrl} onChange={(event) => editHero({ ctaUrl: event.target.value })} className={inputClass} maxLength={400} /></label></div> : null}
       {dialog === "highlights" ? <div><p className="text-sm font-semibold text-slate-700">Informações em destaque</p><div className="mt-2 grid gap-3 sm:grid-cols-2">{hero.highlights.map((item, index) => <div key={index} className="rounded-xl border border-slate-200 p-3"><input value={item.title} onChange={(event) => updateHighlight(index, "title", event.target.value)} placeholder="Título" className={inputClass} /><textarea value={item.description} onChange={(event) => updateHighlight(index, "description", event.target.value)} placeholder="Descrição" className={`${inputClass} min-h-20 resize-y`} /></div>)}</div>{hero.highlights.length < 4 ? <button type="button" onClick={() => editHero({ highlights: [...hero.highlights, { title: "", description: "" }] })} className="mt-3 inline-flex items-center gap-2 text-sm font-bold text-slate-950"><Plus size={16} weight="bold" />Adicionar informação</button> : null}</div> : null}

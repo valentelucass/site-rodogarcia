@@ -5,6 +5,7 @@ import java.util.Set;
 import br.com.rodogarcia.cms.backend.exception.ApiException;
 import br.com.rodogarcia.cms.backend.model.content.ContentJson;
 import br.com.rodogarcia.cms.backend.model.content.ContentKeys;
+import br.com.rodogarcia.cms.backend.model.content.MediaPresentation;
 import org.springframework.stereotype.Service;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
@@ -62,6 +63,9 @@ public final class ServicesContentAdminService {
             image.put("alt", firstText(rawImage, 160, "alt", source, "imageAlt"));
             String position = ContentJson.text(rawImage.get("position"), 60);
             image.put("position", IMAGE_POSITIONS.contains(position) ? position : "");
+            image.set("presentation", MediaPresentation.normalize(
+                mapper, rawImage.get("presentation"), false, image.path("position").asText()
+            ));
 
             ObjectNode item = mapper.createObjectNode();
             item.put("id", textOr(source.get("id"), 80, "services-module-" + (index + 1)));

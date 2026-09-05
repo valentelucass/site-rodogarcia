@@ -13,7 +13,15 @@
             "alt": "Caminhão Rodogarcia em operação",
             "poster": "",
             "desktopSrc": "",
-            "mobileSrc": ""
+            "mobileSrc": "",
+            "presentation": {
+              "desktop": {
+                "focalPoint": {
+                  "x": 50,
+                  "y": 50
+                }
+              }
+            }
           },
           "active": true,
           "mode": "text-media-buttons",
@@ -45,7 +53,15 @@
             "alt": "Operacao Rodogarcia",
             "poster": "",
             "desktopSrc": "",
-            "mobileSrc": ""
+            "mobileSrc": "",
+            "presentation": {
+              "desktop": {
+                "focalPoint": {
+                  "x": 50,
+                  "y": 50
+                }
+              }
+            }
           },
           "active": true,
           "mode": "text-media-buttons",
@@ -77,7 +93,15 @@
             "alt": "Atendimento Rodogarcia",
             "poster": "",
             "desktopSrc": "",
-            "mobileSrc": ""
+            "mobileSrc": "",
+            "presentation": {
+              "desktop": {
+                "focalPoint": {
+                  "x": 50,
+                  "y": 50
+                }
+              }
+            }
           },
           "active": true,
           "mode": "text-media-buttons",
@@ -109,11 +133,19 @@
             "alt": "Banner visual Rodogarcia",
             "poster": "",
             "desktopSrc": "",
-            "mobileSrc": ""
+            "mobileSrc": "",
+            "presentation": {
+              "desktop": {
+                "focalPoint": {
+                  "x": 50,
+                  "y": 50
+                }
+              }
+            }
           },
           "active": true,
           "mode": "media-only",
-          "buttons": []
+          "buttons": [ ]
         },
         {
           "id": "home-hero-4",
@@ -126,11 +158,19 @@
             "alt": "Banner Rodogarcia",
             "poster": "",
             "desktopSrc": "",
-            "mobileSrc": ""
+            "mobileSrc": "",
+            "presentation": {
+              "desktop": {
+                "focalPoint": {
+                  "x": 50,
+                  "y": 50
+                }
+              }
+            }
           },
           "active": true,
           "mode": "text-media",
-          "buttons": []
+          "buttons": [ ]
         },
         {
           "id": "home-hero-5",
@@ -143,11 +183,19 @@
             "alt": "Banner Rodogarcia",
             "poster": "",
             "desktopSrc": "",
-            "mobileSrc": ""
+            "mobileSrc": "",
+            "presentation": {
+              "desktop": {
+                "focalPoint": {
+                  "x": 50,
+                  "y": 50
+                }
+              }
+            }
           },
           "active": true,
           "mode": "text-media",
-          "buttons": []
+          "buttons": [ ]
         },
         {
           "id": "home-hero-6",
@@ -160,11 +208,19 @@
             "alt": "Banner Rodogarcia",
             "poster": "",
             "desktopSrc": "",
-            "mobileSrc": ""
+            "mobileSrc": "",
+            "presentation": {
+              "desktop": {
+                "focalPoint": {
+                  "x": 50,
+                  "y": 50
+                }
+              }
+            }
           },
           "active": true,
           "mode": "text-media",
-          "buttons": []
+          "buttons": [ ]
         }
       ]
     },
@@ -184,7 +240,18 @@
             "alt": "Operação logística Rodogarcia",
             "poster": "",
             "desktopSrc": "",
-            "mobileSrc": ""
+            "mobileSrc": "",
+            "presentation": {
+              "desktop": {
+                "focalPoint": {
+                  "x": 50,
+                  "y": 50
+                },
+                "playback": {
+                  "startSeconds": 0
+                }
+              }
+            }
           }
         },
         {
@@ -198,7 +265,18 @@
             "alt": "Acompanhamento operacional de carga Rodogarcia",
             "poster": "",
             "desktopSrc": "",
-            "mobileSrc": ""
+            "mobileSrc": "",
+            "presentation": {
+              "desktop": {
+                "focalPoint": {
+                  "x": 50,
+                  "y": 50
+                },
+                "playback": {
+                  "startSeconds": 0
+                }
+              }
+            }
           }
         },
         {
@@ -212,7 +290,18 @@
             "alt": "Motorista Rodogarcia em operação",
             "poster": "",
             "desktopSrc": "",
-            "mobileSrc": ""
+            "mobileSrc": "",
+            "presentation": {
+              "desktop": {
+                "focalPoint": {
+                  "x": 50,
+                  "y": 50
+                },
+                "playback": {
+                  "startSeconds": 0
+                }
+              }
+            }
           }
         }
       ]
@@ -231,7 +320,15 @@
             "alt": "Capilaridade operacional Rodogarcia",
             "poster": "",
             "desktopSrc": "",
-            "mobileSrc": ""
+            "mobileSrc": "",
+            "presentation": {
+              "desktop": {
+                "focalPoint": {
+                  "x": 50,
+                  "y": 50
+                }
+              }
+            }
           },
           "active": true
         },
@@ -246,7 +343,15 @@
             "alt": "Equipe Rodogarcia",
             "poster": "",
             "desktopSrc": "",
-            "mobileSrc": ""
+            "mobileSrc": "",
+            "presentation": {
+              "desktop": {
+                "focalPoint": {
+                  "x": 50,
+                  "y": 50
+                }
+              }
+            }
           },
           "active": true
         },
@@ -261,7 +366,15 @@
             "alt": "Operacao Rodogarcia",
             "poster": "",
             "desktopSrc": "",
-            "mobileSrc": ""
+            "mobileSrc": "",
+            "presentation": {
+              "desktop": {
+                "focalPoint": {
+                  "x": 50,
+                  "y": 50
+                }
+              }
+            }
           },
           "active": true
         }
@@ -283,7 +396,18 @@
             "alt": "Distribuicao nacional Rodogarcia",
             "poster": "/foto2.webp",
             "desktopSrc": "",
-            "mobileSrc": ""
+            "mobileSrc": "",
+            "presentation": {
+              "desktop": {
+                "focalPoint": {
+                  "x": 50,
+                  "y": 50
+                },
+                "playback": {
+                  "startSeconds": 0
+                }
+              }
+            }
           },
           "badge": "Malha ativa",
           "title": "Distribuicao nacional",
@@ -300,7 +424,18 @@
             "alt": "Operacao indoor Rodogarcia",
             "poster": "/foto4.webp",
             "desktopSrc": "",
-            "mobileSrc": ""
+            "mobileSrc": "",
+            "presentation": {
+              "desktop": {
+                "focalPoint": {
+                  "x": 50,
+                  "y": 50
+                },
+                "playback": {
+                  "startSeconds": 0
+                }
+              }
+            }
           },
           "badge": "Fluxo interno",
           "title": "Operacao indoor",
@@ -317,7 +452,18 @@
             "alt": "Cargas especiais Rodogarcia",
             "poster": "/caminhoneiro1.webp",
             "desktopSrc": "",
-            "mobileSrc": ""
+            "mobileSrc": "",
+            "presentation": {
+              "desktop": {
+                "focalPoint": {
+                  "x": 50,
+                  "y": 50
+                },
+                "playback": {
+                  "startSeconds": 0
+                }
+              }
+            }
           },
           "badge": "Execucao critica",
           "title": "Cargas especiais",
@@ -334,7 +480,18 @@
             "alt": "Atendimento Rodogarcia",
             "poster": "",
             "desktopSrc": "",
-            "mobileSrc": ""
+            "mobileSrc": "",
+            "presentation": {
+              "desktop": {
+                "focalPoint": {
+                  "x": 50,
+                  "y": 50
+                },
+                "playback": {
+                  "startSeconds": 0
+                }
+              }
+            }
           },
           "badge": "Atendimento próximo",
           "title": "Relacionamento que acompanha sua carga",
@@ -689,7 +846,15 @@
         "image": {
           "src": "/foto3.webp",
           "alt": "Frota Rodogarcia em operação noturna de distribuição.",
-          "position": ""
+          "position": "",
+          "presentation": {
+            "desktop": {
+              "focalPoint": {
+                "x": 50,
+                "y": 50
+              }
+            }
+          }
         },
         "eyebrow": "Distribuição nacional",
         "title": "Malha pronta para escalar entregas sem perder leitura de prazo.",
@@ -708,7 +873,15 @@
         "image": {
           "src": "/Gemini_Generated_Image_h09yu8h09yu8h09y.webp",
           "alt": "Operação indoor com conferência de volumes no centro logístico.",
-          "position": "object-[50%_45%]"
+          "position": "object-[50%_45%]",
+          "presentation": {
+            "desktop": {
+              "focalPoint": {
+                "x": 50,
+                "y": 45
+              }
+            }
+          }
         },
         "eyebrow": "Operação indoor",
         "title": "Apoio interno para fluxos de alto giro e abastecimento continuo.",
@@ -727,7 +900,15 @@
         "image": {
           "src": "/Gemini_Generated_Image_sjd9flsjd9flsjd9.webp",
           "alt": "Equipe Rodogarcia acompanhando documentos e rastreamento da operação.",
-          "position": ""
+          "position": "",
+          "presentation": {
+            "desktop": {
+              "focalPoint": {
+                "x": 50,
+                "y": 50
+              }
+            }
+          }
         },
         "eyebrow": "Cargas especiais",
         "title": "Carga sensível com controle de risco, documentação e monitoramento ativo.",
@@ -787,7 +968,15 @@
       "description": "Desde 1989, transformando a logística com excelência, tecnologia e compromisso com cada entrega.",
       "media": {
         "src": "/caminhoneiro1.webp",
-        "alt": "Operacao Rodogarcia em movimento"
+        "alt": "Operacao Rodogarcia em movimento",
+        "presentation": {
+          "desktop": {
+            "focalPoint": {
+              "x": 50,
+              "y": 50
+            }
+          }
+        }
       },
       "buttons": [
         {
@@ -805,20 +994,140 @@
     "compliance": {
       "image": {
         "src": "/certificados/certificado-sassmaq.webp",
-        "alt": "Certificado SASSMAQ"
+        "alt": "Certificado SASSMAQ",
+        "presentation": {
+          "desktop": {
+            "focalPoint": {
+              "x": 50,
+              "y": 50
+            }
+          }
+        }
       },
       "title": "Governanca e Compliance",
       "description": "Certificações, licenças e controles sustentam operações com mais segurança, rastreabilidade e previsibilidade.",
       "certificateText": "SASSMAQ, ISO 9001 e licenças operacionais ativas.",
       "certificateUrl": "",
       "certifications": [
-        { "title": "ISO 9001", "description": "Gestão da qualidade aplicada em cada camada da operação.", "image": { "src": "/certificados/LOGO ISO 9001.svg", "alt": "Certificado ISO 9001" }, "certificateUrl": "" },
-        { "title": "SASSMAQ", "description": "Segurança, saúde e meio ambiente em processos sensíveis.", "image": { "src": "/certificados/certificado-sassmaq.webp", "alt": "Certificado SASSMAQ" }, "certificateUrl": "" },
-        { "title": "EcoVadis", "description": "Maturidade em sustentabilidade e responsabilidade corporativa.", "image": { "src": "/certificados/ecovadis.webp", "alt": "Certificação EcoVadis" }, "certificateUrl": "" },
-        { "title": "Licença PF", "description": "Autorização para operações que exigem controles adicionais.", "image": { "src": "/certificados/pf.webp", "alt": "Licença Polícia Federal" }, "certificateUrl": "" },
-        { "title": "Polícia Civil SP", "description": "Habilitação estadual alinhada a operações com governança ampliada.", "image": { "src": "/certificados/pc-sp.webp", "alt": "Licença Polícia Civil de São Paulo" }, "certificateUrl": "" },
-        { "title": "Exército Brasileiro", "description": "Autorização conectada a rotinas com requisitos extras de controle.", "image": { "src": "/certificados/exercito-br.webp", "alt": "Certificado Exército Brasileiro" }, "certificateUrl": "" },
-        { "title": "IBAMA", "description": "Conformidade e controle rigoroso em operações com impacto e regulamentação ambiental.", "image": { "src": "/certificados/ibama.webp", "alt": "Certificado IBAMA" }, "certificateUrl": "" }
+        {
+          "title": "ISO 9001",
+          "description": "Gestão da qualidade aplicada em cada camada da operação.",
+          "image": {
+            "src": "/certificados/LOGO ISO 9001.svg",
+            "alt": "Certificado ISO 9001",
+            "presentation": {
+              "desktop": {
+                "focalPoint": {
+                  "x": 50,
+                  "y": 50
+                }
+              }
+            }
+          },
+          "certificateUrl": ""
+        },
+        {
+          "title": "SASSMAQ",
+          "description": "Segurança, saúde e meio ambiente em processos sensíveis.",
+          "image": {
+            "src": "/certificados/certificado-sassmaq.webp",
+            "alt": "Certificado SASSMAQ",
+            "presentation": {
+              "desktop": {
+                "focalPoint": {
+                  "x": 50,
+                  "y": 50
+                }
+              }
+            }
+          },
+          "certificateUrl": ""
+        },
+        {
+          "title": "EcoVadis",
+          "description": "Maturidade em sustentabilidade e responsabilidade corporativa.",
+          "image": {
+            "src": "/certificados/ecovadis.webp",
+            "alt": "Certificação EcoVadis",
+            "presentation": {
+              "desktop": {
+                "focalPoint": {
+                  "x": 50,
+                  "y": 50
+                }
+              }
+            }
+          },
+          "certificateUrl": ""
+        },
+        {
+          "title": "Licença PF",
+          "description": "Autorização para operações que exigem controles adicionais.",
+          "image": {
+            "src": "/certificados/pf.webp",
+            "alt": "Licença Polícia Federal",
+            "presentation": {
+              "desktop": {
+                "focalPoint": {
+                  "x": 50,
+                  "y": 50
+                }
+              }
+            }
+          },
+          "certificateUrl": ""
+        },
+        {
+          "title": "Polícia Civil SP",
+          "description": "Habilitação estadual alinhada a operações com governança ampliada.",
+          "image": {
+            "src": "/certificados/pc-sp.webp",
+            "alt": "Licença Polícia Civil de São Paulo",
+            "presentation": {
+              "desktop": {
+                "focalPoint": {
+                  "x": 50,
+                  "y": 50
+                }
+              }
+            }
+          },
+          "certificateUrl": ""
+        },
+        {
+          "title": "Exército Brasileiro",
+          "description": "Autorização conectada a rotinas com requisitos extras de controle.",
+          "image": {
+            "src": "/certificados/exercito-br.webp",
+            "alt": "Certificado Exército Brasileiro",
+            "presentation": {
+              "desktop": {
+                "focalPoint": {
+                  "x": 50,
+                  "y": 50
+                }
+              }
+            }
+          },
+          "certificateUrl": ""
+        },
+        {
+          "title": "IBAMA",
+          "description": "Conformidade e controle rigoroso em operações com impacto e regulamentação ambiental.",
+          "image": {
+            "src": "/certificados/ibama.webp",
+            "alt": "Certificado IBAMA",
+            "presentation": {
+              "desktop": {
+                "focalPoint": {
+                  "x": 50,
+                  "y": 50
+                }
+              }
+            }
+          },
+          "certificateUrl": ""
+        }
       ]
     },
     "finalCta": {
@@ -1009,7 +1318,15 @@
     },
     "cultureImage": {
       "src": "/caminhoneiro1.webp",
-      "alt": "Time Rodogarcia em operação"
+      "alt": "Time Rodogarcia em operação",
+      "presentation": {
+        "desktop": {
+          "focalPoint": {
+            "x": 50,
+            "y": 50
+          }
+        }
+      }
     },
     "jobs": [
       {

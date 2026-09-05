@@ -45,6 +45,10 @@ interface AdminImageRecord {
   originalSize?: number;
   optimizedSize?: number;
   thumbnailUrl?: string;
+  width?: number;
+  height?: number;
+  aspectRatio?: number;
+  durationSeconds?: number;
 }
 
 const MAX_IMAGE_UPLOAD_BYTES = 8 * 1024 * 1024;
@@ -72,6 +76,37 @@ function formatBytes(bytes: number) {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+}
+
+function formatDimensions(media: AdminImageRecord) {
+  if (!media.width || !media.height) return "Resolução não disponível";
+  return `${media.width} × ${media.height} px`;
+}
+
+function greatestCommonDivisor(left: number, right: number): number {
+  let a = Math.abs(Math.round(left));
+  let b = Math.abs(Math.round(right));
+  while (b !== 0) {
+    [a, b] = [b, a % b];
+  }
+  return a || 1;
+}
+
+function formatAspectRatio(media: AdminImageRecord) {
+  if (!media.width || !media.height) return "Proporção não disponível";
+  const divisor = greatestCommonDivisor(media.width, media.height);
+  return `${media.width / divisor}:${media.height / divisor}`;
+}
+
+function formatDuration(seconds?: number) {
+  if (!seconds || !Number.isFinite(seconds) || seconds <= 0) return "Duração não disponível";
+  const rounded = Math.round(seconds);
+  const hours = Math.floor(rounded / 3600);
+  const minutes = Math.floor((rounded % 3600) / 60);
+  const remainingSeconds = rounded % 60;
+  return hours > 0
+    ? `${hours}:${String(minutes).padStart(2, "0")}:${String(remainingSeconds).padStart(2, "0")}`
+    : `${minutes}:${String(remainingSeconds).padStart(2, "0")}`;
 }
 
 function mediaTypeFromUrl(value: string): "image" | "video" {
@@ -606,9 +641,9 @@ export default function ImagensPage() {
         <DeveloperCard className="flex flex-col">
           <DeveloperSectionHeading
             eyebrow="Biblioteca"
-            title="Imagens encontradas no projeto"
-            description="Lista da mídia mais recente para a mais antiga, facilitando encontrar os últimos uploads."
-            tooltip="Arquivos enviados pelo CMS podem ser excluídos. Se estiverem em uso, a confirmação remove as referências e o site usa os fallbacks configurados; arquivos versionados do projeto não podem ser apagados por esta tela."
+            title="Mídias encontradas no projeto"
+            description="Lista da mídia mais recente para a mais antiga, com formato, tamanho, resolução e duração quando aplicável."
+            tooltip="Arquivos enviados pelo CMS podem ser excluídos. Se estiverem em uso, a confirmação remove as referências e o site usa os fallbacks configurados; arquivos versionados do projeto não podem ser apagados por esta tela. Resolução e duração vêm do próprio arquivo e podem não estar disponíveis em mídias antigas ou inválidas."
           />
 
           <div className="flex-1 overflow-hidden">
@@ -661,7 +696,11 @@ export default function ImagensPage() {
                           {image.url}
                         </p>
                         <p className="mt-1.5 text-[11px] text-[var(--color-muted-raw)]">
-                          {formatBytes(image.optimizedSize ?? image.size)} - {image.format ?? "asset"} - {image.references} refs
+                          {formatBytes(image.optimizedSize ?? image.size)} · {image.format ?? "asset"} · {image.references} refs
+                        </p>
+                        <p className="mt-1 text-[11px] text-[var(--color-muted-raw)]">
+                          Resolução: {formatDimensions(image)} · Proporção: {formatAspectRatio(image)}
+                          {itemType === "video" ? ` · Duração: ${formatDuration(image.durationSeconds)}` : ""}
                         </p>
                         {image.uploadedAt ? (
                           <p className="mt-1 text-[11px] text-[var(--color-muted-raw)]">

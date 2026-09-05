@@ -62,6 +62,7 @@ class CmsPropertiesTest {
         environment.put("CMS_INTERNAL_URL", "http://127.0.0.1:35013");
         environment.put("CORS_ORIGINS", "https://one.example, https://two.example");
         environment.put("FFMPEG_PATH", "C:/tools/ffmpeg.exe");
+        environment.put("FFPROBE_PATH", "C:/tools/ffprobe.exe");
         environment.put("MEDIA_WEBP_QUALITY", "96");
         environment.put("MEDIA_WEBP_THUMB_QUALITY", " ");
         environment.put("MEDIA_WEBP_MEDIUM_WIDTH", "1200.5");
@@ -80,6 +81,7 @@ class CmsPropertiesTest {
             "https://two.example"
         );
         assertThat(properties.ffmpegPath()).isEqualTo("C:/tools/ffmpeg.exe");
+        assertThat(properties.ffprobePath()).isEqualTo("C:/tools/ffprobe.exe");
         assertThat(properties.mediaWebpQuality()).isEqualTo(95);
         assertThat(properties.mediaWebpThumbQuality()).isEqualTo(55);
         assertThat(properties.mediaWebpMediumWidth()).isEqualTo(1201);
@@ -107,9 +109,12 @@ class CmsPropertiesTest {
         strong.put("SESSION_SECRET", "session-secret-with-more-than-32-characters");
         strong.put("ADMIN_SETUP_CODE", "setup-code-2026-safe-value");
         Path ffmpeg = root.resolve("stable-tools/ffmpeg.exe").toAbsolutePath();
+        Path ffprobe = root.resolve("stable-tools/ffprobe.exe").toAbsolutePath();
         Files.createDirectories(ffmpeg.getParent());
         Files.write(ffmpeg, new byte[] {0});
+        Files.write(ffprobe, new byte[] {0});
         strong.put("FFMPEG_PATH", ffmpeg.toString());
+        strong.put("FFPROBE_PATH", ffprobe.toString());
 
         CmsProperties properties = CmsProperties.from(
             strong, root.resolve("repo/cms/backend"));
@@ -119,6 +124,7 @@ class CmsPropertiesTest {
             "https://www.rodogarcia.com.br"
         );
         assertThat(properties.ffmpegPath()).isEqualTo(ffmpeg.toString());
+        assertThat(properties.ffprobePath()).isEqualTo(ffprobe.toString());
     }
 
     @Test

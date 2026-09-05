@@ -85,6 +85,8 @@ class LandingBuilderContractTest {
             assertThat(previewLanding.path("analytics").size()).isEqualTo(1);
             assertThat(previewLanding.path("analytics").path("ga4MeasurementId").asText()).isEqualTo("G-TEST1234");
             assertThat(previewLanding.path("testimonial").has("quote")).isFalse();
+            assertThat(previewLanding.path("hero").path("backgroundPresentation").path("desktop").path("focalPoint").path("x").asInt()).isEqualTo(25);
+            assertThat(previewLanding.path("story").path("imagePresentation").path("desktop").path("focalPoint").path("y").asInt()).isEqualTo(75);
 
             fixture.mvc().perform(post("/api/internal/landings/{id}/publish", id)
                     .header("x-landing-builder-service-token", SERVICE_TOKEN)
@@ -199,6 +201,14 @@ class LandingBuilderContractTest {
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(input("campanha-com-midia", videoUrl, true)))
                 .andExpect(status().isCreated());
+            fixture.mvc().perform(post("/api/internal/landings")
+                    .header("x-landing-builder-service-token", SERVICE_TOKEN)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(input("campanha-com-trecho", videoUrl, true).replace(
+                        "\"imagePresentation\":{\"desktop\":{\"focalPoint\":{\"x\":60,\"y\":75}}}",
+                        "\"imagePresentation\":{\"desktop\":{\"focalPoint\":{\"x\":60,\"y\":75},\"playback\":{\"startSeconds\":1,\"durationSeconds\":5}}}"
+                    )))
+                .andExpect(status().isUnprocessableEntity());
             fixture.mvc().perform(delete("/api/internal/media/{id}", mediaId)
                     .header("x-landing-builder-service-token", SERVICE_TOKEN))
                 .andExpect(status().isConflict());
@@ -314,9 +324,9 @@ class LandingBuilderContractTest {
               "seo":{"title":"Soluções logísticas para operações industriais","description":"Conheça uma operação de logística preparada para armazenagem, distribuição e atendimento nacional com acompanhamento especializado.","index":%s},
               "theme":{},
               "analytics":{"ga4MeasurementId":"G-TEST1234"},
-              "hero":{"title":"Operação logística segura e integrada","description":"Atendemos operações que precisam de armazenagem, distribuição e visibilidade para crescer com segurança.","ctaUrl":"/fale-conosco","highlights":[{"title":"Destaque","description":"Descrição"}]},
+              "hero":{"title":"Operação logística segura e integrada","description":"Atendemos operações que precisam de armazenagem, distribuição e visibilidade para crescer com segurança.","ctaUrl":"/fale-conosco","backgroundPresentation":{"desktop":{"focalPoint":{"x":25,"y":40}}},"highlights":[{"title":"Destaque","description":"Descrição"}]},
               "lowerSection":{"title":"Seção inferior"},
-              "story":{"image":"%s"}
+              "story":{"image":"%s","imagePresentation":{"desktop":{"focalPoint":{"x":60,"y":75}}}}
             }
             """.formatted(slug, index, storyImage);
     }

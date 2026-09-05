@@ -101,7 +101,7 @@ const CMS_HELP_CONTEXTS: Record<string, CmsHelpContext> = {
   "/developer/home": { destination: "a página inicial /", action: "edita os blocos principais da Home", example: "Troque uma imagem do hero para atualizar a primeira área vista pelo visitante." },
   "/developer/home-dna": { destination: "a seção de DNA da página inicial /", action: "edita o conteúdo institucional da Home", example: "Atualize um valor da empresa para ele aparecer na seção institucional da Home." },
   "/developer/home-hero": { destination: "o hero da página inicial /", action: "edita os slides e botões de abertura da Home", example: "Escolha uma nova imagem para o primeiro slide do site." },
-  "/developer/imagens": { destination: "a Biblioteca de mídia e os slots de imagem do site", action: "faz upload, organiza mídia e vincula arquivos a áreas do site", example: "Troque a imagem do slot do popup sem mexer nas outras imagens da Biblioteca." },
+  "/developer/imagens": { destination: "a Biblioteca de mídia e os slots de imagem do site", action: "faz upload, organiza mídia e vincula arquivos a áreas do site; a lista mostra tamanho, resolução, proporção e, em vídeos, a duração lida do arquivo", example: "Compare a proporção 4:5 de uma foto com o espaço visual do bloco antes de usá-la, sem alterar as outras mídias da Biblioteca." },
   "/developer/leads": { destination: "a lista interna de contatos recebidos, sem alterar o site", action: "consulta e filtra leads enviados por formulários", example: "Pesquise um e-mail para localizar o contato enviado pelo formulário." },
   "/developer/landing-pages": { destination: "as rotas de campanhas, como /nome-da-campanha", action: "cria, edita, pré-visualiza e publica landing pages independentes", example: "Salve uma campanha como rascunho, revise o Hero e publique quando a rota estiver pronta para divulgação." },
   "/developer/melhorias": { destination: "/melhoria-continua e a lista interna de sugestões", action: "registra sugestões internas como colaborador e acompanha os envios de visitantes e colaboradores, incluindo os anexos privados", example: "Abra Sugestão interna, escolha um nome ou e-mail sugerido de um usuário do CMS e registre área, tipo, contexto e impacto. Ela entra em Pendentes; uma concluída segue para Arquivadas após 60 dias." },
@@ -123,6 +123,32 @@ const CMS_HELP_CONTEXTS: Record<string, CmsHelpContext> = {
 };
 
 const CMS_HELP_TEMPLATES: Record<string, CmsHelpTemplate> = {
+  "popup-exit.field.image": {
+    title: "Imagem do popup de saída",
+    summary: "Escolha uma imagem da Biblioteca para aparecer no popup de saída. Depois da seleção, a prévia mostra o botão Enquadrar sobre a própria foto para você definir qual parte o visitante verá, sem alterar o arquivo original.",
+    example: "Use uma imagem vertical da operação e clique em Enquadrar sobre a prévia para manter a área mais importante visível no popup.",
+    details: [
+      { label: "Onde aparece", value: "No popup de saída do site. A imagem padrão é usada quando não houver uma versão específica para desktop ou celular." },
+      { label: "Biblioteca", value: "Aceita somente imagens internas validadas no CMS; links externos não são permitidos." },
+      { label: "Enquadramento", value: "O ajuste grava apenas a posição desta imagem neste popup. Ele não recorta nem substitui o arquivo da Biblioteca.", technical: true },
+    ],
+  },
+  "global.field.media-placement": {
+    title: "Enquadramento no quadro",
+    summary: "Use o botão Enquadrar foto ou Enquadrar vídeo ao lado da mídia para abrir o ajuste em uma janela. Escolha ali qual parte continua visível quando o site precisa cortar a mídia; salvar muda somente este uso, sem alterar o arquivo original da Biblioteca.",
+    example: "Se a carreta está no começo da imagem, arraste o alvo até ela ou escolha o atalho do lado correspondente.",
+    details: [
+      { label: "Onde aparece", value: "No quadro visual que está sendo editado em {publicDestination}." },
+      { label: "Desktop e celular", value: "O celular herda o enquadramento do desktop até você marcar a opção para ajustá-lo separadamente." },
+      { label: "Arquivo original", value: "O CMS grava apenas o ponto de enquadramento deste local; não corta, substitui nem modifica o arquivo da Biblioteca.", technical: true },
+    ],
+  },
+  "home.field.video-range": {
+    title: "Trecho do vídeo",
+    summary: "Escolha de qual segundo o vídeo começa e quanto tempo ele roda neste quadro da Home. O arquivo original continua inteiro na Biblioteca; somente este uso passa a mostrar o trecho escolhido.",
+    example: "Em um vídeo de 40 segundos, escolha início 8s e duração 10s para mostrar apenas a chegada da carreta no Hero.",
+    details: [{ label: "Onde aparece", value: "Na área da Home que está sendo editada, como Hero, Operações ou card de serviço." }, { label: "Até o fim", value: "Use esta opção quando o vídeo deve seguir do segundo inicial escolhido até o fim do arquivo." }, { label: "Limite", value: "A duração carregada do arquivo limita o início e o fim disponíveis. O CMS não altera nem recorta o vídeo enviado.", technical: true }],
+  },
   "landing-pages.field.section-visibility": {
     title: "Visibilidade da seção",
     summary: "Escolha se este trecho do template aparece na landing publicada. Ao desmarcar, o conteúdo continua salvo no CMS e pode ser exibido novamente depois.",

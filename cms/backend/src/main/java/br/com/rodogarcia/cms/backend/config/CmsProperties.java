@@ -29,6 +29,7 @@ public record CmsProperties(
     String landingBuilderApiUrl,
     String landingBuilderServiceToken,
     String ffmpegPath,
+    String ffprobePath,
     int mediaWebpQuality,
     int mediaWebpThumbQuality,
     int mediaWebpMediumWidth,
@@ -75,6 +76,7 @@ public record CmsProperties(
             : rawSecret;
         String adminSetupCode = valueOrDefault(environment.get("ADMIN_SETUP_CODE"), "");
         String configuredFfmpeg = valueOrDefault(environment.get("FFMPEG_PATH"), "").trim();
+        String configuredFfprobe = valueOrDefault(environment.get("FFPROBE_PATH"), "").trim();
 
         if (production) {
             List<String> errors = new ArrayList<>();
@@ -88,7 +90,8 @@ public record CmsProperties(
             for (int index = 0; index < extraOrigins.size(); index++) {
                 validateHttpsOrigin("CORS_ORIGINS[" + index + "]", extraOrigins.get(index), errors);
             }
-            validateProductionFfmpeg(configuredFfmpeg, repoRoot, errors);
+            validateProductionMediaTool("FFMPEG_PATH", configuredFfmpeg, repoRoot, errors);
+            validateProductionMediaTool("FFPROBE_PATH", configuredFfprobe, repoRoot, errors);
             if (!errors.isEmpty()) {
                 throw new IllegalStateException(
                     "Configuração de produção insegura: " + String.join(" ", errors)
@@ -150,6 +153,7 @@ public record CmsProperties(
             stripTrailingSlash(valueOrDefault(environment.get("LANDING_BUILDER_API_URL"), "").trim()),
             valueOrDefault(environment.get("LANDING_BUILDER_SERVICE_TOKEN"), "").trim(),
             ffmpegPath,
+            configuredFfprobe,
             clampedNumber(environment.get("MEDIA_WEBP_QUALITY"), 82, 60, 95),
             clampedNumber(environment.get("MEDIA_WEBP_THUMB_QUALITY"), 72, 55, 90),
             clampedNumber(environment.get("MEDIA_WEBP_MEDIUM_WIDTH"), 960, 480, 1_600),
@@ -239,27 +243,28 @@ public record CmsProperties(
         }
     }
 
-    private static void validateProductionFfmpeg(
-        String configuredFfmpeg,
+    private static void validateProductionMediaTool(
+        String variableName,
+        String configuredPath,
         Path repoRoot,
         List<String> errors
     ) {
-        if (configuredFfmpeg.isBlank()) {
-            errors.add("FFMPEG_PATH absoluto e estável é obrigatório para o CMS Spring em produção.");
+        if (configuredPath.isBlank()) {
+            errors.add(variableName + " absoluto e estável é obrigatório para o CMS Spring em produção.");
             return;
         }
 
         try {
-            Path ffmpeg = Path.of(configuredFfmpeg).toAbsolutePath().normalize();
-            if (!Path.of(configuredFfmpeg).isAbsolute()) {
-                errors.add("FFMPEG_PATH deve ser absoluto em produção.");
-            } else if (ffmpeg.startsWith(repoRoot.toAbsolutePath().normalize())) {
-                errors.add("FFMPEG_PATH deve ficar fora do repositório em produção.");
-            } else if (!Files.isRegularFile(ffmpeg)) {
-                errors.add("FFMPEG_PATH deve apontar para um arquivo existente em produção.");
+            Path executable = Path.of(configuredPath).toAbsolutePath().normalize();
+            if (!Path.of(configuredPath).isAbsolute()) {
+                errors.add(variableName + " deve ser absoluto em produção.");
+            } else if (executable.startsWith(repoRoot.toAbsolutePath().normalize())) {
+                errors.add(variableName + " deve ficar fora do repositório em produção.");
+            } else if (!Files.isRegularFile(executable)) {
+                errors.add(variableName + " deve apontar para um arquivo existente em produção.");
             }
         } catch (RuntimeException ignored) {
-            errors.add("FFMPEG_PATH deve ser um caminho absoluto válido em produção.");
+            errors.add(variableName + " deve ser um caminho absoluto válido em produção.");
         }
     }
 

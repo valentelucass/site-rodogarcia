@@ -8,6 +8,7 @@ import java.util.Set;
 
 import br.com.rodogarcia.cms.backend.model.content.ContentJson;
 import br.com.rodogarcia.cms.backend.model.content.ContentKeys;
+import br.com.rodogarcia.cms.backend.model.content.MediaPresentation;
 import br.com.rodogarcia.cms.backend.repository.content.ContentRepository;
 import br.com.rodogarcia.cms.backend.repository.content.MediaSlotsRepository;
 import br.com.rodogarcia.cms.backend.repository.content.SiteTextsRepository;
@@ -211,6 +212,9 @@ public final class PublicContentService {
             publicImage.put("src", publicMedia(firstNonNull(image.get("src"), item.get("imageSrc")), "Mídia do conteúdo"));
             publicImage.put("alt", ContentJson.text(firstNonNull(image.get("alt"), item.get("imageAlt")), 160));
             publicImage.put("position", ContentJson.text(image.get("position"), 60));
+            publicImage.set("presentation", MediaPresentation.normalize(
+                mapper, image.get("presentation"), false, publicImage.path("position").asText()
+            ));
             output.set("image", publicImage);
             output.put("eyebrow", ContentJson.text(item.get("eyebrow"), 80));
             output.put("title", ContentJson.text(item.get("title"), 180));
@@ -298,6 +302,9 @@ public final class PublicContentService {
         result.put("poster", publicMedia(source.get("poster"), "Mídia do conteúdo"));
         result.put("desktopSrc", publicMedia(source.get("desktopSrc"), "Mídia do conteúdo"));
         result.put("mobileSrc", publicMedia(source.get("mobileSrc"), "Mídia do conteúdo"));
+        result.set("presentation", MediaPresentation.normalize(
+            mapper, source.get("presentation"), type.equals("video"), ""
+        ));
         return result;
     }
 

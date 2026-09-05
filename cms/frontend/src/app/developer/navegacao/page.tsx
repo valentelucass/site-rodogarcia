@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { ArrowDown, ArrowUp, CheckCircle, Plus, Trash } from "@phosphor-icons/react";
 import { DeveloperCard, DeveloperField, DeveloperHero, DeveloperMessage, DeveloperPage, DeveloperSectionHeading, developerDangerButtonClassName, developerGhostButtonClassName, developerInputClassName, developerPrimaryButtonClassName, developerSecondaryButtonClassName } from "@/components/developer/ui";
 import { DeveloperCmsAccordion } from "@/components/developer/DeveloperCmsAccordion";
+import { DeveloperConfirmButton } from "@/components/developer/DeveloperConfirmButton";
 import { useApiRequest } from "@/hooks/useApiRequest";
 import { DEFAULT_HEADER_NAVIGATION } from "@/lib/headerNavigationDefaults";
 import { api } from "@/lib/routes";
@@ -99,9 +100,9 @@ export default function HeaderNavigationCmsPage() {
           getEyebrow={(_, index) => `Item ${index + 1} · ${content.items[index]?.group === "principal" ? "Principal" : "Explorar"}`}
           getTitle={(item) => item.label || "Novo item"}
           renderActions={(item, index) => <div className="flex flex-wrap gap-2" role="group" aria-label={`Reorganizar ${item.label}`}>
-            <button type="button" disabled={index === 0} className={developerGhostButtonClassName} onClick={() => moveTo(index, index - 1)}><ArrowUp size={16} /> Subir</button>
-            <button type="button" disabled={index === content.items.length - 1} className={developerGhostButtonClassName} onClick={() => moveTo(index, index + 1)}><ArrowDown size={16} /> Descer</button>
-            <button type="button" aria-label={`Remover ${item.label}`} disabled={content.items.length === 1} className={developerDangerButtonClassName} onClick={() => setContent((current) => ({ items: current.items.filter((_, itemIndex) => itemIndex !== index).map((entry, itemIndex) => ({ ...entry, order: itemIndex + 1 })) }))}><Trash size={16} /> Remover</button>
+            <button type="button" data-cms-collection-action="up" disabled={index === 0} className={developerGhostButtonClassName} onClick={() => moveTo(index, index - 1)}><ArrowUp size={16} /> Subir</button>
+            <button type="button" data-cms-collection-action="down" disabled={index === content.items.length - 1} className={developerGhostButtonClassName} onClick={() => moveTo(index, index + 1)}><ArrowDown size={16} /> Descer</button>
+            <DeveloperConfirmButton actionType="remove" disabled={content.items.length === 1} message={`O item “${item.label}” será removido da navegação.`} onConfirm={() => setContent((current) => ({ items: current.items.filter((_, itemIndex) => itemIndex !== index).map((entry, itemIndex) => ({ ...entry, order: itemIndex + 1 })) }))}><Trash size={16} /> Remover</DeveloperConfirmButton>
           </div>}
           renderItem={(item, index) => <>
           <div className="grid gap-4 md:grid-cols-2">

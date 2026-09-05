@@ -35,12 +35,12 @@ import {
   DeveloperMessage,
   DeveloperPage,
   DeveloperSectionHeading,
-  developerDangerButtonClassName,
   developerGhostButtonClassName,
   developerInputClassName,
   developerPrimaryButtonClassName,
   developerSecondaryButtonClassName,
 } from "@/components/developer/ui";
+import { DeveloperConfirmButton } from "@/components/developer/DeveloperConfirmButton";
 import { DeveloperCmsAccordion } from "@/components/developer/DeveloperCmsAccordion";
 import { DeveloperResponsivePreview } from "@/components/developer/DeveloperResponsivePreview";
 import { cn } from "@/lib/utils";
@@ -223,20 +223,94 @@ function LinkItemFields({
   extra?: ReactNode;
   nested?: boolean;
 }) {
+  const [isOpen, setIsOpen] = useState(false);
+
   return (
-    <div className={cn(nested ? panelClassName : mutedPanelClassName, "space-y-4")}>
-      <div className={cn("grid gap-4", extra ? "lg:grid-cols-3" : "md:grid-cols-2")}>
-        <TextInput label="Texto" value={item.label} maxLength={60} onChange={(value) => onChange({ ...item, label: value })} />
-        <DeveloperField label="Link" required>
-          <input required value={item.url} onChange={(event) => onChange({ ...item, url: event.target.value })} className={developerInputClassName} />
-        </DeveloperField>
-        {extra}
-      </div>
-      <div className="flex flex-wrap gap-2">
-        <button type="button" onClick={onMoveUp} className={developerGhostButtonClassName}><ArrowUp size={16} weight="bold" />Subir</button>
-        <button type="button" onClick={onMoveDown} className={developerGhostButtonClassName}><ArrowDown size={16} weight="bold" />Descer</button>
-        <button type="button" onClick={onRemove} className={developerDangerButtonClassName}><Trash size={16} weight="bold" />Remover</button>
-      </div>
+    <DeveloperCmsAccordion
+      items={[item]}
+      openIndex={isOpen ? 0 : null}
+      onOpenChange={(index) => setIsOpen(index === 0)}
+      getEyebrow={() => nested ? "Link da coluna" : "Link do footer"}
+      getTitle={(link) => link.label || "Link sem texto"}
+      variant="services"
+      compact
+      renderActions={() => (
+        <>
+          <button type="button" data-cms-collection-action="up" onClick={onMoveUp} className={developerGhostButtonClassName}><ArrowUp size={16} weight="bold" />Subir</button>
+          <button type="button" data-cms-collection-action="down" onClick={onMoveDown} className={developerGhostButtonClassName}><ArrowDown size={16} weight="bold" />Descer</button>
+          <DeveloperConfirmButton actionType="remove" message="Este link será removido do rodapé." onConfirm={onRemove}><Trash size={16} weight="bold" />Remover</DeveloperConfirmButton>
+        </>
+      )}
+      renderItem={(link) => (
+        <div className={cn("grid gap-4", extra ? "lg:grid-cols-3" : "md:grid-cols-2")}>
+          <TextInput label="Texto" value={link.label} maxLength={60} onChange={(value) => onChange({ ...link, label: value })} />
+          <DeveloperField label="Link" required>
+            <input required value={link.url} onChange={(event) => onChange({ ...link, url: event.target.value })} className={developerInputClassName} />
+          </DeveloperField>
+          {extra}
+        </div>
+      )}
+    />
+  );
+}
+
+function ServiceHoursEditor({
+  title,
+  hours,
+  onTitleChange,
+  onChange,
+}: {
+  title: string;
+  hours: string[];
+  onTitleChange: (title: string) => void;
+  onChange: (hours: string[]) => void;
+}) {
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
+
+  function moveHour(index: number, direction: -1 | 1) {
+    const target = index + direction;
+    if (target < 0 || target >= hours.length) return;
+    onChange(moveItem(hours, index, direction));
+    if (openIndex === index) setOpenIndex(target);
+  }
+
+  function removeHour(index: number) {
+    const nextHours = hours.filter((_, hourIndex) => hourIndex !== index);
+    if (openIndex === index) setOpenIndex(nextHours.length ? Math.min(index, nextHours.length - 1) : null);
+    else if (openIndex !== null && openIndex > index) setOpenIndex(openIndex - 1);
+    onChange(nextHours);
+  }
+
+  return (
+    <div className={cn(mutedPanelClassName, "space-y-4")}>
+      <TextInput label="Título dos horários" value={title} maxLength={80} onChange={onTitleChange} />
+      <DeveloperCmsAccordion
+        items={hours}
+        openIndex={openIndex}
+        onOpenChange={setOpenIndex}
+        getEyebrow={(_, index) => `Horário ${index + 1}`}
+        getTitle={(hour, index) => hour || `Horário ${index + 1} sem texto`}
+        variant="services"
+        compact
+        renderActions={(_, index) => (
+          <>
+            <button type="button" data-cms-collection-action="up" onClick={() => moveHour(index, -1)} className={developerGhostButtonClassName}><ArrowUp size={16} weight="bold" />Subir</button>
+            <button type="button" data-cms-collection-action="down" onClick={() => moveHour(index, 1)} className={developerGhostButtonClassName}><ArrowDown size={16} weight="bold" />Descer</button>
+            <DeveloperConfirmButton actionType="remove" message="Este horário será removido do rodapé." onConfirm={() => removeHour(index)}><Trash size={16} weight="bold" />Remover</DeveloperConfirmButton>
+          </>
+        )}
+        renderItem={(hour, index) => <TextInput label={`Horário ${index + 1}`} value={hour} maxLength={220} onChange={(value) => {
+          const nextHours = [...hours];
+          nextHours[index] = value;
+          onChange(nextHours);
+        }} />}
+      />
+      {hours.length < 5 ? (
+        <button type="button" onClick={() => { onChange([...hours, ""]); setOpenIndex(hours.length); }} className={developerSecondaryButtonClassName}>
+          <Plus size={16} weight="bold" />
+          Novo horário
+        </button>
+      ) : null}
     </div>
   );
 }
@@ -256,20 +330,51 @@ function TextBlockEditor({
   titleLabel?: string;
   descriptionLabel?: string;
 }) {
+  const [openBlockId, setOpenBlockId] = useState<string | null>(null);
+  const openIndex = openBlockId ? blocks.findIndex((block) => block.id === openBlockId) : null;
+
+  function addBlock() {
+    const block = { id: createId("footer-block"), order: blocks.length + 1, title: "", description: "" };
+    onChange([...blocks, block]);
+    setOpenBlockId(block.id);
+  }
+
+  function removeBlock(index: number) {
+    const nextBlocks = blocks.filter((_, blockIndex) => blockIndex !== index);
+    if (blocks[index]?.id === openBlockId) {
+      setOpenBlockId(nextBlocks[index]?.id ?? nextBlocks[index - 1]?.id ?? null);
+    }
+    onChange(nextBlocks);
+  }
+
   return (
     <div className="space-y-4">
       {!fixed && blocks.length < max ? (
         <button
           type="button"
-          onClick={() => onChange([...blocks, { id: createId("footer-block"), order: blocks.length + 1, title: "", description: "" }])}
+          onClick={addBlock}
           className={developerSecondaryButtonClassName}
         >
           <Plus size={16} weight="bold" />
           Novo bloco
         </button>
       ) : null}
-      {blocks.map((block, index) => (
-        <div key={block.id} className={cn(panelClassName, "space-y-4")}>
+      <DeveloperCmsAccordion
+        items={blocks}
+        openIndex={openIndex === -1 ? null : openIndex}
+        onOpenChange={(index) => setOpenBlockId(index === null ? null : blocks[index]?.id ?? null)}
+        getEyebrow={(_, index) => `Bloco ${index + 1}`}
+        getTitle={(block) => block.title || "Bloco sem título"}
+        variant="services"
+        compact
+        renderActions={!fixed ? (_, index) => (
+          <>
+            <button type="button" data-cms-collection-action="up" onClick={() => onChange(moveItem(blocks, index, -1))} className={developerGhostButtonClassName}><ArrowUp size={16} weight="bold" />Subir</button>
+            <button type="button" data-cms-collection-action="down" onClick={() => onChange(moveItem(blocks, index, 1))} className={developerGhostButtonClassName}><ArrowDown size={16} weight="bold" />Descer</button>
+            <DeveloperConfirmButton actionType="remove" message="Este bloco será removido do rodapé." onConfirm={() => removeBlock(index)}><Trash size={16} weight="bold" />Remover</DeveloperConfirmButton>
+          </>
+        ) : undefined}
+        renderItem={(block, index) => (
           <div className="grid gap-5 md:grid-cols-2">
             <TextInput label={titleLabel} value={block.title} maxLength={180} onChange={(value) => {
               const next = [...blocks];
@@ -282,15 +387,8 @@ function TextBlockEditor({
               onChange(next);
             }} />
           </div>
-          {!fixed ? (
-            <div className="flex flex-wrap gap-2">
-              <button type="button" onClick={() => onChange(moveItem(blocks, index, -1))} className={developerGhostButtonClassName}><ArrowUp size={16} weight="bold" />Subir</button>
-              <button type="button" onClick={() => onChange(moveItem(blocks, index, 1))} className={developerGhostButtonClassName}><ArrowDown size={16} weight="bold" />Descer</button>
-              <button type="button" onClick={() => onChange(blocks.filter((_, blockIndex) => blockIndex !== index))} className={developerDangerButtonClassName}><Trash size={16} weight="bold" />Remover</button>
-            </div>
-          ) : null}
-        </div>
-      ))}
+        )}
+      />
     </div>
   );
 }
@@ -438,7 +536,7 @@ export default function FooterLinksCmsPage() {
           </div>
         </div>
 
-        <div className="mt-4 grid gap-2 sm:grid-cols-3">
+        <div className="mt-3 grid gap-2 sm:grid-cols-3" role="tablist" aria-label="Selecionar etapa de edição do footer">
           {FOOTER_STEPS.map((step, index) => {
             const isActive = step.key === activeStep;
             return (
@@ -446,24 +544,20 @@ export default function FooterLinksCmsPage() {
                 key={step.key}
                 type="button"
                 onClick={() => selectStep(step.key)}
+                role="tab"
+                aria-selected={isActive}
                 aria-current={isActive ? "step" : undefined}
                 className={cn(
-                  "group relative flex min-h-[118px] flex-col items-start overflow-hidden rounded-[18px] border px-3 py-3 text-left transition-all duration-300",
+                  "group flex min-h-12 min-w-0 items-center gap-2 rounded-xl border px-3 py-2 text-left transition-colors",
                   isActive
-                    ? "border-[var(--primary)]/38 bg-[linear-gradient(145deg,rgba(255,255,255,0.96)_0%,rgba(219,234,254,0.92)_100%)] text-[var(--foreground)] shadow-[0_14px_34px_rgba(29,78,216,0.14)]"
-                    : "border-slate-200/90 bg-white text-[var(--foreground)] shadow-[0_8px_18px_rgba(15,23,42,0.03)] hover:-translate-y-0.5 hover:border-[var(--primary)]/30 hover:shadow-[0_12px_24px_rgba(15,23,42,0.07)]"
+                    ? "border-[var(--primary)] bg-[var(--primary)] text-white shadow-[0_8px_18px_rgba(29,78,216,0.16)]"
+                    : "border-[var(--primary)]/14 bg-white/58 text-[var(--foreground)] hover:border-[var(--primary)]/32 hover:bg-white/82"
                 )}
               >
-                <span className="flex h-7 items-center gap-2">
-                  <span className={cn("flex h-7 w-7 items-center justify-center rounded-full border text-[11px] font-bold", isActive ? "border-[var(--primary)] bg-[var(--primary)] text-white shadow-[0_4px_10px_rgba(29,78,216,0.2)]" : "border-[var(--primary)]/14 bg-[var(--primary)]/7 text-[var(--primary)]")}>
-                    {index + 1}
-                  </span>
-                  <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--color-muted-raw)]">
-                    {step.step}
-                  </span>
+                <span className={cn("flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-bold", isActive ? "bg-white/18 text-white" : "bg-[var(--primary)]/8 text-[var(--primary)]")}>
+                  {index + 1}
                 </span>
-                <span className="mt-2 block min-h-5 text-sm font-semibold">{step.title}</span>
-                <span className="mt-1 block text-xs leading-4 text-[var(--color-muted-raw)]">{step.description}</span>
+                <span className="min-w-0 truncate text-sm font-semibold">{step.title}</span>
               </button>
             );
           })}
@@ -511,12 +605,55 @@ function InstitutionalPagesStep({
   onSave: (sectionKey: SectionKey, payload: FooterGlobalContent | FooterLinksTermsContent | FooterLinksHelpContent | FooterLinksPrivacyContent) => void;
   saving: SectionKey | "";
 }) {
-  const [openIndex, setOpenIndex] = useState<number | null>(0);
   const items = [
     { key: "terms", eyebrow: "Termos de Uso", title: "Página /termos-de-uso" },
     { key: "help", eyebrow: "Central de Ajuda", title: "Página /central-ajuda" },
     { key: "privacy", eyebrow: "Privacidade", title: "Página /privacidade" },
-  ];
+  ] as const;
+  const [activeItemKey, setActiveItemKey] = useState<(typeof items)[number]["key"]>("terms");
+  const activeItemIndex = Math.max(0, items.findIndex((item) => item.key === activeItemKey));
+  const activeItem = items[activeItemIndex] ?? items[0];
+
+  function selectItem(index: number) {
+    const next = items[index];
+    if (next) setActiveItemKey(next.key);
+  }
+
+  function renderActiveEditor() {
+    if (activeItem.key === "terms") {
+      return (
+        <TermsEditor
+          embedded
+          terms={content.terms}
+          onChange={(terms) => onChange((draft) => { draft.terms = terms; })}
+          onSave={() => onSave("terms", content.terms)}
+          saving={saving === "terms"}
+        />
+      );
+    }
+
+    if (activeItem.key === "help") {
+      return (
+        <HelpEditor
+          embedded
+          help={content.help}
+          onChange={(help) => onChange((draft) => { draft.help = help; })}
+          onSave={() => onSave("help", content.help)}
+          saving={saving === "help"}
+        />
+      );
+    }
+
+    return (
+      <PrivacyEditor
+        embedded
+        privacy={content.privacy}
+        onChange={(privacy) => onChange((draft) => { draft.privacy = privacy; })}
+        onSave={() => onSave("privacy", content.privacy)}
+        saving={saving === "privacy"}
+      />
+    );
+  }
 
   return (
     <DeveloperCard className="p-4 sm:p-5">
@@ -525,50 +662,53 @@ function InstitutionalPagesStep({
         title="Páginas institucionais"
         description="Edite as páginas acessadas pelo rodapé sem deixar todos os campos abertos ao mesmo tempo."
       />
-      <DeveloperCmsAccordion
-        items={items}
-        openIndex={openIndex}
-        onOpenChange={setOpenIndex}
-        getEyebrow={(item) => item.eyebrow}
-        getTitle={(item) => item.title}
-        variant="services"
-        compact
-        renderItem={(item) => {
-          if (item.key === "terms") {
+      <div className="mt-4 flex items-center gap-2 rounded-[18px] border border-[var(--primary)]/14 bg-[var(--primary)]/4 p-1.5">
+        <div className="grid min-w-0 flex-1 grid-cols-3 gap-1.5" role="tablist" aria-label="Selecionar página institucional">
+          {items.map((item, index) => {
+            const isActive = item.key === activeItem.key;
             return (
-              <TermsEditor
-                embedded
-                terms={content.terms}
-                onChange={(terms) => onChange((draft) => { draft.terms = terms; })}
-                onSave={() => onSave("terms", content.terms)}
-                saving={saving === "terms"}
-              />
+              <button
+                key={item.key}
+                type="button"
+                role="tab"
+                aria-selected={isActive}
+                onClick={() => selectItem(index)}
+                className={cn(
+                  "inline-flex min-h-11 min-w-0 items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-bold transition-colors",
+                  isActive
+                    ? "bg-[var(--primary)] text-white shadow-[0_6px_14px_rgba(29,78,216,0.18)]"
+                    : "text-slate-600 hover:bg-white hover:text-[var(--primary)]"
+                )}
+              >
+                <span className={cn("flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px]", isActive ? "bg-white/18 text-white" : "bg-[var(--primary)]/8 text-[var(--primary)]")}>{index + 1}</span>
+                <span className="truncate">{item.eyebrow}</span>
+              </button>
             );
-          }
-
-          if (item.key === "help") {
-            return (
-              <HelpEditor
-                embedded
-                help={content.help}
-                onChange={(help) => onChange((draft) => { draft.help = help; })}
-                onSave={() => onSave("help", content.help)}
-                saving={saving === "help"}
-              />
-            );
-          }
-
-          return (
-            <PrivacyEditor
-              embedded
-              privacy={content.privacy}
-              onChange={(privacy) => onChange((draft) => { draft.privacy = privacy; })}
-              onSave={() => onSave("privacy", content.privacy)}
-              saving={saving === "privacy"}
-            />
-          );
-        }}
-      />
+          })}
+        </div>
+        <div className="flex shrink-0 items-center gap-1">
+          <button
+            type="button"
+            onClick={() => selectItem(activeItemIndex - 1)}
+            disabled={activeItemIndex === 0}
+            className="inline-flex h-11 w-11 items-center justify-center rounded-xl text-slate-600 transition-colors hover:bg-white hover:text-[var(--primary)] disabled:cursor-not-allowed disabled:opacity-35"
+            aria-label="Página institucional anterior"
+          >
+            <CaretLeft size={18} weight="bold" />
+          </button>
+          <span className="min-w-9 text-center text-xs font-bold tabular-nums text-slate-500">{activeItemIndex + 1}/{items.length}</span>
+          <button
+            type="button"
+            onClick={() => selectItem(activeItemIndex + 1)}
+            disabled={activeItemIndex === items.length - 1}
+            className="inline-flex h-11 w-11 items-center justify-center rounded-xl text-slate-600 transition-colors hover:bg-white hover:text-[var(--primary)] disabled:cursor-not-allowed disabled:opacity-35"
+            aria-label="Próxima página institucional"
+          >
+            <CaretRight size={18} weight="bold" />
+          </button>
+        </div>
+      </div>
+      <div className="mt-4">{renderActiveEditor()}</div>
     </DeveloperCard>
   );
 }
@@ -584,10 +724,21 @@ function FooterGlobalEditor({
   onSave: () => void;
   saving: boolean;
 }) {
+  const [openColumnId, setOpenColumnId] = useState<string | null>(null);
+  const openColumnIndex = openColumnId ? footer.columns.findIndex((column) => column.id === openColumnId) : null;
+
   function updateColumn(index: number, column: FooterLinkColumn) {
     const columns = [...footer.columns];
     columns[index] = column;
     onChange({ ...footer, columns });
+  }
+
+  function removeColumn(index: number) {
+    const nextColumns = footer.columns.filter((_, columnIndex) => columnIndex !== index);
+    if (footer.columns[index]?.id === openColumnId) {
+      setOpenColumnId(nextColumns[index]?.id ?? nextColumns[index - 1]?.id ?? null);
+    }
+    onChange({ ...footer, columns: nextColumns });
   }
 
   return (
@@ -618,37 +769,46 @@ function FooterGlobalEditor({
             </button>
           }
         />
-        {footer.columns.map((column, columnIndex) => (
-          <div key={column.id} className={cn(priorityPanelClassName, "space-y-4")}>
-            <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
+        <DeveloperCmsAccordion
+          items={footer.columns}
+          openIndex={openColumnIndex === -1 ? null : openColumnIndex}
+          onOpenChange={(index) => setOpenColumnId(index === null ? null : footer.columns[index]?.id ?? null)}
+          getEyebrow={(_, index) => `Coluna ${index + 1}`}
+          getTitle={(column) => column.title || "Coluna sem título"}
+          variant="services"
+          compact
+          renderActions={(_: FooterLinkColumn, columnIndex: number) => (
+            <>
+              <button type="button" data-cms-collection-action="up" onClick={() => onChange({ ...footer, columns: moveItem(footer.columns, columnIndex, -1) })} className={developerGhostButtonClassName}><ArrowUp size={16} weight="bold" />Subir</button>
+              <button type="button" data-cms-collection-action="down" onClick={() => onChange({ ...footer, columns: moveItem(footer.columns, columnIndex, 1) })} className={developerGhostButtonClassName}><ArrowDown size={16} weight="bold" />Descer</button>
+              <DeveloperConfirmButton actionType="remove" message="Esta coluna será removida do rodapé." onConfirm={() => removeColumn(columnIndex)}><Trash size={16} weight="bold" />Remover</DeveloperConfirmButton>
+            </>
+          )}
+          renderItem={(column: FooterLinkColumn, columnIndex: number) => (
+            <div className="space-y-4">
               <TextInput label="Título da coluna" value={column.title} maxLength={80} onChange={(value) => updateColumn(columnIndex, { ...column, title: value })} />
-              <div className="flex flex-wrap gap-2">
-                <button type="button" onClick={() => onChange({ ...footer, columns: moveItem(footer.columns, columnIndex, -1) })} className={developerGhostButtonClassName}><ArrowUp size={16} weight="bold" />Subir</button>
-                <button type="button" onClick={() => onChange({ ...footer, columns: moveItem(footer.columns, columnIndex, 1) })} className={developerGhostButtonClassName}><ArrowDown size={16} weight="bold" />Descer</button>
-                <button type="button" onClick={() => onChange({ ...footer, columns: footer.columns.filter((_, index) => index !== columnIndex) })} className={developerDangerButtonClassName}><Trash size={16} weight="bold" />Remover</button>
-              </div>
+              <button type="button" onClick={() => updateColumn(columnIndex, { ...column, links: [...column.links, { id: createId("footer-link"), order: column.links.length + 1, label: "", url: site.home }] })} className={developerSecondaryButtonClassName}>
+                <Plus size={16} weight="bold" />
+                Novo link
+              </button>
+              {column.links.map((link, linkIndex) => (
+                <LinkItemFields
+                  key={link.id}
+                  item={link}
+                  nested
+                  onChange={(item) => {
+                    const links = [...column.links];
+                    links[linkIndex] = item as FooterLinkItem;
+                    updateColumn(columnIndex, { ...column, links });
+                  }}
+                  onMoveUp={() => updateColumn(columnIndex, { ...column, links: moveItem(column.links, linkIndex, -1) })}
+                  onMoveDown={() => updateColumn(columnIndex, { ...column, links: moveItem(column.links, linkIndex, 1) })}
+                  onRemove={() => updateColumn(columnIndex, { ...column, links: column.links.filter((_, index) => index !== linkIndex) })}
+                />
+              ))}
             </div>
-            <button type="button" onClick={() => updateColumn(columnIndex, { ...column, links: [...column.links, { id: createId("footer-link"), order: column.links.length + 1, label: "", url: site.home }] })} className={developerSecondaryButtonClassName}>
-              <Plus size={16} weight="bold" />
-              Novo link
-            </button>
-            {column.links.map((link, linkIndex) => (
-              <LinkItemFields
-                key={link.id}
-                item={link}
-                nested
-                onChange={(item) => {
-                  const links = [...column.links];
-                  links[linkIndex] = item as FooterLinkItem;
-                  updateColumn(columnIndex, { ...column, links });
-                }}
-                onMoveUp={() => updateColumn(columnIndex, { ...column, links: moveItem(column.links, linkIndex, -1) })}
-                onMoveDown={() => updateColumn(columnIndex, { ...column, links: moveItem(column.links, linkIndex, 1) })}
-                onRemove={() => updateColumn(columnIndex, { ...column, links: column.links.filter((_, index) => index !== linkIndex) })}
-              />
-            ))}
-          </div>
-        ))}
+          )}
+        />
 
         <DeveloperSectionHeading
           title="Links inferiores"
@@ -674,28 +834,12 @@ function FooterGlobalEditor({
           />
         ))}
 
-        <div className={cn(mutedPanelClassName, "space-y-4")}>
-          <TextInput label="Título dos horários" value={footer.serviceHoursTitle} maxLength={80} onChange={(value) => onChange({ ...footer, serviceHoursTitle: value })} />
-          {footer.serviceHours.map((hour, index) => (
-            <div key={index} className="grid gap-3 md:grid-cols-[minmax(0,1fr)_auto]">
-              <TextInput label={`Horário ${index + 1}`} value={hour} maxLength={220} onChange={(value) => {
-                const serviceHours = [...footer.serviceHours];
-                serviceHours[index] = value;
-                onChange({ ...footer, serviceHours });
-              }} />
-              <button type="button" onClick={() => onChange({ ...footer, serviceHours: footer.serviceHours.filter((_, itemIndex) => itemIndex !== index) })} className={developerDangerButtonClassName}>
-                <Trash size={16} weight="bold" />
-                Remover
-              </button>
-            </div>
-          ))}
-          {footer.serviceHours.length < 5 ? (
-            <button type="button" onClick={() => onChange({ ...footer, serviceHours: [...footer.serviceHours, ""] })} className={developerSecondaryButtonClassName}>
-              <Plus size={16} weight="bold" />
-              Novo horário
-            </button>
-          ) : null}
-        </div>
+        <ServiceHoursEditor
+          title={footer.serviceHoursTitle}
+          hours={footer.serviceHours}
+          onTitleChange={(serviceHoursTitle) => onChange({ ...footer, serviceHoursTitle })}
+          onChange={(serviceHours) => onChange({ ...footer, serviceHours })}
+        />
 
         {false ? (
         <div className={cn(panelClassName, "space-y-4")}>
@@ -861,6 +1005,8 @@ function HelpEditor({
               actions[index] = nextAction;
               onChange({ ...help, quickAccess: { ...help.quickAccess, actions } });
             }}
+            onMoveUp={() => onChange({ ...help, quickAccess: { ...help.quickAccess, actions: moveItem(help.quickAccess.actions, index, -1) } })}
+            onMoveDown={() => onChange({ ...help, quickAccess: { ...help.quickAccess, actions: moveItem(help.quickAccess.actions, index, 1) } })}
           />
         ))}
         <div className={cn(mutedPanelClassName, "grid gap-5 md:grid-cols-2")}>
@@ -1013,21 +1159,43 @@ function ActionCardFields({
   action,
   label,
   onChange,
+  onMoveUp,
+  onMoveDown,
 }: {
   action: FooterActionCard;
   label: string;
   onChange: (action: FooterActionCard) => void;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
 }) {
+  const [isOpen, setIsOpen] = useState(false);
+
   return (
-    <div className={cn(panelClassName, "space-y-5")}>
-      <DeveloperSectionHeading title={label} />
-      <div className="grid gap-5 md:grid-cols-3">
-        <IconSelect label="Ícone" value={action.icon} options={HELP_ICON_OPTIONS} onChange={(value) => onChange({ ...action, icon: value })} />
-        <TextInput label="Título" value={action.title} maxLength={180} onChange={(value) => onChange({ ...action, title: value })} />
-        <TextInput label="Descrição" value={action.description} maxLength={260} textarea onChange={(value) => onChange({ ...action, description: value })} />
-      </div>
-      <ButtonFields button={action.button} label="Botão" onChange={(button) => onChange({ ...action, button })} />
-    </div>
+    <DeveloperCmsAccordion
+      items={[action]}
+      openIndex={isOpen ? 0 : null}
+      onOpenChange={(index) => setIsOpen(index === 0)}
+      getEyebrow={() => label}
+      getTitle={(item) => item.title || "Ação rápida sem título"}
+      variant="services"
+      compact
+      renderActions={() => (
+        <>
+          <button type="button" data-cms-collection-action="up" onClick={onMoveUp} className={developerGhostButtonClassName}><ArrowUp size={16} weight="bold" />Subir</button>
+          <button type="button" data-cms-collection-action="down" onClick={onMoveDown} className={developerGhostButtonClassName}><ArrowDown size={16} weight="bold" />Descer</button>
+        </>
+      )}
+      renderItem={(item) => (
+        <div className="space-y-5">
+          <div className="grid gap-5 md:grid-cols-3">
+            <IconSelect label="Ícone" value={item.icon} options={HELP_ICON_OPTIONS} onChange={(value) => onChange({ ...item, icon: value })} />
+            <TextInput label="Título" value={item.title} maxLength={180} onChange={(value) => onChange({ ...item, title: value })} />
+            <TextInput label="Descrição" value={item.description} maxLength={260} textarea onChange={(value) => onChange({ ...item, description: value })} />
+          </div>
+          <ButtonFields button={item.button} label="Botão" onChange={(button) => onChange({ ...item, button })} />
+        </div>
+      )}
+    />
   );
 }
 
@@ -1038,11 +1206,27 @@ function FaqEditor({
   items: PageFaqItem[];
   onChange: (items: PageFaqItem[]) => void;
 }) {
+  const [openFaqId, setOpenFaqId] = useState<string | null>(null);
+  const openIndex = openFaqId ? items.findIndex((item) => item.id === openFaqId) : null;
+
   return (
-    <div className="space-y-4">
-      {items.map((item, index) => (
-        <div key={item.id} className={cn(panelClassName, "grid gap-5 md:grid-cols-2")}>
-          <TextInput label={`Pergunta fixa ${index + 1}`} value={item.question} maxLength={180} onChange={(value) => {
+    <DeveloperCmsAccordion
+      items={items}
+      openIndex={openIndex === -1 ? null : openIndex}
+      onOpenChange={(index) => setOpenFaqId(index === null ? null : items[index]?.id ?? null)}
+      getEyebrow={(_, index) => `Pergunta ${index + 1}`}
+      getTitle={(item) => item.question || "Pergunta sem texto"}
+      variant="services"
+      compact
+      renderActions={(_, index) => (
+        <>
+          <button type="button" data-cms-collection-action="up" onClick={() => onChange(moveItem(items, index, -1))} className={developerGhostButtonClassName}><ArrowUp size={16} weight="bold" />Subir</button>
+          <button type="button" data-cms-collection-action="down" onClick={() => onChange(moveItem(items, index, 1))} className={developerGhostButtonClassName}><ArrowDown size={16} weight="bold" />Descer</button>
+        </>
+      )}
+      renderItem={(item, index) => (
+        <div className="grid gap-5 md:grid-cols-2">
+          <TextInput label="Pergunta" value={item.question} maxLength={180} onChange={(value) => {
             const next = [...items];
             next[index] = { ...item, question: value };
             onChange(next);
@@ -1053,7 +1237,7 @@ function FaqEditor({
             onChange(next);
           }} />
         </div>
-      ))}
-    </div>
+      )}
+    />
   );
 }

@@ -1,6 +1,8 @@
 package br.com.rodogarcia.cms.backend.service.content;
 
 import java.util.Locale;
+import java.util.Map;
+import java.util.OptionalDouble;
 import java.util.Set;
 
 import br.com.rodogarcia.cms.backend.exception.ApiException;
@@ -11,6 +13,15 @@ import tools.jackson.databind.node.StringNode;
 public final class TestContentMediaValidator implements ContentMediaValidator {
     private static final Set<String> IMAGES = Set.of("png", "jpg", "jpeg", "webp", "gif", "svg", "avif");
     private static final Set<String> VIDEOS = Set.of("mp4", "webm", "ogg");
+    private final Map<String, Double> videoDurations;
+
+    public TestContentMediaValidator() {
+        this(Map.of());
+    }
+
+    public TestContentMediaValidator(Map<String, Double> videoDurations) {
+        this.videoDurations = Map.copyOf(videoDurations);
+    }
 
     @Override
     public String image(JsonNode value, String label) {
@@ -42,6 +53,13 @@ public final class TestContentMediaValidator implements ContentMediaValidator {
     @Override
     public boolean isKnownImage(String value) {
         return !normalize(StringNode.valueOf(value)).isEmpty() && IMAGES.contains(extension(value));
+    }
+
+    @Override
+    public OptionalDouble videoDuration(String value) {
+        Double duration = videoDurations.get(normalize(StringNode.valueOf(value)));
+        return duration != null && Double.isFinite(duration) && duration > 0
+            ? OptionalDouble.of(duration) : OptionalDouble.empty();
     }
 
     private String media(JsonNode value, String label, Set<String> types) {

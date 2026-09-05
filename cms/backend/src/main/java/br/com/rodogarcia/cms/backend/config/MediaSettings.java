@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 public final class MediaSettings {
 
     private final String ffmpegPath;
+    private final String ffprobePath;
     private final int webpQuality;
     private final int webpThumbQuality;
     private final int webpMediumWidth;
@@ -16,6 +17,7 @@ public final class MediaSettings {
     @Autowired
     public MediaSettings(CmsProperties properties) {
         this.ffmpegPath = properties.ffmpegPath();
+        this.ffprobePath = properties.ffprobePath();
         this.webpQuality = properties.mediaWebpQuality();
         this.webpThumbQuality = properties.mediaWebpThumbQuality();
         this.webpMediumWidth = properties.mediaWebpMediumWidth();
@@ -25,6 +27,7 @@ public final class MediaSettings {
 
     MediaSettings(
         String ffmpegPath,
+        String ffprobePath,
         int webpQuality,
         int webpThumbQuality,
         int webpMediumWidth,
@@ -32,6 +35,7 @@ public final class MediaSettings {
         int webpOptimizedWidth
     ) {
         this.ffmpegPath = ffmpegPath;
+        this.ffprobePath = ffprobePath;
         this.webpQuality = webpQuality;
         this.webpThumbQuality = webpThumbQuality;
         this.webpMediumWidth = webpMediumWidth;
@@ -40,11 +44,19 @@ public final class MediaSettings {
     }
 
     public static MediaSettings defaults(String ffmpegPath) {
-        return new MediaSettings(ffmpegPath, 82, 72, 960, 1_440, 1_920);
+        return defaults(ffmpegPath, "");
+    }
+
+    public static MediaSettings defaults(String ffmpegPath, String ffprobePath) {
+        return new MediaSettings(ffmpegPath, ffprobePath, 82, 72, 960, 1_440, 1_920);
     }
 
     public String ffmpegPath() {
         return ffmpegPath;
+    }
+
+    public String ffprobePath() {
+        return ffprobePath;
     }
 
     public int webpQuality() {

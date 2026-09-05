@@ -46,13 +46,13 @@ O CMS Next usa `basePath=/admin`; a API CMS preserva `/api/...` e `/uploads/...`
 
 ## Ambiente e storage
 
-Os três backends Spring usam `NODE_ENV`, `HOST`, `PORT`, origem, CORS, storage e os mesmos nomes privados documentados nos exemplos de ambiente. O CMS também usa `JWT_SECRET` ou `SESSION_SECRET`, `ADMIN_SETUP_CODE`, `FFMPEG_PATH`, `LANDING_BUILDER_API_URL` e `LANDING_BUILDER_SERVICE_TOKEN`; o Builder exige `FFMPEG_PATH` em produção. Nenhum requer `SPRING_PROFILES_ACTIVE`, `SERVER_PORT` ou YAML.
+Os três backends Spring usam `NODE_ENV`, `HOST`, `PORT`, origem, CORS, storage e os mesmos nomes privados documentados nos exemplos de ambiente. O CMS também usa `JWT_SECRET` ou `SESSION_SECRET`, `ADMIN_SETUP_CODE`, `FFMPEG_PATH`, `FFPROBE_PATH`, `LANDING_BUILDER_API_URL` e `LANDING_BUILDER_SERVICE_TOKEN`; em produção, FFmpeg e FFprobe ficam fora do repositório e o CMS testa ambos no readiness. O Builder também exige `FFMPEG_PATH` e `FFPROBE_PATH` em produção, para registrar metadados de vídeo sem confiar no navegador. Nenhum requer `SPRING_PROFILES_ACTIVE`, `SERVER_PORT` ou YAML.
 
 O volume canônico é `site/backend/storage` ou um root externo configurado. A API pública é escritora exclusiva de `private/rate-limits.json`; a API CMS é escritora exclusiva das coleções administrativas e de `private/cms-rate-limits.json`. O Builder nunca escreve nesse volume.
 
 ## Processo, health e artefatos
 
-`site-api-prod`, `cms-api-prod` e `landing-api-prod` executam seus respectivos `dist/server.jar` com `java -jar`. O health total tem prazo de 30 s, polling de 500 ms e timeout individual de 5 s. `GET /health` responde `200 {"ok":true}` quando o processo está vivo; `GET /ready` responde somente `200 {"ok":true}` ou `503 {"ok":false}` após verificar storage, uploads, assets e, em produção CMS, o executável FFmpeg. O Builder preserva somente `/health`.
+`site-api-prod`, `cms-api-prod` e `landing-api-prod` executam seus respectivos `dist/server.jar` com `java -jar`. O health total tem prazo de 30 s, polling de 500 ms e timeout individual de 5 s. `GET /health` responde `200 {"ok":true}` quando o processo está vivo; `GET /ready` responde somente `200 {"ok":true}` ou `503 {"ok":false}` após verificar storage, uploads, assets e, em produção CMS, os executáveis FFmpeg e FFprobe. O Builder preserva somente `/health`.
 
 `dist.test` nunca é promovido. `dist.next`, `dist.previous` e `dist.failed` isolam candidata, rollback JAR e falha. O hardening usa exclusivamente `site/backend/dist.test/server.jar` e `cms/backend/dist.test/server.jar` em storage temporário.
 

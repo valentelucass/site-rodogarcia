@@ -99,10 +99,17 @@ export default function SetoresPage() {
   if (!isSupreme) {
     return <DeveloperPage>
       <DeveloperHero eyebrow="Administração - Setores" title="Perfis de acesso protegidos" description="Esta área é reservada ao usuário supremo do CMS." />
-      <DeveloperCard className="mt-5 max-w-2xl">
-        <DeveloperSectionHeading eyebrow="Acesso restrito" title="Sua conta não pode administrar perfis" description="Somente o usuário supremo pode visualizar ou alterar setores, privilégios e perfis de acesso. Essa separação impede que uma conta comum amplie as próprias permissões." />
-        <DeveloperMessage tone="info">Peça ao usuário supremo qualquer ajuste de acesso necessário para o seu trabalho.</DeveloperMessage>
-      </DeveloperCard>
+      <div className="mt-5 flex justify-center">
+        <DeveloperCard className="w-full max-w-2xl text-center">
+          <DeveloperSectionHeading
+            eyebrow="Acesso restrito"
+            title="Sua conta não pode administrar perfis"
+            description="Somente o usuário supremo pode visualizar ou alterar setores, privilégios e perfis de acesso. Essa separação impede que uma conta comum amplie as próprias permissões."
+            className="mb-4 items-center text-center sm:justify-center [&>div>div]:justify-center"
+          />
+          <DeveloperMessage tone="info">Peça ao usuário supremo qualquer ajuste de acesso necessário para o seu trabalho.</DeveloperMessage>
+        </DeveloperCard>
+      </div>
     </DeveloperPage>;
   }
 

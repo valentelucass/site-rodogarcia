@@ -51,6 +51,7 @@ public final class LandingMediaService {
     private final LandingMediaRepository repository;
     private final CampaignService campaignService;
     private final String ffmpegPath;
+    private final String ffprobePath;
 
     public LandingMediaService(
         ObjectMapper mapper,
@@ -62,6 +63,7 @@ public final class LandingMediaService {
         this.repository = repository;
         this.campaignService = campaignService;
         ffmpegPath = properties.ffmpegPath();
+        ffprobePath = properties.ffprobePath();
     }
 
     public synchronized ArrayNode list() {
@@ -202,6 +204,12 @@ public final class LandingMediaService {
         String storageName = id + "." + extension;
         writeMediaFile(storageName, bytes, "Não foi possível salvar o vídeo enviado.", 422);
         ObjectNode record = record(id, "video", mimeType, bytes.length, storageName, alt);
+        VideoMetadata metadata = readVideoMetadata(filePath(record));
+        if (metadata != null) {
+            if (metadata.width() > 0) record.put("width", metadata.width());
+            if (metadata.height() > 0) record.put("height", metadata.height());
+            if (metadata.durationSeconds() > 0) record.put("durationSeconds", metadata.durationSeconds());
+        }
         prepend(record);
         return toDto(record);
     }
@@ -238,6 +246,7 @@ public final class LandingMediaService {
         dto.put("poster", record.path("poster").asText(""));
         if (record.path("width").canConvertToInt() && record.path("width").asInt() > 0) dto.put("width", record.path("width").asInt());
         if (record.path("height").canConvertToInt() && record.path("height").asInt() > 0) dto.put("height", record.path("height").asInt());
+        if (record.path("durationSeconds").isNumber() && record.path("durationSeconds").asDouble() > 0) dto.put("durationSeconds", record.path("durationSeconds").asDouble());
         dto.put("createdAt", record.path("createdAt").asText());
         return dto;
     }
@@ -254,6 +263,48 @@ public final class LandingMediaService {
         Path candidate = root.resolve(storageName).toAbsolutePath().normalize();
         return candidate.startsWith(root) ? candidate : null;
     }
+
+    private VideoMetadata readVideoMetadata(Path path) {
+        if (path == null || ffprobePath.isBlank()) return null;
+        Process process = null;
+        try {
+            process = new ProcessBuilder(ffprobePath, "-v", "error", "-show_entries", "format=duration:stream=width,height", "-of", "default=noprint_wrappers=1", path.toString())
+                .redirectErrorStream(true).start();
+            if (!process.waitFor(5, TimeUnit.SECONDS) || process.exitValue() != 0) return null;
+            byte[] output = process.getInputStream().readNBytes(8_192);
+            int width = 0;
+            int height = 0;
+            double duration = 0;
+            for (String line : new String(output, StandardCharsets.UTF_8).split("\\R")) {
+                String[] pair = line.split("=", 2);
+                if (pair.length != 2) continue;
+                if ("width".equals(pair[0])) width = parsePositiveInt(pair[1]);
+                if ("height".equals(pair[0])) height = parsePositiveInt(pair[1]);
+                if ("duration".equals(pair[0])) duration = parsePositiveDouble(pair[1]);
+            }
+            return duration > 0 ? new VideoMetadata(width, height, duration) : null;
+        } catch (IOException ignored) {
+            if (process != null) process.destroyForcibly();
+            return null;
+        } catch (InterruptedException ignored) {
+            if (process != null) process.destroyForcibly();
+            Thread.currentThread().interrupt();
+            return null;
+        }
+    }
+
+    private static int parsePositiveInt(String value) {
+        try { return Math.max(0, Integer.parseInt(value.trim())); } catch (NumberFormatException ignored) { return 0; }
+    }
+
+    private static double parsePositiveDouble(String value) {
+        try {
+            double parsed = Double.parseDouble(value.trim());
+            return Double.isFinite(parsed) && parsed > 0 && parsed <= 86_400 ? parsed : 0;
+        } catch (NumberFormatException ignored) { return 0; }
+    }
+
+    private record VideoMetadata(int width, int height, double durationSeconds) { }
 
     private void writeMediaFile(String storageName, byte[] bytes, String errorMessage, int statusCode) {
         Path root = repository.mediaRoot();

@@ -6,6 +6,7 @@ import br.com.rodogarcia.cms.backend.exception.ApiException;
 import br.com.rodogarcia.cms.backend.model.content.ContentDefaults;
 import br.com.rodogarcia.cms.backend.model.content.ContentJson;
 import br.com.rodogarcia.cms.backend.model.content.ContentKeys;
+import br.com.rodogarcia.cms.backend.model.content.MediaPresentation;
 import org.springframework.stereotype.Service;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
@@ -346,6 +347,9 @@ public final class HomeContentAdminService {
         result.put("mobileSrc", video
             ? mediaValidator.video(source.get("mobileSrc"), "Mídia: vídeo mobile")
             : mediaValidator.image(source.get("mobileSrc"), "Mídia: imagem mobile"));
+        result.set("presentation", MediaPresentation.normalize(
+            mapper, source.get("presentation"), video, ""
+        ));
         return result;
     }
 
@@ -502,11 +506,47 @@ public final class HomeContentAdminService {
         }
     }
 
-    private static void validateMedia(ObjectNode media, String label) {
+    private void validateMedia(ObjectNode media, String label) {
         if (!hasText(media, "src")) throw new ApiException(422, label + ": mídia obrigatória.");
         if (media.path("type").asText().equals("video") && !media.path("src").asText().matches("(?i).*\\.(mp4|webm|ogg)$")) {
             throw new ApiException(422, label + ": vídeo deve usar MP4, WebM ou Ogg.");
         }
+        if (media.path("type").asText().equals("video")) validateVideoPlayback(media, label);
+    }
+
+    private void validateVideoPlayback(ObjectNode media, String label) {
+        ObjectNode presentation = ContentJson.object(media.get("presentation"));
+        ObjectNode desktop = ContentJson.object(presentation.get("desktop"));
+        String desktopSource = firstNonEmpty(media.path("desktopSrc").asText(), media.path("src").asText());
+        validatePlayback(desktop, desktopSource, label + " (desktop)");
+
+        String mobileSource = firstNonEmpty(media.path("mobileSrc").asText(), desktopSource);
+        ObjectNode mobile = presentation.path("mobile").isObject()
+            ? ContentJson.object(presentation.get("mobile")) : desktop;
+        validatePlayback(mobile, mobileSource, label + " (celular)");
+    }
+
+    private void validatePlayback(ObjectNode placement, String source, String label) {
+        ObjectNode playback = ContentJson.object(placement.get("playback"));
+        double start = playback.path("startSeconds").asDouble(0D);
+        boolean hasDuration = playback.has("durationSeconds") && playback.path("durationSeconds").isNumber();
+        if (start <= 0D && !hasDuration) return;
+
+        var duration = mediaValidator.videoDuration(source);
+        if (duration.isEmpty()) {
+            throw new ApiException(422, label + ": não foi possível confirmar a duração deste vídeo para salvar o trecho.");
+        }
+        double total = duration.getAsDouble();
+        if (start >= total) {
+            throw new ApiException(422, label + ": o início do trecho precisa ficar antes do fim do vídeo.");
+        }
+        if (hasDuration && start + playback.path("durationSeconds").asDouble() > total + 0.05D) {
+            throw new ApiException(422, label + ": o fim do trecho ultrapassa a duração do vídeo.");
+        }
+    }
+
+    private static String firstNonEmpty(String primary, String fallback) {
+        return primary == null || primary.isBlank() ? fallback : primary;
     }
 
     private static boolean hasText(ObjectNode value, String key) {

@@ -430,6 +430,7 @@ public final class CampaignService {
             new int[] { 40, 160, 300, 300, 80, 180, 700, 70, 400 });
         validateImageMedia(target, "logo");
         validateImageMedia(target, "backgroundImage");
+        normalizePresentation(target, source, "backgroundPresentation", "backgroundImage");
         validateUrl(target, "ctaUrl");
         if (source.has("highlights")) target.set("highlights", normalizeItems(source.get("highlights"), 1, 4,
             new String[] { "title", "description" }, new int[] { 80, 220 }, false));
@@ -463,6 +464,7 @@ public final class CampaignService {
         copyTextFields(target, source, new String[] { "eyebrow", "title", "description", "image", "ctaLabel", "ctaUrl" },
             new int[] { 80, 180, 900, 300, 70, 400 });
         validateMedia(target, "image");
+        normalizePresentation(target, source, "imagePresentation", "image");
         validateUrl(target, "ctaUrl");
         if (source.has("items")) target.set("items", normalizeItems(source.get("items"), 1, 4,
             new String[] { "title", "description" }, new int[] { 100, 320 }, false));
@@ -482,6 +484,7 @@ public final class CampaignService {
         copyTextFields(target, source, new String[] { "eyebrow", "title", "description", "backgroundImage", "ctaLabel", "ctaUrl" },
             new int[] { 80, 180, 700, 300, 70, 400 });
         validateImageMedia(target, "backgroundImage");
+        normalizePresentation(target, source, "backgroundPresentation", "backgroundImage");
         validateUrl(target, "ctaUrl");
         if (source.has("items")) target.set("items", normalizeItems(source.get("items"), 1, 3,
             new String[] { "title", "description" }, new int[] { 100, 320 }, false));
@@ -519,6 +522,7 @@ public final class CampaignService {
         copyTextFields(target, source, new String[] { "eyebrow", "title", "description", "backgroundImage", "ctaLabel", "ctaUrl" },
             new int[] { 80, 180, 700, 300, 70, 400 });
         validateImageMedia(target, "backgroundImage");
+        normalizePresentation(target, source, "backgroundPresentation", "backgroundImage");
         validateUrl(target, "ctaUrl");
     }
 
@@ -665,6 +669,70 @@ public final class CampaignService {
         if (!url.isBlank() && !"image".equals(text(mediaRecord(url), "kind"))) {
             throw new ApiException("Esta área aceita somente imagens da biblioteca da campanha.", 422);
         }
+    }
+
+    /** Mantém o enquadramento como dado público mínimo, sem aceitar campos livres. */
+    private void normalizePresentation(ObjectNode target, ObjectNode source, String field, String mediaField) {
+        if (!source.has(field)) {
+            target.remove(field);
+            return;
+        }
+        if (!(source.get(field) instanceof ObjectNode input)) throw invalidLanding();
+        if (input.size() > 2 || input.properties().stream().anyMatch(entry -> !Set.of("desktop", "mobile").contains(entry.getKey()))) throw invalidLanding();
+        boolean video = "video".equals(text(mediaRecord(text(target, mediaField)), "kind"));
+        ObjectNode result = mapper.createObjectNode();
+        result.set("desktop", normalizePlacement(input.path("desktop"), video));
+        if (input.has("mobile")) result.set("mobile", normalizePlacement(input.path("mobile"), video));
+        validateVideoPlaybackDuration(result, mediaRecord(text(target, mediaField)));
+        target.set(field, result);
+    }
+
+    private static void validateVideoPlaybackDuration(ObjectNode presentation, ObjectNode media) {
+        if (media == null || !"video".equals(text(media, "kind"))) return;
+        double physicalDuration = media.path("durationSeconds").asDouble(-1);
+        for (String viewport : List.of("desktop", "mobile")) {
+            JsonNode playback = presentation.path(viewport).path("playback");
+            if (playback.isMissingNode()) continue;
+            if (!Double.isFinite(physicalDuration) || physicalDuration <= 0) {
+                throw new ApiException("Não foi possível confirmar a duração física deste vídeo para salvar o trecho.", 422);
+            }
+            double start = playback.path("startSeconds").asDouble();
+            double selectedDuration = playback.has("durationSeconds") ? playback.path("durationSeconds").asDouble() : physicalDuration - start;
+            if (start >= physicalDuration || start + selectedDuration > physicalDuration + 0.05) {
+                throw new ApiException("O trecho selecionado ultrapassa a duração física do vídeo.", 422);
+            }
+        }
+    }
+
+    private ObjectNode normalizePlacement(JsonNode input, boolean video) {
+        if (!(input instanceof ObjectNode placement) || !(placement.path("focalPoint") instanceof ObjectNode focal)) {
+            throw invalidLanding();
+        }
+        ObjectNode result = mapper.createObjectNode();
+        ObjectNode normalizedFocal = result.putObject("focalPoint");
+        normalizedFocal.put("x", normalizedPercent(focal.get("x")));
+        normalizedFocal.put("y", normalizedPercent(focal.get("y")));
+        if (placement.has("playback")) {
+            if (!video) throw invalidLanding();
+            JsonNode rawPlayback = placement.get("playback");
+            if (!(rawPlayback instanceof ObjectNode playback)) throw invalidLanding();
+            double start = normalizedSeconds(playback.get("startSeconds"), true);
+            ObjectNode normalizedPlayback = result.putObject("playback");
+            normalizedPlayback.put("startSeconds", start);
+            if (playback.has("durationSeconds")) normalizedPlayback.put("durationSeconds", normalizedSeconds(playback.get("durationSeconds"), false));
+        }
+        if (placement.size() > (placement.has("playback") ? 2 : 1)) throw invalidLanding();
+        return result;
+    }
+
+    private static double normalizedPercent(JsonNode value) {
+        if (value == null || !value.isNumber() || !Double.isFinite(value.asDouble()) || value.asDouble() < 0 || value.asDouble() > 100) throw invalidLanding();
+        return value.asDouble();
+    }
+
+    private static double normalizedSeconds(JsonNode value, boolean permitsZero) {
+        if (value == null || !value.isNumber() || !Double.isFinite(value.asDouble()) || value.asDouble() < (permitsZero ? 0 : 0.1) || value.asDouble() > 86_400) throw invalidLanding();
+        return value.asDouble();
     }
 
     private static void validateUrl(ObjectNode target, String field) {

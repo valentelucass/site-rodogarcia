@@ -18,6 +18,7 @@ import { CareersJobsList } from "@/components/internal/CareersJobsList";
 import { CareersApplicationSelector } from "@/components/internal/CareersApplicationSelector";
 import { fetchPublicContent } from "@/lib/api";
 import { buildCmsMetadata } from "@/lib/cmsPublic";
+import { PresentedImage } from "@/components/media/PresentedImage";
 import { external, seo, site } from "@/lib/routes";
 import { cn } from "@/lib/utils";
 import type { CareersPageContent } from "@/types/content";
@@ -296,10 +297,11 @@ export default async function TrabalheConoscoPage() {
 
             <div className="relative overflow-hidden rounded-[34px] border border-white/70 bg-[#dce7f7] shadow-[0_24px_64px_rgba(15,23,42,0.12)]">
               <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,rgba(2,6,23,0.08)_100%)]" />
-              <img
+              <PresentedImage
                 src={cultureImage.src}
                 alt={cultureImage.alt}
                 className="aspect-[4/3] w-full object-cover"
+                presentation={cultureImage.presentation}
                 loading="lazy"
                 decoding="async"
               />

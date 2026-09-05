@@ -10,6 +10,7 @@ import java.util.Set;
 
 import br.com.rodogarcia.cms.backend.config.StoragePaths;
 import br.com.rodogarcia.cms.backend.exception.ApiException;
+import br.com.rodogarcia.cms.backend.model.content.MediaPresentation;
 import br.com.rodogarcia.cms.backend.repository.JsonCollections;
 import br.com.rodogarcia.cms.backend.repository.JsonFileStore;
 import br.com.rodogarcia.cms.backend.security.ClientIpResolver;
@@ -311,7 +312,9 @@ public class PopupService {
         result.put("closeText", textOr(input.get("closeText"), 40, defaults.path("closeText").asText()));
         result.put("successMessage", textOr(input.get("successMessage"), 280, defaults.path("successMessage").asText()));
         result.put("badgeText", textOr(input.get("badgeText"), 60, defaults.path("badgeText").asText()));
-        result.put("image", image(input.get("image"), "Popup: imagem padrão", strictMedia));
+        String image = image(input.get("image"), "Popup: imagem padrão", strictMedia);
+        result.put("image", image);
+        putImagePresentation(result, input.get("imagePresentation"), image);
         putNumber(result, "delaySeconds", number(input.get("delaySeconds"), 10, 0, 120));
         putNumber(result, "cooldownHours", number(input.get("cooldownHours"), 24, 0, 720));
         result.put("maxShowsPerSession", Math.round(number(input.get("maxShowsPerSession"), 1, 1, 10)));
@@ -320,11 +323,15 @@ public class PopupService {
         ObjectNode outputDesktop = result.putObject("desktop");
         outputDesktop.put("title", textOr(desktop.get("title"), 120, textOr(input.get("title"), 120, defaults.path("desktop").path("title").asText())));
         outputDesktop.put("description", textOr(desktop.get("description"), 280, textOr(input.get("description"), 280, defaults.path("desktop").path("description").asText())));
-        outputDesktop.put("image", image(desktop.get("image"), "Popup: imagem desktop", strictMedia));
+        String desktopImage = image(desktop.get("image"), "Popup: imagem desktop", strictMedia);
+        outputDesktop.put("image", desktopImage);
+        putImagePresentation(outputDesktop, desktop.get("imagePresentation"), desktopImage);
         ObjectNode outputMobile = result.putObject("mobile");
         outputMobile.put("title", textOr(mobileConfig.get("title"), 120, textOr(input.get("title"), 120, defaults.path("mobile").path("title").asText())));
         outputMobile.put("description", textOr(mobileConfig.get("description"), 280, textOr(input.get("description"), 280, defaults.path("mobile").path("description").asText())));
-        outputMobile.put("image", image(mobileConfig.get("image"), "Popup: imagem mobile", strictMedia));
+        String mobileImage = image(mobileConfig.get("image"), "Popup: imagem mobile", strictMedia);
+        outputMobile.put("image", mobileImage);
+        putImagePresentation(outputMobile, mobileConfig.get("imagePresentation"), mobileImage);
         outputMobile.put("sheetTitle", textOr(mobileConfig.get("sheetTitle"), 80, defaults.path("mobile").path("sheetTitle").asText()));
         return result;
     }
@@ -336,6 +343,17 @@ public class PopupService {
         } catch (ApiException ignored) {
             return "";
         }
+    }
+
+    /**
+     * O enquadramento pertence ao uso da imagem no popup e só é aceito quando
+     * a respectiva imagem interna também foi validada. O popup não recebe vídeo.
+     */
+    private void putImagePresentation(ObjectNode target, JsonNode rawPresentation, String image) {
+        if (image.isEmpty()) return;
+        target.set("imagePresentation", MediaPresentation.normalize(
+            store.mapper(), rawPresentation, false, ""
+        ));
     }
 
     private static ObjectNode merge(ObjectNode current, ObjectNode incoming) {

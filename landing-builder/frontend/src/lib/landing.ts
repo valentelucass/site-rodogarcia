@@ -10,6 +10,8 @@ export interface LandingTheme {
 
 export interface LandingSeo { title: string; description: string; index: boolean; }
 export interface LandingMediaDescriptor { kind: "image" | "video"; alt: string; poster: string; }
+export interface LandingMediaPlacement { focalPoint: { x: number; y: number }; playback?: { startSeconds: number; durationSeconds?: number }; }
+export interface LandingMediaPresentation { desktop: LandingMediaPlacement; mobile?: LandingMediaPlacement; }
 
 export interface PublicLandingPage {
   template: "campaign-v1";
@@ -21,16 +23,16 @@ export interface PublicLandingPage {
   media: Record<string, LandingMediaDescriptor>;
   hero: {
     phone: string; email: string; logo: string; backgroundImage: string; eyebrow: string; title: string;
-    description: string; ctaLabel: string; ctaUrl: string; highlights: Array<{ title: string; description: string }>;
+    description: string; ctaLabel: string; ctaUrl: string; highlights: Array<{ title: string; description: string }>; backgroundPresentation: LandingMediaPresentation;
   };
   lowerSection: { visible: boolean; title: string; description: string; formTitle: string; formDescription: string; submitLabel: string; mapBaseColor: string; mapBranchColor: string; mapBorderColor: string; ctaLabel: string; ctaUrl: string };
   benefits: { visible: boolean; eyebrow: string; title: string; description: string; items: Array<{ title: string; description: string }> };
-  story: { visible: boolean; eyebrow: string; title: string; description: string; image: string; items: Array<{ title: string; description: string }>; ctaLabel: string; ctaUrl: string };
+  story: { visible: boolean; eyebrow: string; title: string; description: string; image: string; imagePresentation: LandingMediaPresentation; items: Array<{ title: string; description: string }>; ctaLabel: string; ctaUrl: string };
   metrics: { visible: boolean; eyebrow: string; title: string; items: Array<{ value: string; label: string; description: string }> };
-  showcase: { visible: boolean; eyebrow: string; title: string; description: string; backgroundImage: string; ctaLabel: string; ctaUrl: string; items: Array<{ title: string; description: string }> };
+  showcase: { visible: boolean; eyebrow: string; title: string; description: string; backgroundImage: string; backgroundPresentation: LandingMediaPresentation; ctaLabel: string; ctaUrl: string; items: Array<{ title: string; description: string }> };
   testimonial: { visible: boolean; eyebrow: string; title: string; description: string; items: Array<{ name: string; detail: string; quote: string; rating: number }> };
   faq: { visible: boolean; eyebrow: string; title: string; items: Array<{ question: string; answer: string }> };
-  finalCta: { visible: boolean; eyebrow: string; title: string; description: string; backgroundImage: string; ctaLabel: string; ctaUrl: string };
+  finalCta: { visible: boolean; eyebrow: string; title: string; description: string; backgroundImage: string; backgroundPresentation: LandingMediaPresentation; ctaLabel: string; ctaUrl: string };
   footer: { brand: string; description: string; phone: string; email: string; legalText: string };
 }
 
@@ -65,6 +67,26 @@ function normalizeColor(value: unknown, fallback: string) {
 function normalizeMediaUrl(value: unknown) {
   const url = string(value, 300);
   return internalMediaPattern.test(url) ? url : "";
+}
+
+const centeredPresentation: LandingMediaPresentation = { desktop: { focalPoint: { x: 50, y: 50 } } };
+
+function normalizePresentation(value: unknown): LandingMediaPresentation {
+  const input = record(value);
+  const normalizePlacement = (candidate: unknown): LandingMediaPlacement | null => {
+    const placement = record(candidate);
+    const focal = record(placement?.focalPoint);
+    const x = typeof focal?.x === "number" && Number.isFinite(focal.x) && focal.x >= 0 && focal.x <= 100 ? focal.x : null;
+    const y = typeof focal?.y === "number" && Number.isFinite(focal.y) && focal.y >= 0 && focal.y <= 100 ? focal.y : null;
+    if (x == null || y == null) return null;
+    const playbackInput = record(placement?.playback);
+    const startSeconds = typeof playbackInput?.startSeconds === "number" && Number.isFinite(playbackInput.startSeconds) && playbackInput.startSeconds >= 0 && playbackInput.startSeconds <= 86_400 ? playbackInput.startSeconds : null;
+    const durationSeconds = typeof playbackInput?.durationSeconds === "number" && Number.isFinite(playbackInput.durationSeconds) && playbackInput.durationSeconds >= .1 && playbackInput.durationSeconds <= 86_400 ? playbackInput.durationSeconds : null;
+    return { focalPoint: { x, y }, ...(startSeconds == null ? {} : { playback: { startSeconds, ...(durationSeconds == null ? {} : { durationSeconds }) } }) };
+  };
+  const desktop = normalizePlacement(input?.desktop);
+  const mobile = normalizePlacement(input?.mobile);
+  return { desktop: desktop ?? centeredPresentation.desktop, ...(mobile ? { mobile } : {}) };
 }
 
 function normalizeMediaDescriptors(value: unknown): Record<string, LandingMediaDescriptor> {
@@ -206,7 +228,7 @@ function normalizeLanding(value: unknown): PublicLandingPage | null {
     media: normalizeMediaDescriptors(input.media),
     hero: {
       phone: string(hero.phone, 40), email: string(hero.email, 160), logo: normalizeMediaUrl(hero.logo), backgroundImage: normalizeMediaUrl(hero.backgroundImage),
-      eyebrow: string(hero.eyebrow, 80), title: heroTitle, description: string(hero.description, 700), ctaLabel: string(hero.ctaLabel, 70), ctaUrl: normalizeActionUrl(hero.ctaUrl), highlights: normalizeHighlights(hero.highlights),
+      eyebrow: string(hero.eyebrow, 80), title: heroTitle, description: string(hero.description, 700), ctaLabel: string(hero.ctaLabel, 70), ctaUrl: normalizeActionUrl(hero.ctaUrl), highlights: normalizeHighlights(hero.highlights), backgroundPresentation: normalizePresentation(hero.backgroundPresentation),
     },
     lowerSection: {
       visible: visible(lowerSection.visible),
@@ -222,12 +244,12 @@ function normalizeLanding(value: unknown): PublicLandingPage | null {
       ctaUrl: normalizeActionUrl(lowerSection.ctaUrl),
     },
     benefits: normalizeBenefits(input.benefits),
-    story: { visible: visible(story.visible), eyebrow: string(story.eyebrow, 80), title: string(story.title, 180), description: string(story.description, 900), image: normalizeMediaUrl(story.image), items: normalizeFeatureItems(story.items, 4), ctaLabel: string(story.ctaLabel, 70), ctaUrl: normalizeActionUrl(story.ctaUrl) },
+    story: { visible: visible(story.visible), eyebrow: string(story.eyebrow, 80), title: string(story.title, 180), description: string(story.description, 900), image: normalizeMediaUrl(story.image), imagePresentation: normalizePresentation(story.imagePresentation), items: normalizeFeatureItems(story.items, 4), ctaLabel: string(story.ctaLabel, 70), ctaUrl: normalizeActionUrl(story.ctaUrl) },
     metrics: normalizeMetrics(input.metrics),
-    showcase: { visible: visible(showcase.visible), eyebrow: string(showcase.eyebrow, 80), title: string(showcase.title, 180), description: string(showcase.description, 700), backgroundImage: normalizeMediaUrl(showcase.backgroundImage), ctaLabel: string(showcase.ctaLabel, 70), ctaUrl: normalizeActionUrl(showcase.ctaUrl), items: normalizeFeatureItems(showcase.items, 3) },
+    showcase: { visible: visible(showcase.visible), eyebrow: string(showcase.eyebrow, 80), title: string(showcase.title, 180), description: string(showcase.description, 700), backgroundImage: normalizeMediaUrl(showcase.backgroundImage), backgroundPresentation: normalizePresentation(showcase.backgroundPresentation), ctaLabel: string(showcase.ctaLabel, 70), ctaUrl: normalizeActionUrl(showcase.ctaUrl), items: normalizeFeatureItems(showcase.items, 3) },
     testimonial: normalizeFeedbacks(testimonial),
     faq: normalizeFaq(input.faq),
-    finalCta: { visible: visible(finalCta.visible), eyebrow: string(finalCta.eyebrow, 80), title: string(finalCta.title, 180), description: string(finalCta.description, 700), backgroundImage: normalizeMediaUrl(finalCta.backgroundImage), ctaLabel: string(finalCta.ctaLabel, 70), ctaUrl: normalizeActionUrl(finalCta.ctaUrl) },
+    finalCta: { visible: visible(finalCta.visible), eyebrow: string(finalCta.eyebrow, 80), title: string(finalCta.title, 180), description: string(finalCta.description, 700), backgroundImage: normalizeMediaUrl(finalCta.backgroundImage), backgroundPresentation: normalizePresentation(finalCta.backgroundPresentation), ctaLabel: string(finalCta.ctaLabel, 70), ctaUrl: normalizeActionUrl(finalCta.ctaUrl) },
     footer: { brand: string(footer.brand, 120) || name, description: string(footer.description, 400), phone: string(footer.phone, 40), email: string(footer.email, 160), legalText: string(footer.legalText, 240) || "Todos os direitos reservados." },
   };
 }

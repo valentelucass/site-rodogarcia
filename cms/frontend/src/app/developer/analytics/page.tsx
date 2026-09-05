@@ -97,6 +97,7 @@ const DEFAULT_FORM: ConfigForm = {
   clarityEnabled: false,
   clarityProjectId: "",
 };
+const compactAnalyticsInputClassName = `${developerInputClassName} py-2`;
 
 interface AnalyticsResourceData {
   stats: StatsResponse | null;
@@ -391,7 +392,7 @@ export default function AnalyticsPage() {
 
       {stats ? (
         <>
-          <section className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <section className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {[
               { label: "Page views", value: stats.totalPageViews, icon: ChartBar },
               { label: "Sessões únicas", value: stats.uniqueSessions, icon: GlobeHemisphereWest },
@@ -406,20 +407,23 @@ export default function AnalyticsPage() {
                 icon: Lightning,
               },
             ].map((item) => (
-              <DeveloperCard key={item.label} className="flex items-center gap-3 p-4 sm:p-4">
-                <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[var(--primary)]/10 text-[var(--primary)]">
+              <DeveloperCard key={item.label} className="flex min-h-[74px] items-center gap-2.5 p-3 sm:gap-3 sm:p-3">
+                <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--primary)]/10 text-[var(--primary)] sm:h-9 sm:w-9">
                   <item.icon size={18} weight="duotone" />
                 </span>
                 <div className="min-w-0">
-                  <div className="text-2xl font-bold leading-none tracking-[-0.05em] text-[var(--foreground)]">{item.value}</div>
-                  <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--color-muted-raw)]">{item.label}</div>
+                  <div className="flex items-center gap-1">
+                    <span className="text-[9px] font-semibold uppercase tracking-[0.13em] text-[var(--color-muted-raw)]">{item.label}</span>
+                    <DeveloperHelp label={item.label} kind="metric" />
+                  </div>
+                  <div className="mt-0.5 text-xl font-bold leading-none tracking-[-0.045em] text-[var(--foreground)] sm:text-2xl">{item.value}</div>
                 </div>
               </DeveloperCard>
             ))}
           </section>
 
-          <section className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-            <DeveloperCard className="flex h-full flex-col p-5 sm:p-6">
+          <section className="mt-5 grid gap-4 lg:grid-cols-2">
+            <DeveloperCard className="flex h-full flex-col p-4 sm:p-4 [&>div:first-child]:mb-3 [&>div:first-child_p:last-child]:leading-5">
               <DeveloperSectionHeading
                 eyebrow="Páginas"
                 title="Top páginas do período"
@@ -432,24 +436,27 @@ export default function AnalyticsPage() {
                   style={{ transform: `translateX(-${topPagesPage * 100}%)` }}
                 >
                   {topPagesPages.map((page, index) => (
-                    <div key={index} className="w-full shrink-0 space-y-4">
-                      {page.map((pageData) => {
+                    <div key={index} className="grid w-full shrink-0 gap-x-5 gap-y-2.5 sm:grid-cols-2">
+                      {page.map((pageData, itemIndex) => {
                         const maxViews = Math.max(...stats.topPages.map((item) => item.views), 1);
                         const width = Math.round((pageData.views / maxViews) * 100);
 
                         return (
-                          <div key={pageData.page}>
+                          <div
+                            key={pageData.page}
+                            className={page.length % 2 === 1 && itemIndex === page.length - 1 ? "sm:col-span-2" : undefined}
+                          >
                             <div className="flex items-center justify-between gap-3">
-                              <span className="truncate text-sm font-medium text-[var(--foreground)]">
+                              <span className="truncate text-xs font-medium text-[var(--foreground)]">
                                 {pageData.page}
                               </span>
-                              <span className="text-sm font-semibold text-[var(--primary)]">
+                              <span className="text-xs font-semibold text-[var(--primary)]">
                                 {pageData.views}
                               </span>
                             </div>
-                            <div className="mt-2 h-2 overflow-hidden rounded-full bg-[var(--color-surface-2)]">
+                            <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-[var(--color-surface-2)]">
                               <div
-                                className="h-2 rounded-full bg-[linear-gradient(90deg,#1d4ed8_0%,#06b6d4_100%)]"
+                                className="h-1.5 rounded-full bg-[linear-gradient(90deg,#1d4ed8_0%,#06b6d4_100%)]"
                                 style={{ width: `${width}%` }}
                               />
                             </div>
@@ -460,10 +467,10 @@ export default function AnalyticsPage() {
                   ))}
                 </div>
               </div>
-              <div className="mt-5"><DeveloperCarouselPagination currentPage={topPagesPage} totalPages={topPagesTotalPages} onNext={nextTopPagesPage} onPrev={prevTopPagesPage} compact /></div>
+              <div className="mt-3"><DeveloperCarouselPagination currentPage={topPagesPage} totalPages={topPagesTotalPages} onNext={nextTopPagesPage} onPrev={prevTopPagesPage} compact /></div>
             </DeveloperCard>
 
-            <DeveloperCard className="flex h-full flex-col p-5 sm:p-6">
+            <DeveloperCard className="flex h-full flex-col p-4 sm:p-4 [&>div:first-child]:mb-3 [&>div:first-child_p:last-child]:leading-5">
               <DeveloperSectionHeading
                 eyebrow="Eventos"
                 title="Contagem por tipo"
@@ -476,17 +483,20 @@ export default function AnalyticsPage() {
                   style={{ transform: `translateX(-${eventEntriesPage * 100}%)` }}
                 >
                   {eventEntriesPages.map((page, index) => (
-                    <div key={index} className="w-full shrink-0 space-y-3">
+                    <div key={index} className="grid w-full shrink-0 gap-2 sm:grid-cols-2">
                       {page.length > 0 ? (
-                        page.map(([eventName, total]) => (
+                        page.map(([eventName, total], itemIndex) => (
                           <div
                             key={eventName}
-                            className="flex items-center justify-between gap-3 rounded-[22px] border border-[var(--border)] bg-white/72 px-4 py-4"
+                            className={cn(
+                              "flex min-h-10 items-center justify-between gap-3 rounded-lg border border-[var(--border)] bg-white/72 px-3 py-2",
+                              page.length % 2 === 1 && itemIndex === page.length - 1 && "sm:col-span-2"
+                            )}
                           >
-                            <span className="truncate text-sm font-medium text-[var(--foreground)]">
+                            <span className="truncate text-xs font-medium text-[var(--foreground)]">
                               {eventName}
                             </span>
-                            <strong className="text-[var(--primary)]">{total}</strong>
+                            <strong className="text-sm text-[var(--primary)]">{total}</strong>
                           </div>
                         ))
                       ) : (
@@ -496,19 +506,19 @@ export default function AnalyticsPage() {
                   ))}
                 </div>
               </div>
-              <div className="mt-auto"><DeveloperCarouselPagination currentPage={eventEntriesPage} totalPages={eventEntriesTotalPages} onNext={nextEventEntriesPage} onPrev={prevEventEntriesPage} compact /></div>
+              <div className="mt-3"><DeveloperCarouselPagination currentPage={eventEntriesPage} totalPages={eventEntriesTotalPages} onNext={nextEventEntriesPage} onPrev={prevEventEntriesPage} compact /></div>
             </DeveloperCard>
           </section>
 
-          <section className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
-            <DeveloperCard className="flex h-full flex-col p-5 sm:p-6">
+          <section className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
+            <DeveloperCard className="flex h-full flex-col p-4 sm:p-4 [&>div:first-child]:mb-3 [&>div:first-child_p:last-child]:leading-5">
               <DeveloperSectionHeading
                 eyebrow="Auditoria"
                 title="Eventos recentes"
                 description="Últimos registros recebidos pelo endpoint de analytics."
               />
 
-              <div className="mb-4 grid gap-3 sm:grid-cols-2">
+              <div className="mb-3 grid gap-3 sm:grid-cols-2">
                 <DeveloperField
                   label="Filtrar tipo"
                   helpKey="filtrar-tipo"
@@ -516,7 +526,7 @@ export default function AnalyticsPage() {
                   <input
                     value={eventFilter}
                     onChange={(event) => setEventFilter(event.target.value)}
-                    className={developerInputClassName}
+                    className={compactAnalyticsInputClassName}
                     placeholder="page_view, cta_click..."
                   />
                 </DeveloperField>
@@ -527,7 +537,7 @@ export default function AnalyticsPage() {
                   <input
                     value={pageFilter}
                     onChange={(event) => setPageFilter(event.target.value)}
-                    className={developerInputClassName}
+                    className={compactAnalyticsInputClassName}
                     placeholder="/servicos"
                   />
                 </DeveloperField>
@@ -541,13 +551,13 @@ export default function AnalyticsPage() {
                   {eventsTablePages.map((page, index) => (
                     <div key={index} className="w-full shrink-0">
                       <div className="overflow-x-auto">
-                        <table className="min-w-full text-left text-sm">
+                        <table className="min-w-full text-left text-xs">
                           <thead>
                             <tr className="border-b border-[var(--border)] text-[11px] uppercase tracking-[0.18em] text-[var(--color-muted-raw)]">
-                              <th className="pb-3 pr-4 font-semibold"><span className="inline-flex items-center gap-1.5">Evento <DeveloperHelp label="Evento" templateKey="evento" /></span></th>
-                              <th className="pb-3 pr-4 font-semibold"><span className="inline-flex items-center gap-1.5">Página <DeveloperHelp label="Página" templateKey="pagina" /></span></th>
-                              <th className="pb-3 pr-4 font-semibold"><span className="inline-flex items-center gap-1.5">Data <DeveloperHelp label="Data" templateKey="data" /></span></th>
-                              <th className="pb-3 font-semibold">
+                              <th className="pb-2 pr-4 font-semibold"><span className="inline-flex items-center gap-1.5">Evento <DeveloperHelp label="Evento" templateKey="evento" /></span></th>
+                              <th className="pb-2 pr-4 font-semibold"><span className="inline-flex items-center gap-1.5">Página <DeveloperHelp label="Página" templateKey="pagina" /></span></th>
+                              <th className="pb-2 pr-4 font-semibold"><span className="inline-flex items-center gap-1.5">Data <DeveloperHelp label="Data" templateKey="data" /></span></th>
+                              <th className="pb-2 font-semibold">
                                 <span className="inline-flex items-center gap-1.5">
                                   Sessão
                                   <DeveloperHelp label="Sessão" templateKey="sessao" />
@@ -558,12 +568,12 @@ export default function AnalyticsPage() {
                           <tbody>
                             {page.map((event) => (
                               <tr key={event.id} className="border-b border-[var(--border)]/60 align-top">
-                                <td className="py-3 pr-4 text-[var(--foreground)]">{event.event}</td>
-                                <td className="py-3 pr-4 text-[var(--color-muted-raw)]">{event.page}</td>
-                                <td className="py-3 pr-4 text-[var(--color-muted-raw)]">
+                                <td className="py-2 pr-4 text-[var(--foreground)]">{event.event}</td>
+                                <td className="py-2 pr-4 text-[var(--color-muted-raw)]">{event.page}</td>
+                                <td className="py-2 pr-4 text-[var(--color-muted-raw)]">
                                   {formatDateTime(event.timestamp)}
                                 </td>
-                                <td className="py-3 text-[var(--color-muted-raw)]">
+                                <td className="py-2 text-[var(--color-muted-raw)]">
                                   {event.sessionId || "-"}
                                 </td>
                               </tr>
@@ -575,10 +585,10 @@ export default function AnalyticsPage() {
                   ))}
                 </div>
               </div>
-              <div className="mt-auto"><DeveloperCarouselPagination currentPage={eventsTablePage} totalPages={eventsTableTotalPages} onNext={nextEventsTablePage} onPrev={prevEventsTablePage} compact /></div>
+              <div className="mt-3"><DeveloperCarouselPagination currentPage={eventsTablePage} totalPages={eventsTableTotalPages} onNext={nextEventsTablePage} onPrev={prevEventsTablePage} compact /></div>
             </DeveloperCard>
 
-            <DeveloperCard className="flex h-full flex-col p-5 sm:p-6">
+            <DeveloperCard className="flex h-full flex-col p-4 sm:p-4 [&>div:first-child]:mb-3 [&>div:first-child_p:last-child]:leading-5">
               <DeveloperSectionHeading
                 eyebrow="Conversões"
                 title="Resumo de resultados"
@@ -588,20 +598,31 @@ export default function AnalyticsPage() {
               <div className="flex flex-1 overflow-hidden">
                 <div className="flex w-full transition-transform duration-500 ease-[cubic-bezier(0.2,0,0,1)]" style={{ transform: `translateX(-${conversionPage * 100}%)` }}>
                   {conversionPages.map((conversionItems, index) => (
-                    <div key={index} className="flex w-full shrink-0 flex-col justify-between gap-3">
-                      {conversionItems.map((item) => <div key={item.label} className="flex items-center justify-between gap-3 rounded-[18px] border border-[var(--border)] bg-slate-50/80 px-4 py-3"><span className="text-sm font-medium text-[var(--foreground)]">{item.label}</span><strong className="text-[var(--primary)]">{item.value}</strong></div>)}
+                    <div key={index} className="grid w-full shrink-0 content-start gap-2 sm:grid-cols-2">
+                      {conversionItems.map((item, itemIndex) => (
+                        <div
+                          key={item.label}
+                          className={cn(
+                            "flex min-h-10 items-center justify-between gap-3 rounded-lg border border-[var(--border)] bg-slate-50/80 px-3 py-2",
+                            conversionItems.length % 2 === 1 && itemIndex === conversionItems.length - 1 && "sm:col-span-2"
+                          )}
+                        >
+                          <span className="text-xs font-medium text-[var(--foreground)]">{item.label}</span>
+                          <strong className="text-sm text-[var(--primary)]">{item.value}</strong>
+                        </div>
+                      ))}
                     </div>
                   ))}
                 </div>
               </div>
-              <div className="mt-auto"><DeveloperCarouselPagination currentPage={conversionPage} totalPages={conversionTotalPages} onNext={nextConversionPage} onPrev={prevConversionPage} compact /></div>
+              <div className="mt-3"><DeveloperCarouselPagination currentPage={conversionPage} totalPages={conversionTotalPages} onNext={nextConversionPage} onPrev={prevConversionPage} compact /></div>
             </DeveloperCard>
           </section>
         </>
       ) : null}
 
       <section className="mt-6">
-        <DeveloperCard className="p-5 sm:p-6">
+        <DeveloperCard className="p-4 sm:p-4 [&>div:first-child]:mb-3 [&>div:first-child_p:last-child]:leading-5">
           <DeveloperSectionHeading
             eyebrow="Configuração"
             title="Eventos internos e integrações"
@@ -609,13 +630,13 @@ export default function AnalyticsPage() {
             tooltip="Estas opções controlam os eventos internos e os provedores externos efetivamente carregados pelo site."
           />
 
-          <div className="space-y-5">
-            <div className="rounded-[20px] border border-[#bfdbfe] bg-[linear-gradient(135deg,rgba(239,246,255,0.9),rgba(255,255,255,0.95))] p-4 sm:p-5">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--primary)]">
-                Eventos próprios
-              </p>
-              <div className="mt-4 grid gap-4 sm:grid-cols-[minmax(220px,0.7fr)_minmax(280px,1.3fr)]">
-                <label className="flex min-h-12 items-center gap-3 rounded-xl border border-white bg-white/92 px-3.5 py-2.5 text-sm font-medium text-[var(--foreground)] shadow-[0_5px_12px_rgba(29,78,216,0.04)]">
+          <div className="space-y-3">
+            <div className="grid gap-2 rounded-lg border border-[#bfdbfe] bg-[linear-gradient(135deg,rgba(239,246,255,0.9),rgba(255,255,255,0.95))] p-2.5 sm:grid-cols-[minmax(220px,0.7fr)_minmax(280px,1.3fr)] sm:items-end sm:gap-3">
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--primary)]">
+                  Eventos próprios
+                </p>
+                <label className="mt-1.5 flex min-h-9 items-center gap-2.5 rounded-lg border border-white bg-white/92 px-3 py-2 text-xs font-medium text-[var(--foreground)] shadow-[0_5px_12px_rgba(29,78,216,0.04)]">
                   <input
                     type="checkbox"
                     checked={form.trackingEnabled}
@@ -625,20 +646,21 @@ export default function AnalyticsPage() {
                   Eventos internos ativos
                   <DeveloperHelp label="Eventos internos ativos" templateKey="eventos-internos-ativos" />
                 </label>
-                <DeveloperField
-                  label="Marcos de scroll (%)"
-                  helpKey="marcos-de-scroll"
-                >
-                  <input
-                    value={form.scrollMilestones}
-                    onChange={(event) => setValue("scrollMilestones", event.target.value)}
-                    className={developerInputClassName}
-                  />
-                </DeveloperField>
               </div>
+              <DeveloperField
+                label="Marcos de scroll (%)"
+                helpKey="marcos-de-scroll"
+                className="[&>span]:!mb-1"
+              >
+                <input
+                  value={form.scrollMilestones}
+                  onChange={(event) => setValue("scrollMilestones", event.target.value)}
+                  className={compactAnalyticsInputClassName}
+                />
+              </DeveloperField>
             </div>
 
-            <div className="grid gap-4 lg:grid-cols-2">
+            <div className="grid gap-3 lg:grid-cols-2">
               {[
                 {
                   enabledKey: "ga4Enabled" as const,
@@ -657,8 +679,8 @@ export default function AnalyticsPage() {
                   fieldHelpKey: "project-id",
                 },
               ].map((item) => (
-                <div key={item.label} className={cn("rounded-[20px] border p-4 shadow-[0_6px_16px_rgba(15,23,42,0.035)]", form[item.enabledKey] ? "border-[#93c5fd] bg-[#eff6ff]" : "border-slate-200 bg-slate-50/82")}>
-                  <label className="flex items-center gap-3 text-sm font-medium text-[var(--foreground)]">
+                <div key={item.label} className={cn("grid gap-2 rounded-lg border px-3 py-2.5 shadow-[0_6px_16px_rgba(15,23,42,0.035)] sm:grid-cols-[auto_minmax(0,1fr)] sm:items-end sm:gap-3", form[item.enabledKey] ? "border-[#93c5fd] bg-[#eff6ff]" : "border-slate-200 bg-slate-50/82")}>
+                  <label className="flex min-h-9 items-center gap-2.5 text-xs font-medium text-[var(--foreground)]">
                     <input
                       type="checkbox"
                       checked={form[item.enabledKey]}
@@ -671,31 +693,29 @@ export default function AnalyticsPage() {
                     <DeveloperHelp label={item.label} templateKey={item.enabledHelpKey} />
                   </label>
 
-                  <div className="mt-4">
-                    <DeveloperField label={item.fieldLabel} helpKey={item.fieldHelpKey}>
-                      <input
-                        value={form[item.fieldKey]}
-                        onChange={(event) =>
-                          setValue(item.fieldKey, event.target.value)
-                        }
-                        required={form[item.enabledKey]}
-                        aria-required={form[item.enabledKey]}
-                        maxLength={item.fieldKey === "ga4MeasurementId" ? 40 : 80}
-                        className={developerInputClassName}
-                      />
-                    </DeveloperField>
-                  </div>
+                  <DeveloperField label={item.fieldLabel} helpKey={item.fieldHelpKey} className="[&>span]:!mb-1">
+                    <input
+                      value={form[item.fieldKey]}
+                      onChange={(event) =>
+                        setValue(item.fieldKey, event.target.value)
+                      }
+                      required={form[item.enabledKey]}
+                      aria-required={form[item.enabledKey]}
+                      maxLength={item.fieldKey === "ga4MeasurementId" ? 40 : 80}
+                      className={compactAnalyticsInputClassName}
+                    />
+                  </DeveloperField>
                 </div>
               ))}
             </div>
 
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <button type="button" onClick={handleSave} disabled={saving} className={developerPrimaryButtonClassName}>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <button type="button" onClick={handleSave} disabled={saving} className={cn(developerPrimaryButtonClassName, "!min-h-9 !rounded-lg !px-3 !py-1.5 text-xs")}>
                 <CheckCircle size={18} weight="bold" />
                 {saving ? "Salvando..." : "Salvar configuração"}
                 <DeveloperHelp label="Salvar configuração" templateKey="salvar-configuracao" />
               </button>
-              <button type="button" onClick={handleRefresh} className={developerSecondaryButtonClassName}>
+              <button type="button" onClick={handleRefresh} className={cn(developerSecondaryButtonClassName, "!min-h-9 !rounded-lg !px-3 !py-1.5 text-xs")}>
                 <CursorClick size={16} weight="bold" />
                 Atualizar métricas
                 <DeveloperHelp label="Atualizar métricas" templateKey="atualizar-metricas" />

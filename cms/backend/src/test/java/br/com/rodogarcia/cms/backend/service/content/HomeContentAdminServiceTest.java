@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import br.com.rodogarcia.cms.backend.exception.ApiException;
 import br.com.rodogarcia.cms.backend.model.content.ContentDefaults;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.databind.node.ArrayNode;
@@ -51,5 +52,44 @@ class HomeContentAdminServiceTest {
         assertThatThrownBy(() -> home.replaceSection(ContentDefaults.home(mapper), "hero", payload))
             .isInstanceOf(ApiException.class)
             .hasMessageContaining("tipo de arquivo incompatível");
+    }
+
+    @Test
+    void normalizesPresentationPerHomeMediaUse() {
+        ObjectNode payload = mapper.createObjectNode();
+        ObjectNode slide = payload.putArray("slides").addObject();
+        slide.put("title", "Título").put("description", "Descrição").put("mode", "text-media");
+        ObjectNode media = slide.putObject("media");
+        media.put("type", "video").put("src", "/video.webm").put("alt", "Vídeo");
+        media.putObject("presentation").putObject("desktop")
+            .putObject("focalPoint").put("x", 15).put("y", 85);
+
+        ObjectNode result = home.replaceSection(ContentDefaults.home(mapper), "hero", payload);
+
+        assertThat(result.path("hero").path("slides").get(0).path("media")
+            .path("presentation").path("desktop").path("focalPoint").path("x").asInt())
+            .isEqualTo(15);
+        assertThat(result.path("hero").path("slides").get(0).path("media")
+            .path("presentation").path("desktop").path("playback").path("startSeconds").asInt())
+            .isZero();
+    }
+
+    @Test
+    void rejectsVideoRangesOutsideTheConfirmedPhysicalDuration() {
+        HomeContentAdminService durationAwareHome = new HomeContentAdminService(
+            mapper, new TestContentMediaValidator(Map.of("/video.webm", 10D))
+        );
+        ObjectNode payload = mapper.createObjectNode();
+        ObjectNode slide = payload.putArray("slides").addObject();
+        slide.put("title", "Título").put("description", "Descrição").put("mode", "text-media");
+        ObjectNode media = slide.putObject("media");
+        media.put("type", "video").put("src", "/video.webm").put("alt", "Vídeo");
+        media.putObject("presentation").putObject("desktop").putObject("playback")
+            .put("startSeconds", 8).put("durationSeconds", 3);
+
+        assertThatThrownBy(() -> durationAwareHome.replaceSection(
+            ContentDefaults.home(mapper), "hero", payload
+        )).isInstanceOf(ApiException.class)
+            .hasMessageContaining("fim do trecho ultrapassa");
     }
 }

@@ -38,7 +38,9 @@ import {
   DeveloperMediaField,
   DeveloperMediaPreview,
 } from "@/components/developer/DeveloperMediaField";
+import { MediaPlacementEditor } from "@/components/developer/MediaPlacementEditor";
 import { DeveloperResponsivePreview } from "@/components/developer/DeveloperResponsivePreview";
+import { DeveloperConfirmButton } from "@/components/developer/DeveloperConfirmButton";
 import {
   DeveloperCard,
   DeveloperColorField,
@@ -506,6 +508,23 @@ function CountHint({
   );
 }
 
+function InlineFieldMeta({
+  value,
+  maxLength,
+  guidance,
+}: {
+  value: string;
+  maxLength: number;
+  guidance: string;
+}) {
+  return (
+    <div className="mt-1 flex flex-wrap items-center gap-x-3 text-[11px] leading-5 text-[var(--color-muted-raw)]">
+      <span>{value.length}/{maxLength} caracteres</span>
+      <span>{guidance}</span>
+    </div>
+  );
+}
+
 const homeFormGroupClassName =
   "cms-home-form-group rounded-[22px] border border-[#93c5fd] bg-[linear-gradient(135deg,#dbeafe_0%,#eff6ff_48%,#f8fbff_100%)] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_12px_28px_rgba(29,78,216,0.1)] ring-1 ring-[var(--primary)]/8 sm:p-5";
 
@@ -658,6 +677,7 @@ function HomeMediaEditor({
 }) {
   const current = { ...EMPTY_MEDIA, ...media };
   const MediaIcon = current.type === "video" ? VideoCamera : ImageSquare;
+  const [framingOpen, setFramingOpen] = useState(false);
   return (
     <div
       className={cn(
@@ -667,7 +687,7 @@ function HomeMediaEditor({
           : "border-[var(--primary)]/14 bg-white/72 shadow-[inset_0_1px_0_rgba(255,255,255,0.82)]"
       )}
     >
-      <div className="mb-5 flex items-start gap-3">
+      <div className="mb-4 flex items-start gap-3">
         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-[var(--primary)]/16 bg-[var(--primary)]/8 text-[var(--primary)]">
           <MediaIcon size={20} weight="bold" />
         </span>
@@ -679,17 +699,18 @@ function HomeMediaEditor({
         </div>
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-[340px_minmax(0,1fr)] lg:items-start">
-        <div className="order-2 lg:order-1 lg:row-span-2">
+      <div className="grid gap-4 lg:grid-cols-[260px_minmax(0,1fr)] lg:items-start">
+        <div className="order-2 lg:order-1">
           <DeveloperMediaPreview
             value={current.src}
             previewAlt={current.alt || label}
             mediaType={current.type}
+            onFrame={() => setFramingOpen(true)}
           />
         </div>
 
-        <div className={cn(homeNestedPanelClassName, "order-1 lg:order-2")}>
-          <div className="grid gap-5 xl:grid-cols-[180px_minmax(0,1fr)]">
+        <div className={cn(homeNestedPanelClassName, "order-1 space-y-3 p-3.5 lg:order-2")}>
+          <div className="grid gap-3 md:grid-cols-[150px_minmax(0,1fr)]">
             <DeveloperField label="Tipo" required={required}>
               <select
                 value={current.type}
@@ -713,11 +734,8 @@ function HomeMediaEditor({
               showPreview={false}
             />
           </div>
-        </div>
-
-        <div className={cn(homeNestedPanelClassName, "order-3 lg:order-3")}>
-          <div className="grid gap-4 lg:grid-cols-3">
-            <DeveloperField label="Texto alternativo">
+          <div className="grid gap-3 border-t border-[var(--primary)]/10 pt-3 md:grid-cols-2">
+            <DeveloperField label="Texto alternativo" className="md:col-span-2">
               <input
                 value={current.alt ?? ""}
                 onChange={(event) => onChange({ ...current, alt: event.target.value })}
@@ -744,7 +762,7 @@ function HomeMediaEditor({
           </div>
 
           {current.type === "video" ? (
-            <div className="mt-4 rounded-[20px] border border-slate-200/80 bg-slate-50/72 p-4">
+            <div className="rounded-xl border border-slate-200/80 bg-slate-50/72 p-3">
               <DeveloperMediaField
                 label="Poster do video"
                 mediaType="image"
@@ -757,6 +775,17 @@ function HomeMediaEditor({
           ) : null}
         </div>
       </div>
+      <MediaPlacementEditor
+        label={label}
+        src={current.src}
+        alt={current.alt || label}
+        mediaType={current.type}
+        value={current.presentation}
+        onChange={(presentation) => onChange({ ...current, presentation })}
+        open={framingOpen}
+        onOpenChange={setFramingOpen}
+        hideTrigger
+      />
     </div>
   );
 }
@@ -790,7 +819,7 @@ export default function DeveloperHomePage() {
   const [openSection1Item, setOpenSection1Item] = useState<number | null>(null);
   const [openSection2Item, setOpenSection2Item] = useState<number | null>(null);
   const [openSection3Card, setOpenSection3Card] = useState<number | null>(null);
-  const [activeRegionalUnit, setActiveRegionalUnit] = useState(0);
+  const [openRegionalUnit, setOpenRegionalUnit] = useState<number | null>(null);
   const [openFeedback, setOpenFeedback] = useState<number | null>(null);
   const [previewRevision, setPreviewRevision] = useState(0);
 
@@ -1012,7 +1041,7 @@ export default function DeveloperHomePage() {
   function addRegionalUnit() {
     setHome((current) => {
       const units = [...current.regionalPresence.units, emptyRegionalUnit()];
-      setActiveRegionalUnit(units.length - 1);
+      setOpenRegionalUnit(units.length - 1);
       return {
         ...current,
         regionalPresence: { units },
@@ -1023,7 +1052,10 @@ export default function DeveloperHomePage() {
   function removeRegionalUnit(index: number) {
     setHome((current) => {
       const units = current.regionalPresence.units.filter((_, unitIndex) => unitIndex !== index);
-      setActiveRegionalUnit((page) => Math.max(0, Math.min(page, units.length - 1)));
+      setOpenRegionalUnit((open) => {
+        if (open === null || open === index) return null;
+        return open > index ? open - 1 : open;
+      });
       return {
         ...current,
         regionalPresence: { units },
@@ -1102,16 +1134,16 @@ export default function DeveloperHomePage() {
         <DeveloperResponsivePreview href={site.home} title="Preview Home" revision={previewRevision} />
       </div>
 
-      <section className="mt-5 rounded-[26px] border border-[var(--primary)]/16 bg-[linear-gradient(135deg,rgba(219,234,254,0.9)_0%,rgba(239,246,255,0.86)_54%,rgba(224,242,254,0.78)_100%)] p-5 shadow-[0_16px_38px_rgba(29,78,216,0.08)] backdrop-blur sm:p-6">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+      <section className="mt-5 rounded-[22px] border border-[var(--primary)]/16 bg-[linear-gradient(135deg,rgba(219,234,254,0.9)_0%,rgba(239,246,255,0.86)_54%,rgba(224,242,254,0.78)_100%)] p-3.5 shadow-[0_12px_28px_rgba(29,78,216,0.08)] backdrop-blur sm:p-4">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--primary)]">
-              Edicao por etapas
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--primary)]">
+              Editar etapa {activeStepIndex + 1} de {HOME_STEPS.length}
             </p>
-            <h2 className="mt-2 text-xl font-semibold tracking-[-0.025em] text-[var(--foreground)]">
+            <h2 className="mt-1 text-lg font-semibold tracking-[-0.025em] text-[var(--foreground)]">
               {activeStepInfo.title}
             </h2>
-            <p className="mt-1 max-w-[68ch] text-sm leading-6 text-[var(--color-muted-raw)]">
+            <p className="mt-0.5 max-w-[68ch] text-xs leading-5 text-[var(--color-muted-raw)]">
               {activeStepInfo.description}
             </p>
           </div>
@@ -1121,7 +1153,7 @@ export default function DeveloperHomePage() {
               onClick={() => moveStep(-1)}
               disabled={activeStepIndex === 0}
               className={cn(
-                "inline-flex min-h-9 items-center justify-center gap-2 rounded-full px-3.5 py-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-white hover:text-[var(--foreground)] disabled:cursor-not-allowed disabled:opacity-40"
+                "inline-flex min-h-8 items-center justify-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-slate-600 transition-colors hover:bg-white hover:text-[var(--foreground)] disabled:cursor-not-allowed disabled:opacity-40"
               )}
             >
               <CaretLeft size={16} weight="bold" />
@@ -1132,7 +1164,7 @@ export default function DeveloperHomePage() {
               onClick={() => moveStep(1)}
               disabled={activeStepIndex === HOME_STEPS.length - 1}
               className={cn(
-                "inline-flex min-h-9 items-center justify-center gap-2 rounded-full px-3.5 py-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-white hover:text-[var(--foreground)] disabled:cursor-not-allowed disabled:opacity-40"
+                "inline-flex min-h-8 items-center justify-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-slate-600 transition-colors hover:bg-white hover:text-[var(--foreground)] disabled:cursor-not-allowed disabled:opacity-40"
               )}
             >
               Proximo
@@ -1141,7 +1173,7 @@ export default function DeveloperHomePage() {
           </div>
         </div>
 
-        <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-8">
+        <nav className="mt-3 grid grid-cols-2 gap-1.5 sm:grid-cols-4 xl:grid-cols-8" aria-label="Etapas do editor da Home">
           {HOME_STEPS.map((step, index) => {
             const active = step.key === activeStep;
             return (
@@ -1150,36 +1182,22 @@ export default function DeveloperHomePage() {
                 type="button"
                 onClick={() => selectStep(step.key)}
                 aria-current={active ? "step" : undefined}
+                title={`Etapa ${index + 1}: ${step.title}`}
                 className={cn(
-                  "group relative flex min-h-[158px] flex-col items-start overflow-hidden rounded-[20px] border px-4 py-4 text-left transition-all duration-300",
+                  "group inline-flex min-h-10 min-w-0 items-center gap-2 rounded-xl border px-2.5 py-2 text-left transition-all duration-300",
                   active
-                    ? "border-[var(--primary)]/38 bg-[linear-gradient(145deg,rgba(255,255,255,0.96)_0%,rgba(219,234,254,0.92)_100%)] text-[var(--foreground)] shadow-[0_14px_34px_rgba(29,78,216,0.14)]"
-                    : "border-slate-200/90 bg-white text-[var(--foreground)] shadow-[0_8px_18px_rgba(15,23,42,0.03)] hover:-translate-y-0.5 hover:border-[var(--primary)]/30 hover:shadow-[0_12px_24px_rgba(15,23,42,0.07)]"
+                    ? "border-[var(--primary)]/38 bg-[linear-gradient(145deg,rgba(255,255,255,0.96)_0%,rgba(219,234,254,0.92)_100%)] text-[var(--foreground)] shadow-[0_6px_16px_rgba(29,78,216,0.12)]"
+                    : "border-slate-200/90 bg-white text-[var(--foreground)] shadow-[0_4px_10px_rgba(15,23,42,0.025)] hover:-translate-y-0.5 hover:border-[var(--primary)]/30 hover:shadow-[0_8px_16px_rgba(15,23,42,0.06)]"
                 )}
               >
-                <span className="flex h-7 items-center gap-2">
-                  <span
-                    className={cn(
-                      "flex h-7 w-7 items-center justify-center rounded-full border text-[11px] font-bold",
-                      active
-                        ? "border-[var(--primary)] bg-[var(--primary)] text-white shadow-[0_4px_10px_rgba(29,78,216,0.2)]"
-                        : "border-[var(--primary)]/14 bg-[var(--primary)]/7 text-[var(--primary)]"
-                    )}
-                  >
-                    {index + 1}
-                  </span>
-                  <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--color-muted-raw)]">
-                    {step.step}
-                  </span>
+                <span className={cn("flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-[10px] font-bold", active ? "border-[var(--primary)] bg-[var(--primary)] text-white shadow-[0_3px_8px_rgba(29,78,216,0.18)]" : "border-[var(--primary)]/14 bg-[var(--primary)]/7 text-[var(--primary)]")}>
+                  {index + 1}
                 </span>
-                <span className="mt-3 block min-h-5 text-sm font-semibold">{step.title}</span>
-                <span className="mt-1 block text-xs leading-5 text-[var(--color-muted-raw)]">
-                  {step.description}
-                </span>
+                <span className="truncate text-xs font-semibold leading-4">{step.title}</span>
               </button>
             );
           })}
-        </div>
+        </nav>
       </section>
 
       <div className="mt-5 grid gap-5">
@@ -1565,9 +1583,9 @@ export default function DeveloperHomePage() {
                 onToggle={() => setOpenSection2Item(openSection2Item === index ? null : index)}
                 actions={
                   <>
-                  <button type="button" onClick={() => setHome((current) => ({ ...current, section2: { ...current.section2, items: moveItem(current.section2.items, index, -1) } }))} className={developerGhostButtonClassName}><ArrowUp size={16} weight="bold" />Subir</button>
-                  <button type="button" onClick={() => setHome((current) => ({ ...current, section2: { ...current.section2, items: moveItem(current.section2.items, index, 1) } }))} className={developerGhostButtonClassName}><ArrowDown size={16} weight="bold" />Descer</button>
-                  <button type="button" onClick={() => setHome((current) => ({ ...current, section2: { ...current.section2, items: current.section2.items.filter((_, itemIndex) => itemIndex !== index) } }))} className={developerDangerButtonClassName}><Trash size={16} weight="bold" />Remover</button>
+                  <button type="button" data-cms-collection-action="up" onClick={() => setHome((current) => ({ ...current, section2: { ...current.section2, items: moveItem(current.section2.items, index, -1) } }))} className={developerGhostButtonClassName}><ArrowUp size={16} weight="bold" />Subir</button>
+                  <button type="button" data-cms-collection-action="down" onClick={() => setHome((current) => ({ ...current, section2: { ...current.section2, items: moveItem(current.section2.items, index, 1) } }))} className={developerGhostButtonClassName}><ArrowDown size={16} weight="bold" />Descer</button>
+                  <DeveloperConfirmButton actionType="remove" message={`O item “${item.title || "sem título"}” será removido da seção.`} onConfirm={() => setHome((current) => ({ ...current, section2: { ...current.section2, items: current.section2.items.filter((_, itemIndex) => itemIndex !== index) } }))}><Trash size={16} weight="bold" />Remover</DeveloperConfirmButton>
                   </>
                 }
               >
@@ -1607,14 +1625,14 @@ export default function DeveloperHomePage() {
             }
           />
           <form className="space-y-5" onSubmit={(event) => { event.preventDefault(); void saveSection("section3", api.admin.homeSection3, home.section3); }}>
-            <div className={cn(homeFormGroupClassName, "space-y-5")}>
-              <div className="grid gap-5 xl:grid-cols-[minmax(140px,190px)_minmax(260px,1.2fr)_minmax(160px,220px)_minmax(220px,1fr)]">
+            <div className={cn(homeFormGroupClassName, "space-y-3 p-3.5 sm:p-4")}>
+              <div className="grid gap-x-4 gap-y-3 md:grid-cols-2">
                 <DeveloperField label="Badge" required>
                   <input value={home.section3.badge} onChange={(event) => setHome((current) => ({ ...current, section3: { ...current.section3, badge: event.target.value } }))} maxLength={60} className={developerInputClassName} />
                 </DeveloperField>
-                <DeveloperField label="Título principal" required hint="Máximo esperado: 3 linhas.">
+                <DeveloperField label="Título principal" required>
                   <input value={home.section3.title} onChange={(event) => setHome((current) => ({ ...current, section3: { ...current.section3, title: event.target.value } }))} maxLength={180} className={developerInputClassName} />
-                  <CountHint value={home.section3.title} maxLength={180} />
+                  <InlineFieldMeta value={home.section3.title} maxLength={180} guidance="Máximo esperado: 3 linhas." />
                 </DeveloperField>
                 <DeveloperField label="Texto do botão" required>
                   <input value={home.section3.ctaLabel} onChange={(event) => setHome((current) => ({ ...current, section3: { ...current.section3, ctaLabel: event.target.value } }))} maxLength={40} className={developerInputClassName} />
@@ -1623,9 +1641,9 @@ export default function DeveloperHomePage() {
                   <input value={home.section3.ctaUrl} onChange={(event) => setHome((current) => ({ ...current, section3: { ...current.section3, ctaUrl: event.target.value } }))} className={developerInputClassName} />
                 </DeveloperField>
               </div>
-              <DeveloperField label="Descrição principal" required hint="Máximo esperado: 4 linhas.">
-                <textarea value={home.section3.description} onChange={(event) => setHome((current) => ({ ...current, section3: { ...current.section3, description: event.target.value } }))} maxLength={420} rows={4} className={`${developerInputClassName} resize-none`} />
-                <CountHint value={home.section3.description} maxLength={420} />
+              <DeveloperField label="Descrição principal" required>
+                <textarea value={home.section3.description} onChange={(event) => setHome((current) => ({ ...current, section3: { ...current.section3, description: event.target.value } }))} maxLength={420} rows={3} className={`${developerInputClassName} resize-none`} />
+                <InlineFieldMeta value={home.section3.description} maxLength={420} guidance="Máximo esperado: 4 linhas." />
               </DeveloperField>
             </div>
             {home.section3.cards.map((card, index) => (
@@ -1638,9 +1656,9 @@ export default function DeveloperHomePage() {
                 onToggle={() => setOpenSection3Card(openSection3Card === index ? null : index)}
                 actions={
                   <>
-                    <button type="button" onClick={() => setHome((current) => ({ ...current, section3: { ...current.section3, cards: moveItem(current.section3.cards, index, -1) } }))} className={developerGhostButtonClassName}><ArrowUp size={16} weight="bold" />Subir</button>
-                    <button type="button" onClick={() => setHome((current) => ({ ...current, section3: { ...current.section3, cards: moveItem(current.section3.cards, index, 1) } }))} className={developerGhostButtonClassName}><ArrowDown size={16} weight="bold" />Descer</button>
-                    <button type="button" onClick={() => removeSection3Card(index)} className={developerDangerButtonClassName}><Trash size={16} weight="bold" />Remover</button>
+                    <button type="button" data-cms-collection-action="up" onClick={() => setHome((current) => ({ ...current, section3: { ...current.section3, cards: moveItem(current.section3.cards, index, -1) } }))} className={developerGhostButtonClassName}><ArrowUp size={16} weight="bold" />Subir</button>
+                    <button type="button" data-cms-collection-action="down" onClick={() => setHome((current) => ({ ...current, section3: { ...current.section3, cards: moveItem(current.section3.cards, index, 1) } }))} className={developerGhostButtonClassName}><ArrowDown size={16} weight="bold" />Descer</button>
+                    <DeveloperConfirmButton actionType="remove" message={`O card “${card.title || "sem título"}” será removido da seção.`} onConfirm={() => removeSection3Card(index)}><Trash size={16} weight="bold" />Remover</DeveloperConfirmButton>
                   </>
                 }
               >
@@ -1701,74 +1719,62 @@ export default function DeveloperHomePage() {
               </DeveloperMessage>
             ) : null}
 
-            {home.regionalPresence.units.length > 0 ? (
-              <div className="overflow-x-auto rounded-[20px] border border-[var(--primary)]/14 bg-[var(--primary)]/4 p-2">
-                <div className="flex min-w-max gap-2" aria-label="Selecionar unidade para editar">
-                  {home.regionalPresence.units.map((unit, index) => (
+            {home.regionalPresence.units.map((unit, index) => (
+              <HomeAccordionCard
+                key={unit.id}
+                label={`Unidade ${index + 1}`}
+                title={unit.name || "Unidade sem nome"}
+                description={unit.description || "Card da seção Presença Regional."}
+                active={unit.active !== false}
+                open={openRegionalUnit === index}
+                onToggle={() => setOpenRegionalUnit(openRegionalUnit === index ? null : index)}
+                actions={
+                  <>
                     <button
-                      key={unit.id}
                       type="button"
-                      onClick={() => setActiveRegionalUnit(index)}
-                      aria-pressed={activeRegionalUnit === index}
-                      className={cn(
-                        "inline-flex min-h-10 items-center gap-2 rounded-xl border px-3 py-2 text-xs font-bold transition-all",
-                        activeRegionalUnit === index
-                          ? "border-[var(--primary)] bg-[var(--primary)] text-white shadow-[0_8px_18px_rgba(29,78,216,0.2)]"
-                          : "border-white bg-white text-slate-600 shadow-[0_3px_8px_rgba(15,23,42,0.035)] hover:border-[var(--primary)]/30 hover:text-[var(--primary)]"
-                      )}
+                      data-cms-collection-action="up"
+                      onClick={() => {
+                        setHome((current) => ({ ...current, regionalPresence: { units: moveItem(current.regionalPresence.units, index, -1) } }));
+                        setOpenRegionalUnit((open) => {
+                          if (index === 0 || open === null) return open;
+                          if (open === index) return index - 1;
+                          if (open === index - 1) return index;
+                          return open;
+                        });
+                      }}
+                      className={developerGhostButtonClassName}
                     >
-                      <span
-                        className={cn(
-                          "flex h-5 w-5 items-center justify-center rounded-full text-[10px]",
-                          activeRegionalUnit === index ? "bg-white/18 text-white" : "bg-[var(--primary)]/8 text-[var(--primary)]"
-                        )}
-                      >
-                        {index + 1}
-                      </span>
-                      Unidade
+                      <ArrowUp size={16} weight="bold" />
+                      Subir
                     </button>
-                  ))}
-                </div>
-              </div>
-            ) : null}
-
-            {home.regionalPresence.units.map((unit, index) =>
-              activeRegionalUnit === index ? (
-                <div key={unit.id} className={homeEditableCardClassName(unit.active !== false)}>
-                  <HomeItemHeader
-                    label={`Unidade ${index + 1}`}
-                    title={unit.name || "Unidade sem nome"}
-                    description={unit.description || "Card da seção Presença Regional."}
-                    active={unit.active !== false}
-                    actions={
-                      <>
-                        <button
-                          type="button"
-                          onClick={() => setHome((current) => ({ ...current, regionalPresence: { units: moveItem(current.regionalPresence.units, index, -1) } }))}
-                          className="inline-flex min-h-9 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-600 transition-colors hover:border-[var(--primary)]/22 hover:text-[var(--primary)]"
-                        >
-                          <ArrowUp size={16} weight="bold" />
-                          Subir
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setHome((current) => ({ ...current, regionalPresence: { units: moveItem(current.regionalPresence.units, index, 1) } }))}
-                          className="inline-flex min-h-9 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-600 transition-colors hover:border-[var(--primary)]/22 hover:text-[var(--primary)]"
-                        >
-                          <ArrowDown size={16} weight="bold" />
-                          Descer
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => removeRegionalUnit(index)}
-                          className="inline-flex min-h-9 items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-600 transition-colors hover:bg-red-100"
-                        >
-                          <Trash size={16} weight="bold" />
-                          Remover
-                        </button>
-                      </>
-                    }
-                  />
+                    <button
+                      type="button"
+                      data-cms-collection-action="down"
+                      onClick={() => {
+                        setHome((current) => ({ ...current, regionalPresence: { units: moveItem(current.regionalPresence.units, index, 1) } }));
+                        setOpenRegionalUnit((open) => {
+                          if (index === home.regionalPresence.units.length - 1 || open === null) return open;
+                          if (open === index) return index + 1;
+                          if (open === index + 1) return index;
+                          return open;
+                        });
+                      }}
+                      className={developerGhostButtonClassName}
+                    >
+                      <ArrowDown size={16} weight="bold" />
+                      Descer
+                    </button>
+                    <DeveloperConfirmButton
+                      actionType="remove"
+                      message={`A unidade “${unit.name || "sem nome"}” será removida da Página Inicial.`}
+                      onConfirm={() => removeRegionalUnit(index)}
+                    >
+                      <Trash size={16} weight="bold" />
+                      Remover
+                    </DeveloperConfirmButton>
+                  </>
+                }
+              >
 
                   <div className={cn(homeNestedPanelClassName, "grid gap-5 lg:grid-cols-3")}>
                     {unitsReferenceAvailable === false ? (
@@ -1896,9 +1902,8 @@ export default function DeveloperHomePage() {
                     />
                     Unidade ativa no site
                   </label>
-                </div>
-              ) : null
-            )}
+              </HomeAccordionCard>
+            ))}
 
             <SaveButton saving={saving === "regionalPresence"}>Salvar Presença Regional</SaveButton>
           </form>
@@ -1993,9 +1998,9 @@ export default function DeveloperHomePage() {
                 onToggle={() => setOpenFeedback(openFeedback === index ? null : index)}
                 actions={
                   <>
-                  <button type="button" onClick={() => setHome((current) => ({ ...current, socialProof: { ...current.socialProof, feedbacks: moveItem(current.socialProof.feedbacks, index, -1) } }))} className={developerGhostButtonClassName}><ArrowUp size={16} weight="bold" />Subir</button>
-                  <button type="button" onClick={() => setHome((current) => ({ ...current, socialProof: { ...current.socialProof, feedbacks: moveItem(current.socialProof.feedbacks, index, 1) } }))} className={developerGhostButtonClassName}><ArrowDown size={16} weight="bold" />Descer</button>
-                  <button type="button" onClick={() => setHome((current) => ({ ...current, socialProof: { ...current.socialProof, feedbacks: current.socialProof.feedbacks.filter((_, feedbackIndex) => feedbackIndex !== index) } }))} className={developerDangerButtonClassName}><Trash size={16} weight="bold" />Excluir</button>
+                  <button type="button" data-cms-collection-action="up" onClick={() => setHome((current) => ({ ...current, socialProof: { ...current.socialProof, feedbacks: moveItem(current.socialProof.feedbacks, index, -1) } }))} className={developerGhostButtonClassName}><ArrowUp size={16} weight="bold" />Subir</button>
+                  <button type="button" data-cms-collection-action="down" onClick={() => setHome((current) => ({ ...current, socialProof: { ...current.socialProof, feedbacks: moveItem(current.socialProof.feedbacks, index, 1) } }))} className={developerGhostButtonClassName}><ArrowDown size={16} weight="bold" />Descer</button>
+                  <DeveloperConfirmButton actionType="remove" title="Confirmar exclusão" message={`O depoimento de ${feedback.name || "esta pessoa"} será excluído.`} onConfirm={() => setHome((current) => ({ ...current, socialProof: { ...current.socialProof, feedbacks: current.socialProof.feedbacks.filter((_, feedbackIndex) => feedbackIndex !== index) } }))}><Trash size={16} weight="bold" />Excluir</DeveloperConfirmButton>
                   </>
                 }
               >
@@ -2013,22 +2018,23 @@ export default function DeveloperHomePage() {
                     <input type="number" min={1} max={5} value={feedback.rating} onChange={(event) => updateFeedback(index, { rating: Math.min(5, Math.max(1, Number(event.target.value) || 1)) })} className={developerInputClassName} />
                   </DeveloperField>
                 </div>
-                <div className={cn(homeHighlightPanelClassName, "mt-4 grid gap-6 lg:grid-cols-[minmax(0,1.25fr)_minmax(380px,0.75fr)] lg:items-start")}>
+                <div className={cn(homeHighlightPanelClassName, "mt-4 grid gap-5 lg:grid-cols-[minmax(0,1.3fr)_minmax(320px,0.7fr)] lg:items-start")}>
                   <DeveloperField label="Depoimento" required>
-                    <textarea value={feedback.testimonial} onChange={(event) => updateFeedback(index, { testimonial: event.target.value })} maxLength={800} rows={10} className={`${developerInputClassName} min-h-64 resize-none`} />
+                    <textarea value={feedback.testimonial} onChange={(event) => updateFeedback(index, { testimonial: event.target.value })} maxLength={800} rows={6} className={`${developerInputClassName} min-h-44 resize-none`} />
                     <CountHint value={feedback.testimonial} maxLength={800} />
                   </DeveloperField>
-                  <div className="space-y-4">
+                  <div className="min-w-0">
                     <DeveloperMediaField
                       label="Foto da pessoa (opcional)"
                       mediaType="image"
                       value={feedback.photo ?? ""}
                       onChange={(photo) => updateFeedback(index, { photo })}
                       previewAlt={feedback.name}
-                      stackControls
+                      stackControls={Boolean(feedback.photo)}
+                      showPreview={Boolean(feedback.photo)}
                       hint="Use apenas foto autorizada da pessoa. Sem foto, a Home mostra as iniciais do nome; logos de empresas não são usados nesta seção."
                       afterControls={
-                        <label className="inline-flex min-h-10 min-w-40 items-center justify-center gap-3 rounded-xl border border-[var(--border)] bg-white px-3 py-2 text-sm font-semibold shadow-[0_6px_16px_rgba(15,23,42,0.04)]">
+                        <label className="inline-flex min-h-10 items-center gap-3 self-start rounded-xl border border-[var(--border)] bg-white px-3 py-2 text-sm font-semibold shadow-[0_6px_16px_rgba(15,23,42,0.04)]">
                           <input type="checkbox" checked={feedback.active !== false} onChange={(event) => updateFeedback(index, { active: event.target.checked })} className="h-4 w-4 accent-[var(--primary)]" />
                           Feedback ativo
                         </label>

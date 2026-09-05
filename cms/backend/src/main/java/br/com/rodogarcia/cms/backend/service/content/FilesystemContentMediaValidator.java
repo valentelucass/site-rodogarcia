@@ -3,11 +3,15 @@ package br.com.rodogarcia.cms.backend.service.content;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Locale;
+import java.util.OptionalDouble;
 import java.util.Set;
 
 import br.com.rodogarcia.cms.backend.config.CmsProperties;
+import br.com.rodogarcia.cms.backend.config.MediaSettings;
 import br.com.rodogarcia.cms.backend.exception.ApiException;
 import br.com.rodogarcia.cms.backend.model.content.ContentJson;
+import br.com.rodogarcia.cms.backend.service.MediaMetadataReader;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.node.StringNode;
@@ -21,10 +25,19 @@ public final class FilesystemContentMediaValidator implements ContentMediaValida
 
     private final Path uploadsRoot;
     private final Path publicRoot;
+    private final MediaMetadataReader metadataReader;
 
     public FilesystemContentMediaValidator(CmsProperties properties) {
+        this(properties, new MediaMetadataReader(
+            MediaSettings.defaults(properties.ffmpegPath(), properties.ffprobePath())
+        ));
+    }
+
+    @Autowired
+    public FilesystemContentMediaValidator(CmsProperties properties, MediaMetadataReader metadataReader) {
         uploadsRoot = properties.uploadsDir().toAbsolutePath().normalize();
         publicRoot = properties.frontendPublicDir().toAbsolutePath().normalize();
+        this.metadataReader = metadataReader;
     }
 
     @Override
@@ -60,6 +73,15 @@ public final class FilesystemContentMediaValidator implements ContentMediaValida
         return known(value, IMAGES);
     }
 
+    @Override
+    public OptionalDouble videoDuration(String value) {
+        Path file = knownFile(value, VIDEOS);
+        if (file == null) return OptionalDouble.empty();
+        return metadataReader.video(file)
+            .map(metadata -> OptionalDouble.of(metadata.durationSeconds()))
+            .orElseGet(OptionalDouble::empty);
+    }
+
     private String assertMedia(JsonNode value, String label, Set<String> extensions) {
         String raw = ContentJson.text(value, 600);
         String normalized = normalize(value);
@@ -80,18 +102,22 @@ public final class FilesystemContentMediaValidator implements ContentMediaValida
     }
 
     private boolean known(String value, Set<String> extensions) {
+        return knownFile(value, extensions) != null;
+    }
+
+    private Path knownFile(String value, Set<String> extensions) {
         String normalized = normalize(StringNode.valueOf(value));
-        if (normalized.isEmpty() || !extensions.contains(extension(normalized))) return false;
+        if (normalized.isEmpty() || !extensions.contains(extension(normalized))) return null;
         Path root = normalized.startsWith("/uploads/") ? uploadsRoot : publicRoot;
         String relative = normalized.startsWith("/uploads/")
             ? normalized.substring("/uploads/".length())
             : normalized.substring(1);
         Path resolved = root.resolve(relative).toAbsolutePath().normalize();
-        if (!resolved.startsWith(root) || resolved.equals(root)) return false;
+        if (!resolved.startsWith(root) || resolved.equals(root)) return null;
         try {
-            return Files.isRegularFile(resolved);
+            return Files.isRegularFile(resolved) ? resolved : null;
         } catch (SecurityException ignored) {
-            return false;
+            return null;
         }
     }
 

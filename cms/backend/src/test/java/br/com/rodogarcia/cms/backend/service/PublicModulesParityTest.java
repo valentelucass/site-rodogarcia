@@ -133,6 +133,45 @@ class PublicModulesParityTest {
     }
 
     @Test
+    void popupKeepsAnImagePresentationPerValidatedImage() {
+        ObjectNode body = context.mapper.createObjectNode();
+        body.put("image", "/popup.png");
+        ObjectNode standardPresentation = body.putObject("imagePresentation");
+        standardPresentation.putObject("desktop").putObject("focalPoint")
+            .put("x", 24).put("y", 72);
+        standardPresentation.putObject("mobile").putObject("focalPoint")
+            .put("x", 120).put("y", 16);
+
+        ObjectNode desktop = body.putObject("desktop");
+        desktop.put("image", "/popup-desktop.webp");
+        desktop.putObject("imagePresentation").putObject("desktop").putObject("focalPoint")
+            .put("x", 88).put("y", 30);
+
+        ObjectNode mobile = body.putObject("mobile");
+        mobile.put("image", "/popup-mobile.avif");
+        mobile.putObject("imagePresentation").putObject("desktop").putObject("focalPoint")
+            .put("x", 18).put("y", 64);
+
+        ObjectNode saved = popup.updateConfig(body, request("127.0.0.19"));
+
+        assertThat(saved.path("imagePresentation").path("desktop").path("focalPoint").path("x").asInt())
+            .isEqualTo(24);
+        assertThat(saved.path("imagePresentation").path("mobile").path("focalPoint").path("x").asInt())
+            .isEqualTo(24);
+        assertThat(saved.path("desktop").path("imagePresentation").path("desktop")
+            .path("focalPoint").path("x").asInt()).isEqualTo(88);
+        assertThat(saved.path("mobile").path("imagePresentation").path("desktop")
+            .path("focalPoint").path("y").asInt()).isEqualTo(64);
+
+        ObjectNode withoutImage = context.mapper.createObjectNode();
+        withoutImage.put("image", "");
+        withoutImage.putObject("imagePresentation").putObject("desktop").putObject("focalPoint")
+            .put("x", 12).put("y", 12);
+        ObjectNode savedWithoutImage = popup.updateConfig(withoutImage, request("127.0.0.20"));
+        assertThat(savedWithoutImage.has("imagePresentation")).isFalse();
+    }
+
+    @Test
     void popupDeduplicatesConcurrentLeadSubmissionsAtomically() throws Exception {
         ObjectNode body = context.mapper.createObjectNode();
         body.put("name", "Pessoa");

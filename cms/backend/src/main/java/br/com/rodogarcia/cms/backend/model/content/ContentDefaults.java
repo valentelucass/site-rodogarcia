@@ -199,6 +199,7 @@ public final class ContentDefaults {
         try (GZIPInputStream gzip = new GZIPInputStream(new ByteArrayInputStream(compressed))) {
             ObjectNode content = (ObjectNode) mapper.readTree(gzip);
             if (!content.has("improvementsPage")) content.set("improvementsPage", improvements(mapper));
+            ContentMediaPresentations.normalizeContent(content, mapper);
             return content;
         } catch (IOException exception) {
             throw new IllegalStateException("Defaults de conteúdo do CMS inválidos.", exception);

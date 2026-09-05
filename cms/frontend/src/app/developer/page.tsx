@@ -175,21 +175,21 @@ function DashboardMetric({
   helper: string;
 }) {
   return (
-    <DeveloperCard className="flex min-h-[98px] items-center gap-3 p-3.5 sm:gap-4 sm:p-4">
-      <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[var(--primary)]/10 text-[var(--primary)] sm:h-10 sm:w-10">
-        <Icon size={20} weight="duotone" />
+    <DeveloperCard className="flex min-h-[82px] items-center gap-2.5 p-3 sm:gap-3 sm:p-3">
+      <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--primary)]/10 text-[var(--primary)] sm:h-9 sm:w-9">
+        <Icon size={18} weight="duotone" />
       </span>
       <div className="min-w-0">
-        <div className="flex items-center gap-1.5">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--color-muted-raw)]">
+        <div className="flex items-center gap-1">
+          <p className="text-[9px] font-semibold uppercase tracking-[0.13em] text-[var(--color-muted-raw)]">
             {title}
           </p>
           <DeveloperHelp label={title} kind="metric" />
         </div>
-        <p className="mt-0.5 text-2xl font-bold leading-none tracking-[-0.045em] text-[var(--foreground)] sm:text-[1.75rem]">
+        <p className="mt-0.5 text-xl font-bold leading-none tracking-[-0.045em] text-[var(--foreground)] sm:text-2xl">
           {value}
         </p>
-        <p className="mt-1.5 truncate text-xs leading-5 text-[var(--color-muted-raw)]" title={helper}>
+        <p className="mt-1 truncate text-[11px] leading-4 text-[var(--color-muted-raw)]" title={helper}>
           {helper}
         </p>
       </div>
@@ -201,13 +201,13 @@ function CoverageRow({ label, value }: { label: string; value: number | null }) 
   const available = value !== null;
   return (
     <div>
-      <div className="flex items-center justify-between gap-3">
-        <span className="text-sm font-medium text-[var(--foreground)]">{label}</span>
-        <span className="text-sm font-semibold text-[var(--primary)]">{available ? `${value}%` : "—"}</span>
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-xs font-medium text-[var(--foreground)]">{label}</span>
+        <span className="text-xs font-semibold text-[var(--primary)]">{available ? `${value}%` : "—"}</span>
       </div>
-      <div className="mt-2 h-2 overflow-hidden rounded-full bg-[var(--color-surface-2)]">
+      <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-[var(--color-surface-2)]">
         <div
-          className="h-2 rounded-full bg-[linear-gradient(90deg,#1d4ed8_0%,#06b6d4_100%)]"
+          className="h-1.5 rounded-full bg-[linear-gradient(90deg,#1d4ed8_0%,#06b6d4_100%)]"
           style={{ width: `${value ?? 0}%` }}
         />
       </div>
@@ -468,41 +468,41 @@ export default function DeveloperDashboardPage() {
 
       {data && summary ? (
         <>
-          <section className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <section className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <DashboardMetric
               title="Itens editáveis"
               value={summary.editableItems.toLocaleString("pt-BR")}
               icon={Sparkle}
-              helper="Home, páginas internas, footer e unidades conforme o CMS atual."
+              helper="Áreas editáveis do site."
             />
             <DashboardMetric
               title="Page views"
               value={data.analytics.available ? data.analytics.data.totalPageViews.toLocaleString("pt-BR") : "—"}
               icon={ChartBar}
-              helper={data.analytics.available ? "Leitura consolidada de visualizações do site no período atual." : unavailableMetricHelper("Page views")}
+              helper={data.analytics.available ? "Views do período atual." : unavailableMetricHelper("Page views")}
             />
             <DashboardMetric
               title="Conversão do popup"
               value={data.popup.available ? `${summary.popupConversion.toFixed(1)}%` : "—"}
               icon={Pulse}
-              helper={data.popup.available ? "Relação entre popup exibido e popup enviado." : unavailableMetricHelper("A conversão do popup")}
+              helper={data.popup.available ? "Envios por exibição." : unavailableMetricHelper("A conversão do popup")}
             />
             <DashboardMetric
               title="Leads capturados"
               value={data.leads.available ? data.leads.data.leads.length.toLocaleString("pt-BR") : "—"}
               icon={CursorClick}
-              helper={data.leads.available ? "Total de contatos recebidos pelo popup de saída." : unavailableMetricHelper("Os leads")}
+              helper={data.leads.available ? "Contatos pelo popup." : unavailableMetricHelper("Os leads")}
             />
           </section>
 
           <section className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
-            <DeveloperCard>
+            <DeveloperCard className="p-4 sm:p-4 [&>div:first-child]:mb-3 [&>div:first-child_p:last-child]:leading-5">
               <DeveloperSectionHeading
                 eyebrow="Saúde do conteúdo"
                 title="Cobertura por módulo"
                 description="Leitura rápida do que já tem dados suficientes para aparecer bem nas páginas do projeto atual."
               />
-              <div className="space-y-4">
+              <div className="grid gap-x-5 gap-y-2.5 sm:grid-cols-2">
                 <CoverageRow label="Home" value={summary.coverageHome} />
                 <CoverageRow label="Trabalhe Conosco" value={summary.coverageCareers} />
                 <CoverageRow label="Footer links" value={summary.coverageFooter} />
@@ -511,8 +511,8 @@ export default function DeveloperDashboardPage() {
                 <CoverageRow label="Mídia e social proof" value={summary.coverageContent} />
               </div>
 
-              <div className="mt-4 grid gap-2 sm:grid-cols-2">
-                <div className="rounded-xl border border-[var(--border)] bg-white/72 px-3 py-2.5">
+              <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                <div className="rounded-xl border border-[var(--border)] bg-white/72 px-2.5 py-2">
                   <div className="flex items-center justify-between gap-3">
                     <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--primary)]">
                       Publicação ativa
@@ -521,12 +521,12 @@ export default function DeveloperDashboardPage() {
                       {summary.publicationRate}%
                     </p>
                   </div>
-                  <p className="mt-1 text-xs text-[var(--color-muted-raw)]">
+                  <p className="mt-0.5 text-[11px] text-[var(--color-muted-raw)]">
                     Hero: {summary.heroActive} • Operações: {summary.operationsActive}
                   </p>
                 </div>
 
-                <div className="rounded-xl border border-[var(--border)] bg-white/72 px-3 py-2.5">
+                <div className="rounded-xl border border-[var(--border)] bg-white/72 px-2.5 py-2">
                   <div className="flex items-center justify-between gap-3">
                     <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--primary)]">
                       Biblioteca
@@ -535,21 +535,21 @@ export default function DeveloperDashboardPage() {
                       {summary.contentImages ?? "—"}
                     </p>
                   </div>
-                  <p className="mt-1 text-xs text-[var(--color-muted-raw)]">
+                  <p className="mt-0.5 text-[11px] text-[var(--color-muted-raw)]">
                     {data.images.available ? `Uploads salvos: ${summary.uploadImages ?? 0}` : unavailableMetricHelper("A biblioteca")}
                   </p>
                 </div>
               </div>
             </DeveloperCard>
 
-            <DeveloperCard>
+            <DeveloperCard className="p-4 sm:p-4 [&>div:first-child]:mb-3 [&>div:first-child_p:last-child]:leading-5">
               <DeveloperSectionHeading
                 eyebrow="Visão comercial"
                 title="Sinais operacionais"
-                description="Indicadores de jobs, depoimentos e popup para leitura diária."
+                description="Jobs, depoimentos e popup."
               />
 
-              <div className="grid gap-2.5 sm:grid-cols-2">
+              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                 {[
                   {
                     label: "Vagas ativas",
@@ -584,15 +584,15 @@ export default function DeveloperDashboardPage() {
                 ].map((item) => (
                   <div
                     key={item.label}
-                    className="flex min-h-[72px] items-center gap-3 rounded-xl border border-[var(--border)] bg-white/72 px-3 py-3"
+                    className="flex min-h-14 items-center gap-2.5 rounded-lg border border-[var(--border)] bg-white/72 px-2.5 py-2"
                   >
-                    <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[var(--primary)]/10 text-[var(--primary)]">
-                      <item.icon size={18} weight="duotone" />
+                    <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--primary)]/10 text-[var(--primary)]">
+                      <item.icon size={17} weight="duotone" />
                     </span>
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium text-[var(--foreground)]">{item.label}</p>
+                      <p className="text-xs font-medium text-[var(--foreground)]">{item.label}</p>
                     </div>
-                    <span className="text-lg font-semibold tracking-[-0.04em] text-[var(--foreground)]">
+                    <span className="text-base font-semibold tracking-[-0.04em] text-[var(--foreground)]">
                       {item.value}
                     </span>
                   </div>
@@ -602,14 +602,14 @@ export default function DeveloperDashboardPage() {
           </section>
 
           <section className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-            <DeveloperCard className="flex h-full flex-col">
+            <DeveloperCard className="flex h-full flex-col p-4 sm:p-4 [&>div:first-child]:mb-3 [&>div:first-child_p:last-child]:leading-5">
               <DeveloperSectionHeading
                 eyebrow="Rotas mais acessadas"
                 title="Top páginas do site"
                 description="As páginas abaixo receberam mais visualizações no período atual."
               />
 
-              <div className="space-y-4 pt-4">
+              <div className="grid gap-x-5 gap-y-2.5 pt-1 sm:grid-cols-2">
                 {!data.analytics.available ? (
                   <DeveloperMessage tone="info">Os indicadores de analytics não estão disponíveis para o seu perfil.</DeveloperMessage>
                 ) : topPages.length > 0 ? (
@@ -619,15 +619,15 @@ export default function DeveloperDashboardPage() {
 
                     return (
                       <div key={item.page}>
-                        <div className="flex items-center gap-3">
-                          <span className="flex-1 truncate text-sm font-medium text-[var(--foreground)]">
+                        <div className="flex items-center gap-2">
+                          <span className="flex-1 truncate text-xs font-medium text-[var(--foreground)]">
                             {item.page}
                           </span>
-                          <span className="text-sm font-semibold text-[var(--primary)]">{item.views}</span>
+                          <span className="text-xs font-semibold text-[var(--primary)]">{item.views}</span>
                         </div>
-                        <div className="mt-2 h-2 overflow-hidden rounded-full bg-[var(--color-surface-2)]">
+                        <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-[var(--color-surface-2)]">
                           <div
-                            className="h-2 rounded-full bg-[linear-gradient(90deg,#1d4ed8_0%,#06b6d4_100%)]"
+                            className="h-1.5 rounded-full bg-[linear-gradient(90deg,#1d4ed8_0%,#06b6d4_100%)]"
                             style={{ width: `${pct}%` }}
                           />
                         </div>
@@ -644,15 +644,15 @@ export default function DeveloperDashboardPage() {
               <DeveloperSectionHeading
                 eyebrow="Acesso rápido"
                 title="Abrir módulos do CMS"
-                description="Cada rota abaixo foi reescrita em React/TypeScript dentro de src/app/developer."
+                description="Acesse os módulos de gestão do site."
               />
 
-              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
                 {quickLinks.map((item) => (
                   <Link
                     key={item.href}
                     href={item.href as AppPath}
-                    className={developerSecondaryButtonClassName}
+                    className={`${developerSecondaryButtonClassName} min-h-9 rounded-lg px-3 py-1.5 text-xs`}
                   >
                     {item.label}
                   </Link>

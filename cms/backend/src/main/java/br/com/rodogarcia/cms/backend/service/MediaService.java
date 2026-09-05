@@ -79,6 +79,7 @@ public final class MediaService {
     private final SiteTextsRepository siteTextsRepository;
     private final MediaValidationService validation;
     private final AdminMediaProcessor processor;
+    private final MediaMetadataReader metadataReader;
     private final MediaSettings settings;
     private final AuditService audit;
     private final Clock clock;
@@ -91,6 +92,7 @@ public final class MediaService {
         SiteTextsRepository siteTextsRepository,
         MediaValidationService validation,
         AdminMediaProcessor processor,
+        MediaMetadataReader metadataReader,
         MediaSettings settings,
         AuditService audit,
         Clock clock
@@ -103,6 +105,7 @@ public final class MediaService {
         this.siteTextsRepository = siteTextsRepository;
         this.validation = validation;
         this.processor = processor;
+        this.metadataReader = metadataReader;
         this.settings = settings;
         this.audit = audit;
         this.clock = clock;
@@ -136,10 +139,12 @@ public final class MediaService {
             record.put("usedInContent", referenceCount > 0);
             record.put("source", "upload");
             String explicitType = jsString(item.get("mediaType"), mediaTypeFromUrl(url));
-            record.put("mediaType", explicitType.equals("video") ? "video" : "image");
+            String mediaType = explicitType.equals("video") ? "video" : "image";
+            record.put("mediaType", mediaType);
             record.put("format", jsString(item.get("format"), "webp"));
             putOptionalNumber(record, "width", number(item.get("width"), 0));
             putOptionalNumber(record, "height", number(item.get("height"), 0));
+            putOptionalDecimal(record, "durationSeconds", decimal(item.get("durationSeconds"), 0d));
             record.put("uploadedAt", jsString(firstPresent(item, "uploadedAt", "createdAt"), ""));
             putOptionalNumber(record, "originalSize", number(item.get("originalSize"), 0));
             putOptionalNumber(record, "optimizedSize", number(item.get("optimizedSize"), size));
@@ -148,6 +153,7 @@ public final class MediaService {
             record.put("thumbnailUrl", normalizedPath(item.get("thumbnailUrl")));
             record.put("mediumUrl", normalizedPath(item.get("mediumUrl")));
             record.put("largeUrl", normalizedPath(item.get("largeUrl")));
+            enrichTechnicalMetadata(record, statsPath, mediaType);
             result.add(record);
         }
 
@@ -360,6 +366,7 @@ public final class MediaService {
         record.put("originalFormat", mimeType);
         record.put("width", image.width());
         record.put("height", image.height());
+        putAspectRatio(record, image.width(), image.height());
         record.put("originalSize", bytes.length);
         record.put("optimizedSize", size(optimized));
         record.put("thumbnailSize", size(thumbnail));
@@ -430,6 +437,12 @@ public final class MediaService {
         record.put("originalSize", bytes.length);
         record.put("optimizedSize", outputSize);
         record.put("uploadedAt", IsoTime.format(clock.millis()));
+        metadataReader.video(stored).ifPresent(metadata -> {
+            record.put("width", metadata.width());
+            record.put("height", metadata.height());
+            record.put("durationSeconds", roundedMetric(metadata.durationSeconds()));
+            putAspectRatio(record, metadata.width(), metadata.height());
+        });
         prependLibrary(record);
         audit.record(
             request,
@@ -604,6 +617,7 @@ public final class MediaService {
         record.put("source", source);
         record.put("mediaType", mediaTypeFromUrl(url));
         record.put("format", extension(url).replaceFirst("^\\.", ""));
+        enrichTechnicalMetadata(record, file, record.path("mediaType").asText());
         try {
             record.put("uploadedAt", IsoTime.format(Files.getLastModifiedTime(file).toMillis()));
         } catch (IOException error) {
@@ -750,8 +764,80 @@ public final class MediaService {
         return fallback;
     }
 
+    private static double decimal(JsonNode value, double fallback) {
+        if (value == null || value.isNull()) return fallback;
+        try {
+            double parsed = value.isNumber() ? value.doubleValue() : Double.parseDouble(value.asText());
+            return Double.isFinite(parsed) ? parsed : fallback;
+        } catch (NumberFormatException ignored) {
+            return fallback;
+        }
+    }
+
     private static void putOptionalNumber(ObjectNode target, String field, long value) {
         if (value != 0) target.put(field, value);
+    }
+
+    private static void putOptionalDecimal(ObjectNode target, String field, double value) {
+        if (validDuration(value)) target.put(field, roundedMetric(value));
+    }
+
+    private void enrichTechnicalMetadata(ObjectNode record, Path file, String mediaType) {
+        long width = number(record.get("width"), 0);
+        long height = number(record.get("height"), 0);
+        double duration = decimal(record.get("durationSeconds"), 0d);
+
+        if ("video".equals(mediaType)) {
+            if (!validDimensions(width, height) || !validDuration(duration)) {
+                metadataReader.video(file).ifPresent(metadata -> {
+                    record.put("width", metadata.width());
+                    record.put("height", metadata.height());
+                    record.put("durationSeconds", roundedMetric(metadata.durationSeconds()));
+                });
+            }
+        } else if (!validDimensions(width, height)) {
+            metadataReader.image(file).ifPresent(dimensions -> {
+                record.put("width", dimensions.width());
+                record.put("height", dimensions.height());
+            });
+        }
+
+        long resolvedWidth = number(record.get("width"), 0);
+        long resolvedHeight = number(record.get("height"), 0);
+        if (validDimensions(resolvedWidth, resolvedHeight)) {
+            putAspectRatio(record, resolvedWidth, resolvedHeight);
+        } else {
+            record.remove("width");
+            record.remove("height");
+            record.remove("aspectRatio");
+        }
+        if ("video".equals(mediaType)) {
+            double resolvedDuration = decimal(record.get("durationSeconds"), 0d);
+            if (validDuration(resolvedDuration)) {
+                record.put("durationSeconds", roundedMetric(resolvedDuration));
+            } else {
+                record.remove("durationSeconds");
+            }
+        } else {
+            record.remove("durationSeconds");
+        }
+    }
+
+    private static boolean validDimensions(long width, long height) {
+        return width > 0 && height > 0 && width <= 32_768 && height <= 32_768;
+    }
+
+    private static boolean validDuration(double duration) {
+        return Double.isFinite(duration) && duration > 0d && duration <= 86_400d;
+    }
+
+    private static void putAspectRatio(ObjectNode target, long width, long height) {
+        if (!validDimensions(width, height)) return;
+        target.put("aspectRatio", roundedMetric((double) width / (double) height));
+    }
+
+    private static double roundedMetric(double value) {
+        return Math.round(value * 10_000d) / 10_000d;
     }
 
     private static JsonNode firstPresent(JsonNode item, String... fields) {

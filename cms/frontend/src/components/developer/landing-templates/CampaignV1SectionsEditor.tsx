@@ -2,6 +2,7 @@
 
 import { Plus } from "@phosphor-icons/react";
 import { DeveloperCard, DeveloperColorField, DeveloperField, DeveloperHelp, DeveloperSectionHeading, developerInputClassName, developerSecondaryButtonClassName } from "../ui";
+import type { ResponsiveMediaPresentation } from "@shared/types/media";
 
 type ContentItem = { title: string; description: string };
 type CampaignMedia = { id: string; url: string; kind: string; alt?: string };
@@ -36,11 +37,11 @@ export type CampaignV1Sections = {
   lowerSection: { visible: boolean; title: string; description: string; formTitle: string; formDescription: string; submitLabel: string; mapBaseColor: string; mapBranchColor: string; mapBorderColor: string; ctaLabel: string; ctaUrl: string };
   benefits: { visible: boolean; eyebrow: string; title: string; description: string; items: ContentItem[] };
   metrics: { visible: boolean; eyebrow: string; title: string; items: Array<{ value: string; label: string; description: string }> };
-  story: { visible: boolean; eyebrow: string; title: string; description: string; image: string; ctaLabel: string; ctaUrl: string; items: ContentItem[] };
-  showcase: { visible: boolean; eyebrow: string; title: string; description: string; backgroundImage: string; ctaLabel: string; ctaUrl: string; items: ContentItem[] };
+  story: { visible: boolean; eyebrow: string; title: string; description: string; image: string; imagePresentation?: ResponsiveMediaPresentation; ctaLabel: string; ctaUrl: string; items: ContentItem[] };
+  showcase: { visible: boolean; eyebrow: string; title: string; description: string; backgroundImage: string; backgroundPresentation?: ResponsiveMediaPresentation; ctaLabel: string; ctaUrl: string; items: ContentItem[] };
   testimonial: { visible: boolean; eyebrow: string; title: string; description: string; items: Array<{ name: string; detail: string; quote: string; rating: number }>; quote: string; author: string; role: string };
   faq: { visible: boolean; eyebrow: string; title: string; items: Array<{ question: string; answer: string }> };
-  finalCta: { visible: boolean; eyebrow: string; title: string; description: string; backgroundImage: string; ctaLabel: string; ctaUrl: string };
+  finalCta: { visible: boolean; eyebrow: string; title: string; description: string; backgroundImage: string; backgroundPresentation?: ResponsiveMediaPresentation; ctaLabel: string; ctaUrl: string };
   footer: { brand: string; description: string; phone: string; email: string; legalText: string };
 };
 

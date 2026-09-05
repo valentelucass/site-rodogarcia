@@ -148,4 +148,23 @@ class ContentMigrationServiceTest {
         assertThat(normalizedPresent.path("homePage").path("regionalPresence").path("units").get(0)
             .path("id").asText()).isEqualTo("unit-a");
     }
+
+    @Test
+    void migratesLegacyServicePositionToItsOwnPresentation() {
+        ObjectNode raw = ContentDefaults.repositoryContent(mapper);
+        ObjectNode services = (ObjectNode) raw.get("servicesPage");
+        ObjectNode image = services.putArray("modules").addObject().putObject("image");
+        image.put("src", "/service.webp").put("alt", "Serviço").put("position", "object-top");
+
+        ContentMigrationService.MigrationResult migrated = migrations.migrate(
+            raw, mapper.createObjectNode(), mapper.createObjectNode());
+
+        assertThat(migrated.shouldPersist()).isTrue();
+        assertThat(migrated.content().path("servicesPage").path("modules").get(0).path("image")
+            .path("presentation").path("desktop").path("focalPoint").path("x").asInt())
+            .isEqualTo(50);
+        assertThat(migrated.content().path("servicesPage").path("modules").get(0).path("image")
+            .path("presentation").path("desktop").path("focalPoint").path("y").asInt())
+            .isZero();
+    }
 }

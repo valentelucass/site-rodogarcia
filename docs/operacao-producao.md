@@ -30,7 +30,7 @@ Na VM, crie `.env.production.local` a partir de `.env.production.example`. Preen
 - `FRONTEND_ORIGIN` e `CORS_ORIGINS` com origens HTTPS canônicas.
 - `ADMIN_SETUP_CODE`, `SESSION_SECRET` ou `JWT_SECRET`, e `ESL_OPERATION_SECRET` com valores fortes e distintos.
 - `STORAGE_ROOT` e `UPLOADS_DIR` com caminhos absolutos no volume persistente.
-- `FFMPEG_PATH` absoluto para um executável estável fora do repositório e de `node_modules`, usado pelos backends Spring do CMS e Landing Builder.
+- `FFMPEG_PATH` e `FFPROBE_PATH` absolutos para executáveis estáveis fora do repositório e de `node_modules`, usados pelos backends Spring do CMS e Landing Builder para converter imagens e ler com limite de tempo resolução/duração de vídeos.
 - `TRUST_PROXY=1` quando o Next/tunnel for o salto confiável.
 - `BACKEND_INTERNAL_URL=http://127.0.0.1:6050`.
 - `CMS_BACKEND_INTERNAL_URL=http://127.0.0.1:6051`, `CMS_BACKEND_PROXY_URL=http://127.0.0.1:6051` e `CMS_INTERNAL_URL=http://127.0.0.1:6061`.

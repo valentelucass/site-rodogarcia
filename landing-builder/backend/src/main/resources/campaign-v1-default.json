@@ -1,7 +1,7 @@
 {
   "template": "campaign-v1",
   "hero": {
-    "phone": "", "email": "", "logo": "", "backgroundImage": "",
+    "phone": "", "email": "", "logo": "", "backgroundImage": "", "backgroundPresentation": {"desktop":{"focalPoint":{"x":50,"y":50}}},
     "eyebrow": "Campanha em destaque",
     "title": "Uma solução preparada para o seu desafio",
     "description": "Apresente a proposta principal da campanha com uma mensagem direta, clara e orientada à ação.",
@@ -33,7 +33,7 @@
   "story": {
     "visible": true, "eyebrow": "Como funciona", "title": "Uma experiência simples do início ao fim",
     "description": "Combine uma imagem com uma explicação objetiva sobre a operação, o serviço ou a oportunidade apresentada pela campanha.",
-    "image": "",
+    "image": "", "imagePresentation": {"desktop":{"focalPoint":{"x":50,"y":50}}},
     "items": [
       {"title": "Operação preparada", "description": "Organize a estrutura e os processos que sustentam a sua rotina logística."},
       {"title": "Visibilidade em tempo real", "description": "Apresente os recursos que mantêm a operação acompanhada em cada etapa."},
@@ -51,7 +51,7 @@
   "showcase": {
     "visible": true, "eyebrow": "Soluções sob medida", "title": "Soluções de armazenagem para diversos produtos",
     "description": "Apresente a estrutura, os processos e a capacidade que tornam esta operação preparada para diferentes demandas.",
-    "backgroundImage": "", "ctaLabel": "Fazer cotação", "ctaUrl": "",
+    "backgroundImage": "", "backgroundPresentation": {"desktop":{"focalPoint":{"x":50,"y":50}}}, "ctaLabel": "Fazer cotação", "ctaUrl": "",
     "items": [
       {"title": "Cargas e produtos industriais", "description": "Estrutura preparada para receber e gerenciar fluxos industriais de grande porte."},
       {"title": "Matéria-prima", "description": "Infraestrutura flexível para recebimento, controle e armazenagem de insumos essenciais."},
@@ -79,7 +79,7 @@
   "finalCta": {
     "visible": true, "eyebrow": "Próximo passo", "title": "Vamos conversar sobre a sua necessidade?",
     "description": "Finalize a campanha com uma chamada direta e um único destino de conversão.",
-    "backgroundImage": "", "ctaLabel": "Entrar em contato", "ctaUrl": ""
+    "backgroundImage": "", "backgroundPresentation": {"desktop":{"focalPoint":{"x":50,"y":50}}}, "ctaLabel": "Entrar em contato", "ctaUrl": ""
   },
   "footer": {
     "brand": "Sua empresa", "description": "Uma mensagem curta para encerrar a campanha.",

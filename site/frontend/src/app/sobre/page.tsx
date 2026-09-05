@@ -129,6 +129,7 @@ export default async function SobrePage() {
         stats={ABOUT_STATS}
         image={aboutPage.hero.media.src}
         imageAlt={aboutPage.hero.media.alt}
+        imagePresentation={aboutPage.hero.media.presentation}
         buttons={aboutPage.hero.buttons.map((button, index) => ({
           label: button.label,
           href: button.url,

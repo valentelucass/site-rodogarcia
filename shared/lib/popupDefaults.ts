@@ -1,3 +1,5 @@
+import type { ResponsiveMediaPresentation } from "@shared/types/media";
+
 export interface PopupConfig {
   enabled: boolean;
   title: string;
@@ -10,6 +12,8 @@ export interface PopupConfig {
   successMessage: string;
   badgeText?: string;
   image?: string;
+  /** Enquadramento da imagem padrão quando ela for usada pelo popup. */
+  imagePresentation?: ResponsiveMediaPresentation;
   delaySeconds: number;
   cooldownHours: number;
   maxShowsPerSession: number;
@@ -19,11 +23,15 @@ export interface PopupConfig {
     title?: string;
     description?: string;
     image?: string;
+    /** Enquadramento da imagem exclusiva para telas maiores. */
+    imagePresentation?: ResponsiveMediaPresentation;
   };
   mobile?: {
     title?: string;
     description?: string;
     image?: string;
+    /** Enquadramento da imagem exclusiva para o layout de celular. */
+    imagePresentation?: ResponsiveMediaPresentation;
     sheetTitle?: string;
   };
 }
