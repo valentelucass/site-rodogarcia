@@ -32,3 +32,22 @@ export interface ResponsiveMediaPresentation {
   desktop: MediaPlacement;
   mobile?: MediaPlacement;
 }
+
+/**
+ * Derivadas públicas opcionais de uma imagem da biblioteca. Conteúdo legado
+ * continua válido somente com `src`; as dimensões das derivadas permitem que
+ * o navegador escolha um arquivo sem adivinhar a largura descrita no srcset.
+ */
+export interface ResponsiveImageSources {
+  width?: number;
+  height?: number;
+  thumbnailUrl?: string;
+  thumbnailWidth?: number;
+  thumbnailHeight?: number;
+  mediumUrl?: string;
+  mediumWidth?: number;
+  mediumHeight?: number;
+  largeUrl?: string;
+  largeWidth?: number;
+  largeHeight?: number;
+}

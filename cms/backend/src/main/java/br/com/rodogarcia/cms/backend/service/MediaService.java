@@ -150,6 +150,14 @@ public final class MediaService {
             record.put("thumbnailUrl", normalizedPath(item.get("thumbnailUrl")));
             record.put("mediumUrl", normalizedPath(item.get("mediumUrl")));
             record.put("largeUrl", normalizedPath(item.get("largeUrl")));
+            putOptionalNumber(record, "optimizedWidth", number(item.get("optimizedWidth"), 0));
+            putOptionalNumber(record, "optimizedHeight", number(item.get("optimizedHeight"), 0));
+            putOptionalNumber(record, "thumbnailWidth", number(item.get("thumbnailWidth"), 0));
+            putOptionalNumber(record, "thumbnailHeight", number(item.get("thumbnailHeight"), 0));
+            putOptionalNumber(record, "mediumWidth", number(item.get("mediumWidth"), 0));
+            putOptionalNumber(record, "mediumHeight", number(item.get("mediumHeight"), 0));
+            putOptionalNumber(record, "largeWidth", number(item.get("largeWidth"), 0));
+            putOptionalNumber(record, "largeHeight", number(item.get("largeHeight"), 0));
             enrichTechnicalMetadata(record, statsPath, mediaType);
             result.add(record);
         }
@@ -363,6 +371,14 @@ public final class MediaService {
         record.put("originalFormat", mimeType);
         record.put("width", image.width());
         record.put("height", image.height());
+        record.put("optimizedWidth", image.optimizedWidth());
+        record.put("optimizedHeight", image.optimizedHeight());
+        record.put("thumbnailWidth", image.thumbnailWidth());
+        record.put("thumbnailHeight", image.thumbnailHeight());
+        record.put("mediumWidth", image.mediumWidth());
+        record.put("mediumHeight", image.mediumHeight());
+        record.put("largeWidth", image.largeWidth());
+        record.put("largeHeight", image.largeHeight());
         putAspectRatio(record, image.width(), image.height());
         record.put("originalSize", bytes.length);
         record.put("optimizedSize", size(optimized));

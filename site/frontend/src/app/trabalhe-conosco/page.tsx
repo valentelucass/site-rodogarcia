@@ -38,14 +38,14 @@ const fallbackMetadata: Metadata = {
     description:
       "Veja as vagas em destaque e como a Rodogarcia organiza sua frente de recrutamento.",
     url: seo.absoluteUrl(site.careers),
-    images: [{ url: seo.absoluteUrl("/caminhoneiro1.webp") }],
+    images: [{ url: seo.absoluteUrl("/motorista-rodogarcia.abbf7875cfae.webp") }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Carreiras | Rodogarcia Transportes",
     description:
       "Trabalhe em uma operação nacional orientada por consistência, crescimento e excelência.",
-    images: [seo.absoluteUrl("/caminhoneiro1.webp")],
+    images: [seo.absoluteUrl("/motorista-rodogarcia.abbf7875cfae.webp")],
   },
   robots: {
     index: true,
@@ -156,7 +156,7 @@ const FALLBACK_CAREERS_PAGE: CareersPageContent = {
     ],
   },
   cultureImage: {
-    src: "/caminhoneiro1.webp",
+    src: "/motorista-rodogarcia.abbf7875cfae.webp",
     alt: "Time Rodogarcia em operação",
   },
   jobs: STATIC_JOBS.map((job, index) => ({
@@ -298,10 +298,9 @@ export default async function TrabalheConoscoPage() {
             <div className="relative overflow-hidden rounded-[34px] border border-white/70 bg-[#dce7f7] shadow-[0_24px_64px_rgba(15,23,42,0.12)]">
               <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,rgba(2,6,23,0.08)_100%)]" />
               <PresentedImage
-                src={cultureImage.src}
-                alt={cultureImage.alt}
+                {...cultureImage}
                 className="aspect-[4/3] w-full object-cover"
-                presentation={cultureImage.presentation}
+                sizes="(max-width: 1023px) calc(100vw - 3rem), 50vw"
                 loading="lazy"
                 decoding="async"
               />

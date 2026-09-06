@@ -4,6 +4,7 @@ import Link from "next/link";
 import { createPortal } from "react-dom";
 import { useEffect, useId, useMemo, useState } from "react";
 import type { ReactNode } from "react";
+import type { ResponsiveImageSources } from "@shared/types/media";
 import {
   ArrowSquareOut,
   CaretLeft,
@@ -24,7 +25,7 @@ import {
   developerSecondaryButtonClassName,
 } from "./ui";
 
-export interface AdminMediaRecord {
+export interface AdminMediaRecord extends ResponsiveImageSources {
   name: string;
   url: string;
   source: "upload" | "content" | "library";
@@ -32,9 +33,6 @@ export interface AdminMediaRecord {
   size: number;
   references: number;
   mediaType?: "image" | "video";
-  thumbnailUrl?: string;
-  width?: number;
-  height?: number;
   aspectRatio?: number;
   durationSeconds?: number;
 }

@@ -5,11 +5,13 @@
   "scripts": {
     "dev": "next dev --hostname 127.0.0.1 --port 35180",
     "build": "next build",
-    "build:prod": "npm run build && node scripts/prepare-prod-artifact.mjs",
+    "build:prod": "npm run verify:static-assets && npm run verify:home-contracts && npm run build && node scripts/prepare-prod-artifact.mjs",
     "vercel-build": "next build",
     "start": "next start --hostname 127.0.0.1 --port 35180",
     "start:prod": "node dist-prod/server.js",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "verify:static-assets": "node scripts/verify-static-assets.mjs",
+    "verify:home-contracts": "node scripts/verify-home-contracts.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.3.0",

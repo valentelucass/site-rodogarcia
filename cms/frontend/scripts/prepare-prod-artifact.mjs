@@ -35,6 +35,7 @@ if ((isolatedPreflight || nextBuildDirectoryName === ".next.test") && artifactDi
 }
 
 const outputDir = path.join(cmsRoot, artifactDirectoryName);
+const outputNextDir = path.join(outputDir, nextBuildDirectoryName);
 
 async function requireDirectory(directory, label) {
   try {
@@ -55,8 +56,8 @@ await rm(outputDir, { recursive: true, force: true });
 // `.next/standalone`. O artefato operacional deve expor o servidor na sua raiz
 // para coincidir com `start:prod` e com o processo PM2.
 await cp(standaloneAppDir, outputDir, { recursive: true });
-await mkdir(path.join(outputDir, ".next"), { recursive: true });
-await cp(staticDir, path.join(outputDir, ".next", "static"), {
+await mkdir(outputNextDir, { recursive: true });
+await cp(staticDir, path.join(outputNextDir, "static"), {
   recursive: true,
   filter: (source) => !source.endsWith(".map"),
 });
@@ -75,7 +76,7 @@ await writeFile(
       format: "next-standalone",
       buildId,
       generatedAt: new Date().toISOString(),
-      staticAssets: ".next/static",
+      staticAssets: `${nextBuildDirectoryName}/static`,
     },
     null,
     2

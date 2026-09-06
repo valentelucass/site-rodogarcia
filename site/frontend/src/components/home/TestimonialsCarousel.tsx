@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { CaretLeft, CaretRight, Quotes, Star } from "@phosphor-icons/react";
 import type { HomeFeedback, HomeSocialProof } from "@/types/content";
+import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 
 interface TestimonialsCarouselProps {
   section: HomeSocialProof;
@@ -79,6 +80,7 @@ export default function TestimonialsCarousel({ section }: TestimonialsCarouselPr
   const items = useMemo(() => normalizeFeedbacks(section.feedbacks), [section.feedbacks]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const totalSlides = items.length;
+  const prefersReducedMotion = usePrefersReducedMotion();
 
   const goToTestimonial = useCallback((index: number) => {
     setCurrentIndex(() => wrapIndex(index, totalSlides));
@@ -89,14 +91,14 @@ export default function TestimonialsCarousel({ section }: TestimonialsCarouselPr
   }, [totalSlides]);
 
   useEffect(() => {
-    if (totalSlides < 2 || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (totalSlides < 2 || prefersReducedMotion) return;
 
     const timer = window.setInterval(() => {
       setCurrentIndex((index) => wrapIndex(index + 1, totalSlides));
     }, 7000);
 
     return () => window.clearInterval(timer);
-  }, [totalSlides]);
+  }, [prefersReducedMotion, totalSlides]);
 
   const displayedItems = displayFeedbacks(items, currentIndex);
   if (!section.title || displayedItems.length === 0) return null;
@@ -126,15 +128,15 @@ export default function TestimonialsCarousel({ section }: TestimonialsCarouselPr
               return (
                 <motion.article
                   key={feedback.id}
-                  layout
-                  initial={{ opacity: 0, scale: 0.88, y: 20 }}
+                  layout={!prefersReducedMotion}
+                  initial={prefersReducedMotion ? false : { opacity: 0, scale: 0.88, y: 20 }}
                   animate={{
                     opacity: isCurrent ? 1 : 0.74,
                     scale: isCurrent ? 1 : 0.86,
                     y: isCurrent ? 0 : 12,
                   }}
                   exit={{ opacity: 0, scale: 0.82, y: -12 }}
-                  transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+                  transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
                   className={`relative overflow-hidden rounded-[28px] border bg-white text-center shadow-[0_18px_44px_rgba(3,10,26,0.2)] ${isCurrent ? "z-10 border-white p-6 sm:p-8 lg:p-9" : "hidden border-white/80 p-5 sm:block sm:p-6"}`}
                 >
                   <div className={`mx-auto flex shrink-0 items-center justify-center overflow-hidden rounded-full border border-slate-200 bg-[linear-gradient(145deg,#eff6ff,#dbeafe)] text-[var(--primary)] shadow-[0_10px_24px_rgba(15,23,42,0.08)] ${isCurrent ? "h-24 w-24 sm:h-28 sm:w-28" : "h-16 w-16 sm:h-20 sm:w-20"}`}>
@@ -166,7 +168,7 @@ export default function TestimonialsCarousel({ section }: TestimonialsCarouselPr
                     <span className="text-slate-300" aria-hidden="true">·</span>
                     <p className="text-slate-600">{feedback.role}</p>
                   </div>
-                  <div className="mt-3 flex justify-center gap-1" aria-label={`${feedback.rating} de 5 estrelas`}>
+                  <div className="mt-3 flex justify-center gap-1" role="img" aria-label={`${feedback.rating} de 5 estrelas`}>
                     {renderStars(feedback.rating)}
                   </div>
                 </motion.article>
@@ -176,9 +178,9 @@ export default function TestimonialsCarousel({ section }: TestimonialsCarouselPr
         </div>
 
         {totalSlides > 1 ? (
-          <div className="mt-8 flex items-center justify-center gap-4 sm:mt-10">
+          <div className="mt-8 flex items-center justify-center gap-1 sm:mt-10 sm:gap-4">
             <TestimonialNavButton label="Depoimento anterior" direction="previous" onClick={() => goToTestimonial(currentIndex - 1)} />
-            <div className="flex gap-2" aria-label={`Depoimento ${currentIndex + 1} de ${totalSlides}`}>
+            <div className="flex min-w-0 items-center overflow-x-auto" role="group" aria-label={`Depoimento ${currentIndex + 1} de ${totalSlides}`}>
               {items.map((item, index) => (
                 <button
                   key={item.id}
@@ -186,8 +188,13 @@ export default function TestimonialsCarousel({ section }: TestimonialsCarouselPr
                   aria-label={`Exibir depoimento ${index + 1} de ${totalSlides}`}
                   aria-current={index === currentIndex ? "true" : undefined}
                   onClick={() => goToTestimonial(index)}
-                  className={`h-1.5 rounded-full transition-all duration-300 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-200/35 ${index === currentIndex ? "w-8 bg-sky-400" : "w-2.5 bg-white/25 hover:bg-white/45"}`}
-                />
+                  className="group inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-200/35"
+                >
+                  <span
+                    aria-hidden="true"
+                    className={`h-1.5 rounded-full transition-[width,background-color] duration-300 motion-reduce:transition-none ${index === currentIndex ? "w-8 bg-sky-400" : "w-2.5 bg-white/25 group-hover:bg-white/45"}`}
+                  />
+                </button>
               ))}
             </div>
             <TestimonialNavButton label="Próximo depoimento" direction="next" onClick={() => goToTestimonial(currentIndex + 1)} />
@@ -204,7 +211,7 @@ function TestimonialNavButton({ label, direction, onClick }: { label: string; di
       type="button"
       aria-label={label}
       onClick={onClick}
-      className="flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-white/[0.075] text-white/85 shadow-[0_12px_28px_rgba(2,6,23,0.24)] backdrop-blur-md transition-[background-color,border-color,transform,color] duration-200 hover:-translate-y-px hover:border-white/25 hover:bg-white/[0.14] hover:text-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/20"
+      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/15 bg-white/[0.075] text-white/85 shadow-[0_12px_28px_rgba(2,6,23,0.24)] backdrop-blur-md transition-[background-color,border-color,transform,color] duration-200 hover:-translate-y-px hover:border-white/25 hover:bg-white/[0.14] hover:text-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/20 motion-reduce:transition-none motion-reduce:hover:translate-y-0"
     >
       {direction === "previous" ? <CaretLeft size={20} weight="bold" aria-hidden="true" /> : <CaretRight size={20} weight="bold" aria-hidden="true" />}
     </button>

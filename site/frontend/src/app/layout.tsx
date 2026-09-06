@@ -1,8 +1,13 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
+import { Suspense } from "react";
 import { Space_Grotesk, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { ShellLayout } from "@/components/layout/ShellLayout";
 import { SiteFooter } from "@/components/layout/SiteFooter";
+import { SiteHeader } from "@/components/layout/SiteHeader";
+import { SiteHeaderLoader } from "@/components/layout/SiteHeaderLoader";
+import { DEFAULT_HEADER_NAVIGATION } from "@/lib/headerNavigationDefaults";
 import { seo } from "@/lib/routes";
 
 const spaceGrotesk = Space_Grotesk({
@@ -61,11 +66,14 @@ const structuredData = {
   sameAs: [seo.baseUrl],
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const requestHeaders = await headers();
+  const nonce = requestHeaders.get("x-nonce") ?? undefined;
+
   return (
     <html
       lang="pt-BR"
@@ -75,9 +83,21 @@ export default function RootLayout({
       <body className="min-h-dvh">
         <script
           type="application/ld+json"
+          nonce={nonce}
           dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
         />
-        <ShellLayout footer={<SiteFooter />}>{children}</ShellLayout>
+        <ShellLayout
+          footer={<SiteFooter />}
+          header={
+            <Suspense
+              fallback={<SiteHeader initialNavigation={DEFAULT_HEADER_NAVIGATION} />}
+            >
+              <SiteHeaderLoader />
+            </Suspense>
+          }
+        >
+          {children}
+        </ShellLayout>
       </body>
     </html>
   );

@@ -31,6 +31,7 @@ const standaloneDir = path.join(nextDir, "standalone");
 const staticDir = path.join(nextDir, "static");
 const publicDir = path.join(frontendRoot, "public");
 const outputDir = path.join(frontendRoot, artifactDirectoryName);
+const outputNextDir = path.join(outputDir, nextBuildDirectoryName);
 
 async function requireDirectory(directory, label) {
   try {
@@ -47,8 +48,8 @@ const buildId = (await readFile(path.join(nextDir, "BUILD_ID"), "utf8")).trim();
 
 await rm(outputDir, { recursive: true, force: true });
 await cp(standaloneDir, outputDir, { recursive: true });
-await mkdir(path.join(outputDir, ".next"), { recursive: true });
-await cp(staticDir, path.join(outputDir, ".next", "static"), {
+await mkdir(outputNextDir, { recursive: true });
+await cp(staticDir, path.join(outputNextDir, "static"), {
   recursive: true,
   filter: (source) => !source.endsWith(".map"),
 });
@@ -62,7 +63,7 @@ try {
 
 await writeFile(
   path.join(outputDir, "build-info.json"),
-  `${JSON.stringify({ format: "next-standalone", buildId, generatedAt: new Date().toISOString(), staticAssets: ".next/static" }, null, 2)}\n`,
+  `${JSON.stringify({ format: "next-standalone", buildId, generatedAt: new Date().toISOString(), staticAssets: `${nextBuildDirectoryName}/static` }, null, 2)}\n`,
   "utf8"
 );
 

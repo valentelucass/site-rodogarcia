@@ -125,7 +125,7 @@ set "NEXT_BUILD_DIST_DIR=.next.test"
 set "RODOGARCIA_ISOLATED_PREFLIGHT=1"
 set "LANDING_BUILDER_API_URL="
 set "LANDING_BUILDER_SERVICE_TOKEN="
-set "LANDING_BUILDER_PUBLIC_URL="
+set "LANDING_BUILDER_PUBLIC_URL=http://127.0.0.1:42515"
 set "PROD_ARTIFACT_DIR=dist-prod.test"
 call "%~dp0scripts\stage-production-jar.bat" "site\backend" "site\backend\dist.test"
 if not "%ERRORLEVEL%"=="0" goto :preflight_failed
@@ -141,7 +141,7 @@ call "%~dp0scripts\build-production-frontend-artifact.bat" "cms\frontend" "CMS" 
 if not "%ERRORLEVEL%"=="0" goto :preflight_failed
 
 echo [Rodogarcia PROD] Executando hardening ponta a ponta em portas isoladas...
-node scripts\tests\test-security-hardening.js
+node --experimental-websocket scripts\tests\test-security-hardening.js
 if not "%ERRORLEVEL%"=="0" goto :preflight_failed
 
 set "BACKEND_PROXY_URL="

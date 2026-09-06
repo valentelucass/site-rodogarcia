@@ -38,63 +38,47 @@ const landingBuilderAssetPrefix = (() => {
 })();
 const nextBuildDistDir = process.env.NEXT_BUILD_DIST_DIR?.trim() || ".next";
 
+// Somente arquivos cujo nome muda junto com o conteúdo podem receber cache
+// imutável. URLs históricas sem versão permanecem com o TTL revalidável do
+// servidor para que um rollback não fique preso no navegador.
+const immutablePublicAssetPaths = [
+  "/36-anos-rodogarcia.4c43a61efb46.webp",
+  "/motorista-rodogarcia.abbf7875cfae.webp",
+  "/operacao-indoor-rodogarcia.d6f36f33e258.webp",
+  "/certificados/ibama.7198f261a1ee.webp",
+  "/certificados/iso-9001.9371c4a6c19f.webp",
+  "/certificados/policia-civil-sp.57269b3e1bdd.webp",
+  "/favicon-rodogarcia-20260718.svg",
+  "/home-atendimento-poster.741b9476c78e.webp",
+  "/home-atendimento-silent.c9c72d26fc63.webm",
+  "/home-caminhoes-poster.f5746017ec72.webp",
+  "/home-caminhoes-silent.3bee1a633929.webm",
+  "/home-caminhoneiro-poster.521ac36f8173.webp",
+  "/home-caminhoneiro-silent.537fea4cb953.webm",
+  "/home-operacao-poster.5f976502a5c8.webp",
+  "/home-operacao-silent.6e2fa78ac5d9.webm",
+  "/media/canonical/1-1772986684149.webp",
+  "/media/canonical/2-1772986687188.webp",
+  "/media/canonical/3-1772986690224.webp",
+  "/media/canonical/gemini_generated_image_43k01d43k01d43k0-1772734949859.webp",
+];
+
+const immutablePublicAssetHeaders = immutablePublicAssetPaths.map((source) => ({
+  source,
+  headers: [
+    {
+      key: "Cache-Control",
+      value: "public, max-age=31536000, immutable",
+    },
+  ],
+}));
+
 if (![".next", ".next.test"].includes(nextBuildDistDir)) {
   throw new Error("NEXT_BUILD_DIST_DIR deve ser .next ou .next.test.");
 }
 
-function buildContentSecurityPolicy(frameAncestors) {
+function buildSecurityHeaders({ frameOptions }) {
   return [
-    "default-src 'self'",
-    [
-      "script-src",
-      "'self'",
-      "'unsafe-inline'",
-      isProduction ? "" : "'unsafe-eval'",
-      "https://www.googletagmanager.com",
-      "https://www.clarity.ms",
-    ],
-    [
-      "connect-src",
-      "'self'",
-      "https://www.google-analytics.com",
-      "https://*.google-analytics.com",
-      "https://www.googletagmanager.com",
-      "https://*.clarity.ms",
-    ],
-    [
-      "img-src",
-      "'self'",
-      "data:",
-      "blob:",
-      "https://www.google-analytics.com",
-      "https://*.google-analytics.com",
-      "https://*.clarity.ms",
-    ],
-    ["media-src", "'self'", "blob:"],
-    "style-src 'self' 'unsafe-inline'",
-    "font-src 'self' data:",
-    "frame-src 'self'",
-    `frame-ancestors ${frameAncestors}`,
-    "object-src 'none'",
-    "base-uri 'self'",
-    "form-action 'self'",
-    "manifest-src 'self'",
-  ]
-    .map((directive) =>
-      Array.isArray(directive)
-        ? directive.filter(Boolean).join(" ")
-        : directive
-    )
-    .filter(Boolean)
-    .join("; ");
-}
-
-function buildSecurityHeaders({ frameAncestors, frameOptions }) {
-  return [
-    {
-      key: "Content-Security-Policy",
-      value: buildContentSecurityPolicy(frameAncestors),
-    },
     { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
     { key: "X-Content-Type-Options", value: "nosniff" },
     { key: "X-Frame-Options", value: frameOptions },
@@ -113,12 +97,10 @@ function buildSecurityHeaders({ frameAncestors, frameOptions }) {
 }
 
 const securityHeaders = buildSecurityHeaders({
-  frameAncestors: "'none'",
   frameOptions: "DENY",
 });
 
 const cmsPreviewHeaders = buildSecurityHeaders({
-  frameAncestors: "'self'",
   frameOptions: "SAMEORIGIN",
 });
 
@@ -172,6 +154,7 @@ const nextConfig = {
         source: "/admin/:path*",
         headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow, noarchive" }],
       },
+      ...immutablePublicAssetHeaders,
       ...cmsPreviewPaths.map((source) => ({
         source,
         has: cmsPreviewQuery,

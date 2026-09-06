@@ -15,6 +15,48 @@ function remove(target) {
   fs.rmSync(target, { recursive: true, force: true });
 }
 
+function copySharpFixtureDependencies(projectRoot) {
+  const sourceNodeModules = path.join(ROOT_DIR, "site", "frontend", "node_modules");
+  const runtimePackages = ["sharp", "detect-libc", "semver", "@img"];
+
+  writeFile(path.join(projectRoot, "package.json"), '{"private":true}\n');
+  for (const relativePackagePath of runtimePackages) {
+    const source = path.join(sourceNodeModules, relativePackagePath);
+    assert.ok(
+      fs.existsSync(source),
+      `Dependencia do Sharp ausente para a fixture: ${source}`
+    );
+    fs.cpSync(source, path.join(projectRoot, "node_modules", relativePackagePath), {
+      recursive: true,
+    });
+  }
+}
+
+function assertPreparedSharpWorksWithoutSourceNodeModules(preparedArtifact, fixtureRoot) {
+  const isolatedArtifact = path.join(fixtureRoot, "isolated-sharp-runtime");
+  fs.cpSync(preparedArtifact, isolatedArtifact, { recursive: true });
+
+  const probe = spawnSync(
+    process.execPath,
+    [
+      "-e",
+      [
+        "const sharp = require(require.resolve('sharp', { paths: [process.cwd()] }));",
+        "const input = Buffer.alloc(32 * 32 * 3, 127);",
+        "sharp(input, { raw: { width: 32, height: 32, channels: 3 } })",
+        "  .resize(8, 8).webp({ quality: 75 }).toBuffer({ resolveWithObject: true })",
+        "  .then(({ data, info }) => {",
+        "    if (info.format !== 'webp' || info.width !== 8 || info.height !== 8 || data.length >= input.length) process.exit(2);",
+        "  })",
+        "  .catch((error) => { console.error(error); process.exit(1); });",
+      ].join("\n"),
+    ],
+    { cwd: isolatedArtifact, encoding: "utf8" }
+  );
+
+  assert.equal(probe.status, 0, probe.stderr || probe.stdout);
+}
+
 function createPromotionFixture() {
   const fixture = fs.mkdtempSync(path.join(os.tmpdir(), "rodogarcia-promotion-test-"));
   fs.mkdirSync(path.join(fixture, "scripts"), { recursive: true });
@@ -129,6 +171,14 @@ function testProductionLauncherUsesExternalBatchHelpers() {
   assert.match(launcher, /if not "%DEV_PREFLIGHT_EXIT_CODE%"=="0" goto :preflight_failed/i);
   assert.match(launcher, /build-production-frontend-artifact\.bat" "site\\frontend" "site" "\.next\.test" "dist-prod\.test" "1"/i);
   assert.match(launcher, /build-production-frontend-artifact\.bat" "cms\\frontend" "CMS" "\.next\.test" "dist-prod\.test" "1"/i);
+  assert.match(
+    launcher,
+    /set "LANDING_BUILDER_PUBLIC_URL=http:\/\/127\.0\.0\.1:42515"/i
+  );
+  assert.match(
+    launcher,
+    /node --experimental-websocket scripts\\tests\\test-security-hardening\.js/i
+  );
   assert.match(launcher, /validate-production-rollout-mode\.bat/i);
   assert.match(launcher, /verify-production-spring-backend\.bat/i);
   assert.match(launcher, /RODOGARCIA_INITIAL_PROD_ROLLOUT/i);
@@ -147,6 +197,66 @@ function testProductionLauncherUsesExternalBatchHelpers() {
   assert.match(isolatedBuild, /set "NEXT_BUILD_DIST_DIR=%~3"/i);
   assert.match(isolatedBuild, /set "PROD_ARTIFACT_DIR=%~4"/i);
   assert.match(isolatedBuild, /set "RODOGARCIA_ISOLATED_PREFLIGHT=%~5"/i);
+
+  const ciWorkflow = fs.readFileSync(path.join(ROOT_DIR, ".github", "workflows", "ci.yml"), "utf8");
+  assert.match(
+    ciWorkflow,
+    /LANDING_BUILDER_PUBLIC_URL:\s*http:\/\/127\.0\.0\.1:42515/i
+  );
+  assert.match(
+    ciWorkflow,
+    /node --experimental-websocket scripts\/tests\/test-security-hardening\.js/i
+  );
+}
+
+function testPublicHomeVideoPolicy() {
+  const content = JSON.parse(
+    fs.readFileSync(path.join(ROOT_DIR, "site", "backend", "storage", "content.json"), "utf8")
+  );
+  const publicRoot = path.join(ROOT_DIR, "site", "frontend", "public");
+  const mediaEntries = [];
+
+  function collect(value) {
+    if (Array.isArray(value)) {
+      value.forEach(collect);
+      return;
+    }
+    if (!value || typeof value !== "object") return;
+    if (value.type === "video" && typeof value.src === "string") {
+      mediaEntries.push(value);
+    }
+    Object.values(value).forEach(collect);
+  }
+
+  collect(content.homePage);
+  assert.ok(mediaEntries.length > 0, "A Home canonica deve manter suas midias de video.");
+
+  for (const media of mediaEntries) {
+    assert.match(media.src, /\.[a-f0-9]{12}\.webm$/i, `Video sem hash de conteudo: ${media.src}`);
+    assert.equal(
+      typeof media.poster === "string" && media.poster.length > 0,
+      true,
+      `Video adiado sem poster: ${media.src}`
+    );
+
+    for (const [kind, publicUrl] of [["video", media.src], ["poster", media.poster]]) {
+      assert.equal(publicUrl.startsWith("/") && !publicUrl.startsWith("//"), true);
+      const normalizedUrl = publicUrl.startsWith("/public/")
+        ? publicUrl.slice("/public".length)
+        : publicUrl;
+      const assetPath = path.join(publicRoot, normalizedUrl.replace(/^\/+/, ""));
+      assert.ok(fs.existsSync(assetPath), `${kind} publico ausente: ${publicUrl}`);
+
+      if (kind === "video") {
+        const bytes = fs.readFileSync(assetPath);
+        assert.equal(
+          bytes.includes(Buffer.from("OpusHead")),
+          false,
+          `Loop decorativo ainda contem faixa Opus: ${publicUrl}`
+        );
+      }
+    }
+  }
 }
 
 function testNegativeNpmExitStopsTheInstallHelper() {
@@ -177,7 +287,11 @@ function testNegativeNpmExitStopsTheInstallHelper() {
 function testIsolatedNextArtifactNeverTouchesTheActiveArtifact() {
   const fixture = fs.mkdtempSync(path.join(os.tmpdir(), "rodogarcia-next-artifact-test-"));
   const frontends = [
-    { project: ["site", "frontend"], standaloneApp: ["site", "frontend"] },
+    {
+      project: ["site", "frontend"],
+      standaloneApp: ["site", "frontend"],
+      requiresSharpRuntime: true,
+    },
     { project: ["cms", "frontend"], standaloneApp: ["cms", "frontend"] },
     { project: ["landing-builder", "frontend"], standaloneApp: [] },
   ];
@@ -201,6 +315,9 @@ function testIsolatedNextArtifactNeverTouchesTheActiveArtifact() {
       writeFile(path.join(nextTestRoot, "static", "chunk.js"), "// static\n");
       writeFile(path.join(nextTestRoot, "BUILD_ID"), "isolated-test\n");
       writeFile(path.join(projectRoot, "dist-prod", "server.js"), "// active artifact\n");
+      if (frontend.requiresSharpRuntime) {
+        copySharpFixtureDependencies(projectRoot);
+      }
 
       const blocked = spawnSync(process.execPath, [script], {
         cwd: projectRoot,
@@ -249,10 +366,26 @@ function testIsolatedNextArtifactNeverTouchesTheActiveArtifact() {
       });
       assert.equal(prepared.status, 0, prepared.stderr);
       assert.ok(fs.existsSync(path.join(projectRoot, "dist-prod.test", "server.js")));
+      assert.ok(
+        fs.existsSync(
+          path.join(projectRoot, "dist-prod.test", ".next.test", "static", "chunk.js")
+        ),
+        `${frontend.project.join("/")} nao preservou o distDir compilado no artefato isolado.`
+      );
+      const buildInfo = JSON.parse(
+        fs.readFileSync(path.join(projectRoot, "dist-prod.test", "build-info.json"), "utf8")
+      );
+      assert.equal(buildInfo.staticAssets, ".next.test/static");
       assert.equal(
         fs.readFileSync(path.join(projectRoot, "dist-prod", "server.js"), "utf8"),
         "// active artifact\n"
       );
+      if (frontend.requiresSharpRuntime) {
+        assertPreparedSharpWorksWithoutSourceNodeModules(
+          path.join(projectRoot, "dist-prod.test"),
+          fixture
+        );
+      }
     }
   } finally {
     remove(fixture);
@@ -264,6 +397,7 @@ testPromotionAndRollbackPreserveSpringArtifacts();
 testInitialRolloutAllowsMissingActiveArtifacts();
 testExternalBackupManifestTargetsItsOriginalSource();
 testProductionLauncherUsesExternalBatchHelpers();
+testPublicHomeVideoPolicy();
 testNegativeNpmExitStopsTheInstallHelper();
 testIsolatedNextArtifactNeverTouchesTheActiveArtifact();
 console.log("ALL PRODUCTION OPERATION TESTS PASS");

@@ -225,7 +225,12 @@ export function SiteSearchPanel({ open, onClose }: SiteSearchPanelProps) {
                     onMouseEnter={() => setActiveIndex(index)}
                     onFocus={() => setActiveIndex(index)}
                   >
-                    <SearchResultLink item={item} active={isActive} onClose={onClose} />
+                    <SearchResultLink
+                      item={item}
+                      active={isActive}
+                      onClose={onClose}
+                      prefetch={open}
+                    />
                   </li>
                 );
               })}
@@ -257,10 +262,12 @@ function SearchResultLink({
   item,
   active,
   onClose,
+  prefetch,
 }: {
   item: SearchItem;
   active: boolean;
   onClose: () => void;
+  prefetch: boolean;
 }) {
   const className = [
     "flex w-full items-center gap-3 rounded-xl px-3.5 py-3 text-left transition-[background-color,color,box-shadow] duration-150 sm:px-4",
@@ -286,7 +293,12 @@ function SearchResultLink({
   }
 
   return (
-    <Link href={item.href} onClick={onClose} className={className}>
+    <Link
+      href={item.href}
+      prefetch={prefetch}
+      onClick={onClose}
+      className={className}
+    >
       {content}
     </Link>
   );

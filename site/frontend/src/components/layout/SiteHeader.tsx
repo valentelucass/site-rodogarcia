@@ -20,7 +20,7 @@ import {
 } from "@phosphor-icons/react";
 import { usePathname } from "next/navigation";
 import { useScrollDirection } from "@/hooks/useScrollDirection";
-import { api, site } from "@/lib/routes";
+import { site } from "@/lib/routes";
 import { DEFAULT_HEADER_NAVIGATION } from "@/lib/headerNavigationDefaults";
 import type { HeaderNavigationContent, NavigationHighlightTone } from "@/types/content";
 import { SiteSearchPanel } from "@/components/search/SiteSearchPanel";
@@ -75,7 +75,11 @@ function matchesRoute(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export function SiteHeader() {
+export function SiteHeader({
+  initialNavigation,
+}: {
+  initialNavigation: HeaderNavigationContent;
+}) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const headerRef = useRef<HTMLElement>(null);
@@ -87,7 +91,9 @@ export function SiteHeader() {
   } = useSiteSearch();
   const isHidden = useScrollDirection();
   const pathname = usePathname();
-  const [navigation, setNavigation] = useState<HeaderNavigationContent>(DEFAULT_HEADER_NAVIGATION);
+  const navigation = initialNavigation?.items?.length
+    ? initialNavigation
+    : DEFAULT_HEADER_NAVIGATION;
   const hasDarkHero = DARK_HERO_ROUTES.some((route) => matchesRoute(pathname, route));
   const hasSolidChrome = isScrolled || searchOpen;
   const isOverlay = !hasSolidChrome;
@@ -109,17 +115,6 @@ export function SiteHeader() {
 
     return () => window.removeEventListener("scroll", handleScroll);
   }, [pathname]);
-
-  useEffect(() => {
-    let active = true;
-    fetch(api.public.content)
-      .then((response) => response.ok ? response.json() : null)
-      .then((body: { headerNavigation?: HeaderNavigationContent } | null) => {
-        if (active && body?.headerNavigation?.items?.length) setNavigation(body.headerNavigation);
-      })
-      .catch(() => undefined);
-    return () => { active = false; };
-  }, []);
 
   /* Ctrl+K / Cmd+K shortcut to open search */
   useEffect(() => {
@@ -295,6 +290,7 @@ export function SiteHeader() {
         id="site-mobile-nav"
         aria-label="Menu de navegacao"
         aria-hidden={!drawerOpen}
+        inert={!drawerOpen}
         className={[
           "fixed top-0 left-0 z-50 h-full w-80 max-w-[90vw] bg-white",
           "flex flex-col shadow-2xl transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]",
@@ -318,7 +314,7 @@ export function SiteHeader() {
             const Icon = MENU_ICONS[icon] ?? Info;
             const active = isActive(url);
             const highlight = highlightLabel ? HIGHLIGHT_STYLES[highlightTone ?? "blue"] : null;
-            return <Link key={id} href={url} onClick={() => setDrawerOpen(false)} className={[
+            return <Link key={id} href={url} prefetch={url.startsWith("/") && !url.startsWith("//") ? drawerOpen : false} onClick={() => setDrawerOpen(false)} className={[
               "flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200",
               highlight ? active ? highlight.active : highlight.inactive : active ? "bg-[var(--color-primary-soft)] text-[var(--primary)]" : "text-[var(--foreground)] hover:bg-black/5",
             ].join(" ")}><span className={[
@@ -339,6 +335,7 @@ export function SiteHeader() {
           </button>
           <Link
             href={site.quote}
+            prefetch={drawerOpen}
             onClick={() => setDrawerOpen(false)}
             className="w-full rounded-xl bg-[var(--primary)] px-4 py-2.5 text-center text-sm font-semibold text-white transition-colors hover:bg-[var(--color-primary-strong)]"
           >

@@ -1,4 +1,4 @@
-import type { ResponsiveMediaPresentation } from "./media";
+import type { ResponsiveImageSources, ResponsiveMediaPresentation } from "./media";
 
 export type ButtonVariant = "solid" | "outline";
 export type HomeMediaType = "image" | "video";
@@ -16,7 +16,7 @@ export interface QuickAction {
   downloadFile?: string;
 }
 
-export interface HomeMedia {
+export interface HomeMedia extends ResponsiveImageSources {
   type: HomeMediaType;
   src: string;
   alt?: string;
@@ -150,7 +150,7 @@ export interface HomePageContent {
   quickActions?: QuickAction[];
 }
 
-export interface ServicesModuleImage {
+export interface ServicesModuleImage extends ResponsiveImageSources {
   src: string;
   alt: string;
   /** Mantido temporariamente para ler conteúdo legado durante a migração. */
@@ -199,7 +199,7 @@ export interface PageButton {
   external?: boolean;
 }
 
-export interface PageMedia {
+export interface PageMedia extends ResponsiveImageSources {
   src: string;
   alt: string;
   presentation?: ResponsiveMediaPresentation;

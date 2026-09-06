@@ -50,7 +50,7 @@ export async function SiteFooter() {
               <FooterButton href={footer.proposalButton.url} className="bg-[var(--primary)] font-semibold hover:bg-[var(--color-primary-strong)] hover:shadow-[0_16px_36px_rgba(29,78,216,0.22)]">
                 {footer.proposalButton.label}
               </FooterButton>
-              <FooterButton href={footer.supportButton.url} className="bg-emerald-500 font-medium shadow-[0_18px_44px_rgba(34,197,94,0.35)] hover:bg-emerald-600 hover:shadow-[0_22px_52px_rgba(22,163,74,0.38)] focus-visible:ring-emerald-500/24">
+              <FooterButton href={footer.supportButton.url} className="bg-emerald-700 font-medium shadow-[0_18px_44px_rgba(4,120,87,0.3)] hover:bg-emerald-800 hover:shadow-[0_22px_52px_rgba(6,95,70,0.34)] focus-visible:ring-emerald-700/24">
                 {footer.supportButton.label}
               </FooterButton>
             </div>
@@ -92,9 +92,11 @@ export async function SiteFooter() {
           </FooterColumn>
         </div>
 
-        <div className="flex flex-col gap-4 pt-6 text-xs text-white/40 sm:hidden">
-          <span className="max-w-[32ch] leading-5">&copy; {CURRENT_YEAR} {footer.copyrightText}</span>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-2 border-y border-white/10 py-3">
+        <div className="flex flex-col gap-4 pt-6 text-xs text-white/55 sm:pt-8 lg:flex-row lg:items-center lg:justify-between lg:gap-6">
+          <span className="max-w-[32ch] shrink-0 leading-5">
+            &copy; {CURRENT_YEAR} {footer.copyrightText}
+          </span>
+          <div className="grid grid-cols-2 gap-x-4 gap-y-2 border-y border-white/10 py-3 sm:flex sm:flex-row sm:flex-wrap sm:items-center sm:border-0 sm:py-0 lg:justify-center">
             {bottomLinks.map((link) => (
               <FooterInlineLink key={link.id} href={link.url} external={link.external}>
                 {link.label}
@@ -102,23 +104,9 @@ export async function SiteFooter() {
             ))}
             <CookieSettingsButton />
           </div>
-          <div className="flex flex-col gap-1 leading-5">
+          <div className="flex shrink-0 flex-col gap-1 leading-5 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-4">
             <span>{footer.locationText}</span>
-            <a href={footer.creditUrl} target="_blank" rel="noopener noreferrer" className="font-medium text-white/56 transition-colors hover:text-white/80">{footer.creditText}</a>
-          </div>
-        </div>
-
-        <div className="hidden pt-8 text-xs text-white/40 sm:flex sm:items-center sm:justify-between">
-          <span>&copy; {CURRENT_YEAR} {footer.copyrightText}</span>
-          <div className="flex flex-row flex-wrap items-center gap-4">
-            {bottomLinks.map((link) => (
-              <FooterInlineLink key={link.id} href={link.url} external={link.external}>
-                {link.label}
-              </FooterInlineLink>
-            ))}
-            <CookieSettingsButton />
-            <span>{footer.locationText}</span>
-            <a href={footer.creditUrl} target="_blank" rel="noopener noreferrer" className="font-medium text-white/56 transition-colors hover:text-white/80">{footer.creditText}</a>
+            <a href={footer.creditUrl} target="_blank" rel="noopener noreferrer" className="font-medium text-white/70 transition-colors hover:text-white">{footer.creditText}</a>
           </div>
         </div>
       </div>

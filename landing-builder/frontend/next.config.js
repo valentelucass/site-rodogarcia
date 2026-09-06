@@ -13,30 +13,7 @@ const assetPrefix = (() => {
     : "/landing-assets";
 })();
 
-const contentSecurityPolicy = [
-  "default-src 'self'",
-  [
-    "script-src",
-    "'self'",
-    "'unsafe-inline'",
-    !isProduction ? "'unsafe-eval'" : "",
-    "https://www.googletagmanager.com",
-  ].filter(Boolean).join(" "),
-  "connect-src 'self' https://www.google-analytics.com https://*.google-analytics.com https://www.googletagmanager.com",
-  "img-src 'self' data: blob: https://www.google-analytics.com https://*.google-analytics.com",
-  "media-src 'self' blob:",
-  "style-src 'self' 'unsafe-inline'",
-  "font-src 'self' data:",
-  "frame-src 'none'",
-  "frame-ancestors 'none'",
-  "object-src 'none'",
-  "base-uri 'self'",
-  "form-action 'self'",
-  "manifest-src 'self'",
-].join("; ");
-
 const securityHeaders = [
-  { key: "Content-Security-Policy", value: contentSecurityPolicy },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "X-Frame-Options", value: "DENY" },

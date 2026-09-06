@@ -398,6 +398,54 @@
   100% { transform: translateX(-50%); }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .certifications-marquee-viewport {
+    overflow: visible;
+    -webkit-mask-image: none !important;
+    mask-image: none !important;
+  }
+
+  .certifications-marquee {
+    animation: none !important;
+    transform: translateX(0) !important;
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .certifications-marquee-copy {
+    display: none;
+  }
+}
+
+.presented-media-position {
+  object-position: var(--presented-media-position-desktop, 50% 50%);
+}
+
+@media (max-width: 767px) {
+  .presented-media-position--mobile-sm,
+  .presented-media-position--mobile-lg {
+    object-position: var(--presented-media-position-mobile, 50% 50%);
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .presented-media-position--mobile-lg {
+    object-position: var(--presented-media-position-mobile, 50% 50%);
+  }
+}
+
+@keyframes service-page-enter {
+  from {
+    opacity: 0;
+    transform: translate3d(18px, 0, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
 /* O hero continua amplo em desktops convencionais, mas não consome a primeira
    dobra inteira quando a janela tem pouca altura (notebooks e telas divididas). */
 .home-hero-viewport {

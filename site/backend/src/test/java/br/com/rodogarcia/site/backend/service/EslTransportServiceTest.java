@@ -15,7 +15,6 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
-import java.util.List;
 
 import br.com.rodogarcia.site.backend.dto.request.CancellationReason;
 import br.com.rodogarcia.site.backend.dto.request.CityRequest;

@@ -236,9 +236,9 @@
           "description": "Fluxo comercial mais direto, com resposta clara para operações que precisam avançar sem ruído.",
           "media": {
             "type": "video",
-            "src": "/Animação_de_Conversa_Sem_Manipulação_de_Objetos.webm",
+            "src": "/home-atendimento-silent.c9c72d26fc63.webm",
             "alt": "Operação logística Rodogarcia",
-            "poster": "",
+            "poster": "/home-atendimento-poster.741b9476c78e.webp",
             "desktopSrc": "",
             "mobileSrc": "",
             "presentation": {
@@ -261,9 +261,9 @@
           "description": "Visibilidade da carga com leitura operacional para acompanhar a jornada alem do status basico.",
           "media": {
             "type": "video",
-            "src": "/Vídeo_de_Operação_Gerado.webm",
+            "src": "/home-operacao-silent.6e2fa78ac5d9.webm",
             "alt": "Acompanhamento operacional de carga Rodogarcia",
-            "poster": "",
+            "poster": "/home-operacao-poster.5f976502a5c8.webp",
             "desktopSrc": "",
             "mobileSrc": "",
             "presentation": {
@@ -286,9 +286,9 @@
           "description": "Capilaridade nacional e consistência de execução para operações que crescem em volume e complexidade.",
           "media": {
             "type": "video",
-            "src": "/caminhoneiro.webm",
+            "src": "/home-caminhoneiro-silent.537fea4cb953.webm",
             "alt": "Motorista Rodogarcia em operação",
-            "poster": "",
+            "poster": "/home-caminhoneiro-poster.521ac36f8173.webp",
             "desktopSrc": "",
             "mobileSrc": "",
             "presentation": {
@@ -339,7 +339,7 @@
           "description": "Equipes preparadas para conduzir cada etapa com atenção, segurança e agilidade.",
           "media": {
             "type": "image",
-            "src": "/caminhoneiro1.webp",
+            "src": "/motorista-rodogarcia.abbf7875cfae.webp",
             "alt": "Equipe Rodogarcia",
             "poster": "",
             "desktopSrc": "",
@@ -362,7 +362,7 @@
           "description": "Acompanhamento próximo para decisões mais rápidas e clientes mais bem informados.",
           "media": {
             "type": "image",
-            "src": "/caminhoneiro1.webp",
+            "src": "/motorista-rodogarcia.abbf7875cfae.webp",
             "alt": "Operacao Rodogarcia",
             "poster": "",
             "desktopSrc": "",
@@ -392,9 +392,9 @@
           "order": 1,
           "media": {
             "type": "video",
-            "src": "/caminhoes1.webm",
+            "src": "/home-caminhoes-silent.3bee1a633929.webm",
             "alt": "Distribuicao nacional Rodogarcia",
-            "poster": "/foto2.webp",
+            "poster": "/36-anos-rodogarcia.4c43a61efb46.webp",
             "desktopSrc": "",
             "mobileSrc": "",
             "presentation": {
@@ -420,9 +420,9 @@
           "order": 2,
           "media": {
             "type": "video",
-            "src": "/Vídeo_de_Operação_Gerado.webm",
+            "src": "/home-operacao-silent.6e2fa78ac5d9.webm",
             "alt": "Operacao indoor Rodogarcia",
-            "poster": "/foto4.webp",
+            "poster": "/operacao-indoor-rodogarcia.d6f36f33e258.webp",
             "desktopSrc": "",
             "mobileSrc": "",
             "presentation": {
@@ -448,9 +448,9 @@
           "order": 3,
           "media": {
             "type": "video",
-            "src": "/caminhoneiro.webm",
+            "src": "/home-caminhoneiro-silent.537fea4cb953.webm",
             "alt": "Cargas especiais Rodogarcia",
-            "poster": "/caminhoneiro1.webp",
+            "poster": "/motorista-rodogarcia.abbf7875cfae.webp",
             "desktopSrc": "",
             "mobileSrc": "",
             "presentation": {
@@ -476,9 +476,9 @@
           "order": 4,
           "media": {
             "type": "video",
-            "src": "/Animação_de_Conversa_Sem_Manipulação_de_Objetos.webm",
+            "src": "/home-atendimento-silent.c9c72d26fc63.webm",
             "alt": "Atendimento Rodogarcia",
-            "poster": "",
+            "poster": "/home-atendimento-poster.741b9476c78e.webp",
             "desktopSrc": "",
             "mobileSrc": "",
             "presentation": {
@@ -967,7 +967,7 @@
       "title": "Mais de 35 anos conectando o Brasil",
       "description": "Desde 1989, transformando a logística com excelência, tecnologia e compromisso com cada entrega.",
       "media": {
-        "src": "/caminhoneiro1.webp",
+        "src": "/motorista-rodogarcia.abbf7875cfae.webp",
         "alt": "Operacao Rodogarcia em movimento",
         "presentation": {
           "desktop": {
@@ -1013,7 +1013,7 @@
           "title": "ISO 9001",
           "description": "Gestão da qualidade aplicada em cada camada da operação.",
           "image": {
-            "src": "/certificados/LOGO ISO 9001.svg",
+            "src": "/certificados/iso-9001.9371c4a6c19f.webp",
             "alt": "Certificado ISO 9001",
             "presentation": {
               "desktop": {
@@ -1081,7 +1081,7 @@
           "title": "Polícia Civil SP",
           "description": "Habilitação estadual alinhada a operações com governança ampliada.",
           "image": {
-            "src": "/certificados/pc-sp.webp",
+            "src": "/certificados/policia-civil-sp.57269b3e1bdd.webp",
             "alt": "Licença Polícia Civil de São Paulo",
             "presentation": {
               "desktop": {
@@ -1115,7 +1115,7 @@
           "title": "IBAMA",
           "description": "Conformidade e controle rigoroso em operações com impacto e regulamentação ambiental.",
           "image": {
-            "src": "/certificados/ibama.webp",
+            "src": "/certificados/ibama.7198f261a1ee.webp",
             "alt": "Certificado IBAMA",
             "presentation": {
               "desktop": {
@@ -1317,7 +1317,7 @@
       ]
     },
     "cultureImage": {
-      "src": "/caminhoneiro1.webp",
+      "src": "/motorista-rodogarcia.abbf7875cfae.webp",
       "alt": "Time Rodogarcia em operação",
       "presentation": {
         "desktop": {
@@ -2361,7 +2361,7 @@
       "updatedAt": "2026-05-01T23:35:45.218Z",
       "title": "Pessoas que movem a operação",
       "text": "Equipes preparadas para conduzir cada etapa com atenção, segurança e agilidade.",
-      "image": "/caminhoneiro1.webp",
+      "image": "/motorista-rodogarcia.abbf7875cfae.webp",
       "video": "",
       "desktopImage": "",
       "mobileImage": "",
@@ -2377,7 +2377,7 @@
       "updatedAt": "2026-05-01T23:36:18.632Z",
       "title": "Visibilidade em cada entrega",
       "text": "Acompanhamento próximo para decisões mais rápidas e clientes mais bem informados.",
-      "image": "/caminhoneiro1.webp",
+      "image": "/motorista-rodogarcia.abbf7875cfae.webp",
       "video": "",
       "desktopImage": "",
       "mobileImage": "",

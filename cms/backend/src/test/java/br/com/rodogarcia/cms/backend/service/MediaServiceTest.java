@@ -52,23 +52,29 @@ class MediaServiceTest {
         assertThat(record.path("width").intValue()).isEqualTo(32);
         assertThat(record.path("height").intValue()).isEqualTo(24);
         assertThat(record.path("aspectRatio").doubleValue()).isEqualTo(1.3333d);
-        for (String field : List.of("url", "thumbnailUrl", "mediumUrl", "largeUrl")) {
-            byte[] webp = Files.readAllBytes(uploadPath(context, record.path(field).asString()));
-            assertThat(new String(webp, 0, 4, StandardCharsets.US_ASCII)).isEqualTo("RIFF");
-            assertThat(new String(webp, 8, 4, StandardCharsets.US_ASCII)).isEqualTo("WEBP");
-            BufferedImage decoded = WebPCodec.decodeImage(webp);
-            assertThat(decoded).isNotNull();
-            if (!field.equals("thumbnailUrl")) {
-                assertThat(decoded.getWidth()).isEqualTo(32);
-                assertThat(decoded.getHeight()).isEqualTo(24);
-            }
+        assertStoredVariant(context, record, "url", "optimized", 32, 24);
+        assertStoredVariant(context, record, "thumbnailUrl", "thumbnail", 420, 260);
+        assertStoredVariant(context, record, "mediumUrl", "medium", 32, 24);
+        assertStoredVariant(context, record, "largeUrl", "large", 32, 24);
+
+        JsonNode library = context.store.readArray(context.properties.storagePaths().mediaLibrary());
+        assertThat(library).hasSize(1);
+        JsonNode persisted = library.get(0);
+        for (String field : List.of(
+            "optimizedWidth", "optimizedHeight",
+            "thumbnailWidth", "thumbnailHeight",
+            "mediumWidth", "mediumHeight",
+            "largeWidth", "largeHeight"
+        )) {
+            assertThat(persisted.path(field).intValue()).isEqualTo(record.path(field).intValue());
         }
-        BufferedImage thumbnail = WebPCodec.decodeImage(
-            Files.readAllBytes(uploadPath(context, record.path("thumbnailUrl").asString()))
-        );
-        assertThat(thumbnail.getWidth()).isEqualTo(420);
-        assertThat(thumbnail.getHeight()).isEqualTo(260);
-        assertThat(context.store.readArray(context.properties.storagePaths().mediaLibrary())).hasSize(1);
+
+        JsonNode listed = context.media.listAdminImages().get(0);
+        assertThat(listed.path("url").asString()).isEqualTo(record.path("url").asString());
+        assertThat(listed.path("optimizedWidth").intValue()).isEqualTo(32);
+        assertThat(listed.path("thumbnailWidth").intValue()).isEqualTo(420);
+        assertThat(listed.path("mediumWidth").intValue()).isEqualTo(32);
+        assertThat(listed.path("largeWidth").intValue()).isEqualTo(32);
     }
 
     @Test
@@ -226,6 +232,27 @@ class MediaServiceTest {
 
     private static Path uploadPath(MediaTestContext context, String url) {
         return context.properties.uploadsDir().resolve(url.substring("/uploads/".length()));
+    }
+
+    private static void assertStoredVariant(
+        MediaTestContext context,
+        ObjectNode record,
+        String urlField,
+        String dimensionPrefix,
+        int expectedWidth,
+        int expectedHeight
+    ) throws Exception {
+        byte[] webp = Files.readAllBytes(uploadPath(context, record.path(urlField).asString()));
+        assertThat(new String(webp, 0, 4, StandardCharsets.US_ASCII)).isEqualTo("RIFF");
+        assertThat(new String(webp, 8, 4, StandardCharsets.US_ASCII)).isEqualTo("WEBP");
+        BufferedImage decoded = WebPCodec.decodeImage(webp);
+        assertThat(decoded).isNotNull();
+        assertThat(record.path(dimensionPrefix + "Width").intValue())
+            .isEqualTo(expectedWidth)
+            .isEqualTo(decoded.getWidth());
+        assertThat(record.path(dimensionPrefix + "Height").intValue())
+            .isEqualTo(expectedHeight)
+            .isEqualTo(decoded.getHeight());
     }
 
     private static byte[] png(int width, int height) throws Exception {

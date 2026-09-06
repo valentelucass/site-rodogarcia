@@ -123,7 +123,8 @@ class PublicContentServiceTest {
             media,
             Clock.fixed(Instant.parse("2026-01-02T03:04:05.678Z"), ZoneOffset.UTC)
         );
+        PublicMediaCatalog mediaCatalog = mock(PublicMediaCatalog.class);
         return new PublicContentService(
-            mapper, repository, siteTexts, mediaSlots, media, sanitizer);
+            mapper, repository, siteTexts, mediaSlots, media, sanitizer, mediaCatalog);
     }
 }

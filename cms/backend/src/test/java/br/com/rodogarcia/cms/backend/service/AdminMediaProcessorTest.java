@@ -18,8 +18,11 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
+import javax.imageio.ImageIO;
+
 import br.com.rodogarcia.cms.backend.config.MediaSettings;
 import br.com.rodogarcia.cms.backend.exception.ApiException;
+import dev.matrixlab.webp4j.WebPCodec;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -139,6 +142,34 @@ class AdminMediaProcessorTest {
     }
 
     @Test
+    void recordsPostExifAndPhysicalVariantDimensions() throws Exception {
+        BufferedImage source = new BufferedImage(1_200, 2_000, BufferedImage.TYPE_INT_RGB);
+        ByteArrayOutputStream jpeg = new ByteArrayOutputStream();
+        assertThat(ImageIO.write(source, "jpeg", jpeg)).isTrue();
+        AdminMediaProcessor processor = new AdminMediaProcessor(MediaSettings.defaults(""));
+
+        AdminMediaProcessor.ProcessedImage result = processor.image(
+            withExifOrientation(jpeg.toByteArray(), 6),
+            "image/jpeg"
+        );
+
+        assertThat(result.width()).isEqualTo(2_000);
+        assertThat(result.height()).isEqualTo(1_200);
+        assertPhysicalDimensions(
+            result.optimized(), result.optimizedWidth(), result.optimizedHeight(), 1_920, 1_152
+        );
+        assertPhysicalDimensions(
+            result.thumbnail(), result.thumbnailWidth(), result.thumbnailHeight(), 420, 260
+        );
+        assertPhysicalDimensions(
+            result.medium(), result.mediumWidth(), result.mediumHeight(), 960, 576
+        );
+        assertPhysicalDimensions(
+            result.large(), result.largeWidth(), result.largeHeight(), 1_440, 864
+        );
+    }
+
+    @Test
     void appliesExifTransposeAndRotationsFiveThroughEight() {
         BufferedImage source = new BufferedImage(2, 3, BufferedImage.TYPE_INT_RGB);
         for (int y = 0; y < source.getHeight(); y++) {
@@ -170,6 +201,36 @@ class AdminMediaProcessorTest {
                 assertThat(result.getRGB(point.x(), point.y())).isEqualTo(source.getRGB(x, y));
             }
         }
+    }
+
+    private static void assertPhysicalDimensions(
+        byte[] encoded,
+        int recordedWidth,
+        int recordedHeight,
+        int expectedWidth,
+        int expectedHeight
+    ) throws java.io.IOException {
+        BufferedImage decoded = WebPCodec.decodeImage(encoded);
+        assertThat(decoded).isNotNull();
+        assertThat(recordedWidth).isEqualTo(expectedWidth).isEqualTo(decoded.getWidth());
+        assertThat(recordedHeight).isEqualTo(expectedHeight).isEqualTo(decoded.getHeight());
+    }
+
+    private static byte[] withExifOrientation(byte[] jpeg, int orientation) {
+        assertThat(jpeg).startsWith((byte) 0xff, (byte) 0xd8);
+        byte[] exifSegment = {
+            (byte) 0xff, (byte) 0xe1, 0, 34,
+            'E', 'x', 'i', 'f', 0, 0,
+            'I', 'I', 42, 0, 8, 0, 0, 0,
+            1, 0,
+            0x12, 0x01, 3, 0, 1, 0, 0, 0, (byte) orientation, 0, 0, 0,
+            0, 0, 0, 0
+        };
+        ByteArrayOutputStream result = new ByteArrayOutputStream(jpeg.length + exifSegment.length);
+        result.write(jpeg, 0, 2);
+        result.writeBytes(exifSegment);
+        result.write(jpeg, 2, jpeg.length - 2);
+        return result.toByteArray();
     }
 
     private record Point(int x, int y) {

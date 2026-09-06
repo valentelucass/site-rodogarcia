@@ -1,6 +1,6 @@
 # Estado Atual do Sistema — Site Rodogarcia
 
-## Estado confirmado em 2026-09-03
+## Estado confirmado em 2026-09-06
 
 - O monorepo possui três backends canônicos em Java 21/Spring Boot 4.1.1 MVC: `site/backend`, `cms/backend` e `landing-builder/backend`.
 - Os fontes, lockfiles, caches e artefatos dos backends Node/Express de site, CMS e Landing Builder foram removidos. Não há fallback Node nem seleção de runtime restante.
@@ -71,6 +71,14 @@
 - No editor do Popup de saída, as imagens padrão, desktop e celular usam o mesmo padrão de mídia dos Heros: a prévia só ocupa espaço depois de uma seleção e traz **Enquadrar** sobre a própria foto. O modal continua gravando a apresentação específica de cada uso; não há uma barra de enquadramento separada abaixo do seletor.
 - O helper público `site/frontend/src/lib/mediaPresentation.ts` converte foco validado em `object-position` centralizado como fallback e escolhe a substituição móvel quando ela existe. `PresentedImage` e `PresentedVideo` aplicam esse contrato a todo quadro de corte público; o vídeo toca somente o intervalo configurado, respeita `playsInline`, autoplay silencioso, redução de movimento e o ciclo de carrosséis.
 - Campanhas usam um contrato local equivalente em `landings.json`: Hero, Story, vitrine e CTA final podem guardar foco por desktop/celular; apenas Story aceita trecho de vídeo. O Builder normaliza e publica somente esse dado mínimo, confirma a duração física quando há trecho e renderiza o enquadramento também nas prévias opacas.
+- O contrato público de imagens é retrocompatível: `PublicMediaCatalog` remove metadados recebidos do conteúdo e acrescenta somente dimensões e variantes `thumbnail`, `medium` e `large` pertencentes à fonte publicada e ao catálogo interno validado. Novos uploads persistem dimensões físicas pós-EXIF de cada variante; registros legados sem pares comprovados continuam apenas com a fonte original, sem descritores inferidos.
+- `PresentedImage` entrega `<picture>`, `srcset`, `sizes`, `<source media>` e dimensões intrínsecas sem seleção pós-hidratação. `PresentedVideo` escolhe a fonte responsiva nativamente, mantém somente o poster antes da proximidade da viewport, usa `preload="none"`, pausa fora da área visível e adota o estado conservador até conhecer redução de movimento e economia de dados. Quando não existe poster, a fonte só é anexada perto da viewport e carrega metadados para oferecer um quadro estático também nesses modos restritivos.
+- Os quatro vídeos canônicos da Home são loops visuais decorativos: usam arquivos WebM silenciosos com hash de conteúdo, sem faixa Opus, poster obrigatório e reprodução restrita ao card ou página visível. A URL anterior permanece disponível, mas não integra mais o conteúdo publicado.
+- O Hero dá prioridade alta apenas à mídia inicial, usa uma derivada pequena do otimizador Next no fundo desfocado, prepara slides seguintes depois do primeiro paint e mantém no máximo fundo e mídia principal por slide preparado. Slides invisíveis usam `inert` e `aria-hidden`, e vídeos de autoplay do Hero são sempre silenciosos e decorativos; o artigo de mídia única preserva nome acessível.
+- `BrazilMap` só é montado a 600 px da viewport e reserva a altura responsiva da seção antes do carregamento. Header e busca não prefetcham rotas enquanto fechados; a navegação do header é um Server Component sob `Suspense`, acompanha novos payloads RSC e não bloqueia o shell. `fetchPublicContent` é deduplicado por render e a Home busca conteúdo e slots em paralelo, preservando `force-dynamic` e `no-store`.
+- Operações usa uma única árvore responsiva, Serviços monta somente a página corrente e o rodapé não duplica árvores por breakpoint. A repetição do marquee permanece exclusivamente para continuidade visual, com a segunda sequência fora da árvore acessível; em redução de movimento, a cópia é removida e a sequência original quebra em linhas sem recorte.
+- Busca rápida e estrelas usam semântica nativa; Hero e menu fechados removem seus descendentes da ordem de foco; carrosséis e marquee respeitam redução de movimento; indicadores oferecem área de toque de 44 px; contrastes verdes usam tons escuros e o consentimento limita a transição a `background-color` e `box-shadow`.
+- O enquadramento permanece uma propriedade não destrutiva de cada uso da mídia. O contrato não gera nem sobrescreve cópias cortadas permanentes, preservando o original e evitando efeitos indiretos em outras páginas.
 
 ## Portas e artefatos
 
@@ -85,11 +93,14 @@
 - Antes de encerrar processos DEV, `iniciar-dev.bat` chama um preflight Maven externo para os três backends; uma falha preserva os processos que já estavam em execução. O inicializador não depende de subrotinas por rótulo. A identificação de processos usa exclusivamente as seis portas DEV canônicas e percorre a ancestralidade para reconhecer as JVMs filhas do Maven sem atingir outro projeto.
 - Cada processo Spring iniciado pelo fluxo DEV recebe explicitamente sua porta canônica por launcher isolado: site `31012`, CMS `31013` e Builder `36110`. O launcher usa atribuições `set "chave=valor"`, sem aspas/whitespace propagados para `HOST`, `PORT` ou as variáveis do Builder.
 - A promoção preserva rollback completo quando existe conjunto ativo; `RODOGARCIA_INITIAL_PROD_ROLLOUT=1` continua restrito ao caso excepcional em que esse conjunto esteja ausente.
-- O preflight de produção recusa os seis listeners DEV antes de executar `npm ci`, pois as instalações compartilham os `node_modules` do checkout e poderiam corromper o runtime DEV em uso. O encerramento/início do DEV permanece manual.
+- O preflight de produção recusa os seis listeners DEV antes de executar `npm ci`, pois as instalações compartilham os `node_modules` do checkout e poderiam corromper o runtime em uso; esse fluxo não encerra nem inicia processos DEV.
 - A guarda de listeners DEV é chamada por um helper batch que captura explicitamente o retorno do PowerShell. Qualquer bloqueio encerra o preflight antes de instalação, build ou acesso a artefatos ativos.
 - Os helpers batch de instalação, Maven, typecheck e staging normalizam qualquer retorno diferente de `0` (inclusive o `EPERM -4048` negativo do npm no Windows) para falha explícita; o orquestrador compara o status literal e não pode avançar ao Maven/typecheck após uma instalação incompleta.
 - O hardening isolado cobre site e CMS com `site/backend/dist.test/server.jar`, `cms/backend/dist.test/server.jar`, `site/frontend/dist-prod.test` e `cms/frontend/dist-prod.test`. O Builder tem Maven Wrapper e suíte de contrato próprios.
 - O helper de build entrega `NEXT_BUILD_DIST_DIR`, `PROD_ARTIFACT_DIR` e o marcador `RODOGARCIA_ISOLATED_PREFLIGHT` diretamente ao npm. Os preparadores Next recusam esse marcador fora de `.next.test`/`dist-prod.test`, portanto uma falha de propagação não pode remover `dist-prod` ativo.
+- Os preparadores dos três frontends preservam dentro do standalone o mesmo `distDir` usado na compilação: `.next/static` no artefato definitivo e `.next.test/static` no isolado. `build-info.json` registra esse caminho, os testes de operação o conferem e o smoke em navegador recusa qualquer `4xx`/`5xx` de JavaScript, CSS ou fonte.
+- O preparador standalone do site recompõe o grafo de runtime do Sharp a partir dos pacotes efetivamente instalados para a plataforma, preserva dependências aninhadas e executa um resize WebP nativo antes de aceitar o artefato. O teste operacional prova a cópia em fixture sem acesso ao `node_modules` de origem, e o hardening também exige que `/_next/image` devolva a largura pedida e um corpo menor que o raster original; DLL, `.so`, `.dylib` ou pacote opcional ausente interrompe o pre-flight antes da promoção.
+- `build:prod` do site executa `verify:static-assets` e `verify:home-contracts` antes de compilar. O hardening usa uma fixture HTTP própria para o fallback de campanha e um Chrome/Edge/Chromium headless real para comprovar hidratação, interação, execução da CSP e ausência de downloads iniciais de WebM e do mapa, sempre nas portas e artefatos isolados de teste.
 
 ## Contratos, Segurança e Persistência
 
@@ -104,6 +115,8 @@
 - No uso isolado, o Builder lê `landing-builder/backend/.env` com a mesma precedência do dotenv histórico: as variáveis do processo prevalecem sobre o arquivo.
 - Em produção, CMS e Builder exigem `FFMPEG_PATH` e `FFPROBE_PATH` absolutos, existentes e fora do repositório/`node_modules`; o CMS confere os dois no readiness e o Builder usa o segundo para registrar duração/resolução sem confiar no navegador. O Builder também exige token de serviço forte e storage externo absoluto.
 - Arquivos privados, uploads, backups, logs e builds permanecem ignorados pelo Git. A raiz também ignora explicitamente os `target/` dos três backends Spring, relatórios Maven, dumps de JVM e credenciais/certificados locais, preservando wrappers e fontes versionáveis. Apenas o processo responsável por cada coleção pode escrevê-la.
+- Documentos do site passam por `site/frontend/src/proxy.ts`, que gera nonce novo por requisição e aplica `script-src` com nonce e `'strict-dynamic'`, sem `'unsafe-inline'` ou `'unsafe-eval'` em produção. Scripts do Next, JSON-LD e a prévia CMS recebem esse nonce. No fallback de campanhas, o Builder só herda `x-nonce` quando ele também consta da CSP recebida; fora do gateway, gera outro nonce seguro. Os matchers excluem apenas segmentos técnicos completos, portanto slugs como `/publicidade`, `/administracao` e `/apiario` continuam protegidos. Trusted Types não integra o contrato atual porque não há caminho homologado para este runtime Next/Turbopack; o SRI experimental depende de webpack e também permanece desativado.
+- Cache de um ano com `immutable` é reservado a uma allowlist exata de assets versionados. Os seis novos WebPs canônicos reduziram o conjunto comparado de 2.550.614 para 415.364 bytes; o verificador fixa SHA-256, dimensões, orçamento e fidelidade em fundos claro/escuro. Vídeos, posters e demais itens imutáveis também têm digest fixado; URLs históricas permanecem com `max-age=0`, ETag e revalidação.
 
 ## Migração Spring concluída
 
@@ -174,15 +187,10 @@
 - `node scripts/tests/test-production-operations.js` passou, inclusive a guarda contra retorno de `call :rótulo`, a recusa do DEV ativo e a propagação correta do `EPERM -4048` do npm no `iniciar-prod.bat`; os helpers PowerShell e a promoção de artefatos também foram validados estaticamente.
 - A guarda real do `cmd` com listeners DEV ativos retornou `1` e bloqueou antes do build. A preparação isolada dos três frontends foi exercitada em fixture; no site, o build em `.next.test` e o preparo produziram `dist-prod.test` sem alterar `dist-prod`.
 - O hardening isolado de site/CMS passou integralmente com JARs e storage temporários. Ele não usou portas ou artefatos de produção.
+- Após corrigir o empacotamento nativo do Sharp, `node scripts/tests/test-production-operations.js`, o typecheck e o build isolado do site passaram; o preparador executou resize WebP dentro de `dist-prod.test` e o hardening ponta a ponta confirmou `/_next/image` em 128 px com 1.750 bytes contra 470.614 bytes do raster original. Nenhum processo ou artefato ativo de produção foi alterado.
+- Após concluir as correções de mídia, carregamento, DOM, acessibilidade, CSP e artefatos, `cms/backend` passou no `mvnw.cmd -B clean verify` com 192 testes; site, CMS e Builder passaram em typecheck e build isolado; os verificadores da Home confirmaram os contratos e redução de 84% nos seis WebPs comparados; `test-production-operations.js` e o hardening completo passaram. O Edge headless confirmou hidratação e busca, zero recurso crítico com erro, zero violação CSP, nenhum WebM ou mapa na carga inicial e execução do fallback `/publicidade-hardening` com nonce válido, sem iniciar processos DEV ou de produção.
+- Após remover imports Java sem uso em `ImprovementService` e a duplicação de `List` em `EslTransportServiceTest`, `cms/backend` e `site/backend` passaram em `mvnw.cmd -B clean verify`, respectivamente com 192 e 154 testes.
 
 ## Tarefas Pendentes
 
-### Enquadramento e trechos de fotos e vídeos no CMS
-
-> A implementação foi concluída. O enquadramento é específico de cada uso da mídia, preserva o arquivo original e só aparece onde a interface pública usa corte visual (`cover`); logos, certificados em `contain` e imagens de SEO permanecem sem esse controle.
-
-- [ ] Validar visualmente, com os processos DEV já iniciados manualmente pela equipe, os previews e páginas públicas em desktop e celular para Home, Serviços, Sobre, Trabalhe Conosco, Popup e campanha.
-
-#### Fora do escopo inicial, mas registrado para evolução posterior
-
-- [ ] Avaliar uma ação explícita de “Criar cópia cortada” para gerar um novo arquivo permanente de imagem ou vídeo; ela não deve sobrescrever o original nem alterar automaticamente usos existentes.
+- Nenhuma tarefa acionável verificada no código atual.

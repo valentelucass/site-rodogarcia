@@ -43,6 +43,7 @@ Este contrato descreve os 24 destinos configuráveis do CMS Spring: 23 arquivos 
 ## Superfícies adicionais e ownership
 
 - `uploadsDir` é o único diretório público de mídia; imagens geram variantes WebP e vídeos preservam o formato permitido pelo contrato de mídia.
+- Novos registros de imagem em `media-library.json` guardam `width`/`height` após a orientação EXIF e os pares físicos `optimizedWidth`/`optimizedHeight`, `thumbnailWidth`/`thumbnailHeight`, `mediumWidth`/`mediumHeight` e `largeWidth`/`largeHeight`. Registros legados podem não possuir esses campos; nenhuma dimensão é inferida a partir da configuração atual.
 - `frontendPublicDir` é somente leitura para a biblioteca administrativa.
 - O Landing Builder é acessado por HTTP interno autenticado; `cms/backend` não lê nem escreve `landings.json`, `media.json` ou a mídia do Builder.
 - `cms/backend` é o escritor único de todos os destinos listados. `site/backend` não grava essas coleções e o Builder usa volume próprio.

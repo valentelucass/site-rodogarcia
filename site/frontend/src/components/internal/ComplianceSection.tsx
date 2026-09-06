@@ -34,7 +34,7 @@ const CERTIFICATIONS: CertificationItem[] = [
   {
     title: "ISO 9001",
     description: "Gestão da qualidade aplicada em cada camada da operação.",
-    image: "/certificados/LOGO ISO 9001.svg",
+    image: "/certificados/iso-9001.9371c4a6c19f.webp",
   },
   {
     title: "SASSMAQ",
@@ -54,7 +54,7 @@ const CERTIFICATIONS: CertificationItem[] = [
   {
     title: "Polícia Civil SP",
     description: "Habilitação estadual alinhada a operações com governança ampliada.",
-    image: "/certificados/pc-sp.webp",
+    image: "/certificados/policia-civil-sp.57269b3e1bdd.webp",
   },
   {
     title: "Exército Brasileiro",
@@ -64,7 +64,7 @@ const CERTIFICATIONS: CertificationItem[] = [
   {
     title: "IBAMA",
     description: "Conformidade e controle rigoroso em operações com impacto e regulamentação ambiental.",
-    image: "/certificados/ibama.webp",
+    image: "/certificados/ibama.7198f261a1ee.webp",
   },
 ];
 

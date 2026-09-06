@@ -86,7 +86,7 @@ const EMPTY_HOME_PAGE: HomePageContent = {
 
 const CERTS = [
   {
-    src: "/certificados/LOGO ISO 9001.svg",
+    src: "/certificados/iso-9001.9371c4a6c19f.webp",
     alt: "ISO 9001",
     title: "ISO 9001",
     slot: "home.cert.iso",
@@ -110,7 +110,7 @@ const CERTS = [
     slot: "home.cert.pf",
   },
   {
-    src: "/certificados/pc-sp.webp",
+    src: "/certificados/policia-civil-sp.57269b3e1bdd.webp",
     alt: "Policia Civil SP",
     title: "Policia Civil SP",
     slot: "home.cert.pcsp",
@@ -122,7 +122,7 @@ const CERTS = [
     slot: "home.cert.exercito",
   },
   {
-    src: "/certificados/ibama.webp",
+    src: "/certificados/ibama.7198f261a1ee.webp",
     alt: "IBAMA",
     title: "IBAMA",
     slot: "home.cert.ibama",
@@ -131,15 +131,13 @@ const CERTS = [
 
 export default async function HomePage() {
   let homePage = EMPTY_HOME_PAGE;
-  const mediaSlots = await fetchMediaSlots();
+  const [mediaSlots, contentResponse] = await Promise.all([
+    fetchMediaSlots(),
+    fetchPublicContent().catch(() => null),
+  ]);
 
-  try {
-    const response = await fetchPublicContent();
-    if (response.success && response.data) {
-      homePage = response.data.homePage ?? EMPTY_HOME_PAGE;
-    }
-  } catch {
-    // Se o CMS estiver indisponível, os blocos editáveis da Home ficam ocultos.
+  if (contentResponse?.success && contentResponse.data) {
+    homePage = contentResponse.data.homePage ?? EMPTY_HOME_PAGE;
   }
 
   const certs = CERTS.map((cert) => ({
@@ -168,24 +166,26 @@ export default async function HomePage() {
 
         <div className="mx-auto max-w-[1440px] px-6">
           <div
-            className="group relative overflow-hidden py-4"
+            className="certifications-marquee-viewport group relative overflow-hidden py-4"
             style={{ WebkitMaskImage: "linear-gradient(to right, transparent, black 10%, black 90%, transparent)" }}
           >
             <div
-              className="flex w-max items-center gap-6 group-hover:[animation-play-state:paused] sm:gap-8"
+              className="certifications-marquee flex w-max items-center gap-6 group-hover:[animation-play-state:paused] sm:gap-8"
               style={{ animation: "certifications-marquee 35s linear infinite" }}
               aria-label="Certificações e licenças operacionais"
             >
               {[...certs, ...certs].map((cert, index) => (
                 <div
                   key={`${cert.title}-${index}`}
-                  className="group/card flex w-[170px] shrink-0 flex-col items-center justify-center gap-3 transition-all duration-500 hover:-translate-y-1 sm:w-[200px] lg:w-[220px]"
+                  className={`group/card flex w-[170px] shrink-0 flex-col items-center justify-center gap-3 transition-all duration-500 hover:-translate-y-1 motion-reduce:transition-none motion-reduce:hover:translate-y-0 sm:w-[200px] lg:w-[220px] ${index >= CERTS.length ? "certifications-marquee-copy" : ""}`}
                   aria-hidden={index >= CERTS.length ? true : undefined}
                 >
                   <img
                     src={cert.src}
                     alt={index < CERTS.length ? cert.alt : ""}
-                    className="h-[72px] max-w-[150px] grayscale object-contain opacity-55 transition-all duration-500 group-hover/card:scale-[1.08] group-hover/card:grayscale-0 group-hover/card:opacity-100 sm:h-[82px] sm:max-w-[170px] lg:h-[88px]"
+                    width={170}
+                    height={88}
+                    className="h-[72px] w-[150px] grayscale object-contain opacity-55 transition-all duration-500 group-hover/card:scale-[1.08] group-hover/card:grayscale-0 group-hover/card:opacity-100 motion-reduce:transition-none motion-reduce:group-hover/card:scale-100 sm:h-[82px] sm:w-[170px] lg:h-[88px]"
                     loading="lazy"
                     decoding="async"
                   />

@@ -65,7 +65,7 @@ jobs:
           NEXT_PUBLIC_SITE_URL: http://127.0.0.1:42511
           LANDING_BUILDER_API_URL: ""
           LANDING_BUILDER_SERVICE_TOKEN: ""
-          LANDING_BUILDER_PUBLIC_URL: ""
+          LANDING_BUILDER_PUBLIC_URL: http://127.0.0.1:42515
           PROD_ARTIFACT_DIR: dist-prod.test
       - run: npm run build:prod
         working-directory: cms/frontend
@@ -75,7 +75,7 @@ jobs:
           CMS_BACKEND_PROXY_URL: http://127.0.0.1:42514
           NEXT_PUBLIC_SITE_URL: http://127.0.0.1:42511
           PROD_ARTIFACT_DIR: dist-prod.test
-      - run: node scripts/tests/test-security-hardening.js
+      - run: node --experimental-websocket scripts/tests/test-security-hardening.js
         env:
           SECURITY_TEST_BACKEND_ARTIFACT_DIR: site/backend/dist.test
           SECURITY_TEST_CMS_BACKEND_ARTIFACT_DIR: cms/backend/dist.test

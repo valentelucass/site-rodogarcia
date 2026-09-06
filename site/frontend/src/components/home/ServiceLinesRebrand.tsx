@@ -6,6 +6,7 @@ import type { HomeSection3 } from "@/types/content";
 import { cn } from "@/lib/utils";
 import { PresentedVideo } from "@/components/media/PresentedVideo";
 import { PresentedImage } from "@/components/media/PresentedImage";
+import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 
 const CARDS_PER_PAGE = 2;
 const AUTO_ADVANCE_MS = 8500;
@@ -37,7 +38,10 @@ export default function ServiceLinesRebrand({
   }, [cards]);
   const [currentPage, setCurrentPage] = useState(0);
   const [paused, setPaused] = useState(false);
+  const prefersReducedMotion = usePrefersReducedMotion();
   const totalPages = pages.length;
+  const visiblePageIndex = Math.min(currentPage, Math.max(0, totalPages - 1));
+  const visiblePage = pages[visiblePageIndex] ?? [];
 
   useEffect(() => {
     if (currentPage < totalPages) return;
@@ -45,12 +49,12 @@ export default function ServiceLinesRebrand({
   }, [currentPage, totalPages]);
 
   useEffect(() => {
-    if (totalPages <= 1 || paused) return;
+    if (totalPages <= 1 || paused || prefersReducedMotion) return;
     const timeout = window.setTimeout(() => {
       setCurrentPage((page) => (page + 1) % totalPages);
     }, AUTO_ADVANCE_MS);
     return () => window.clearTimeout(timeout);
-  }, [currentPage, paused, totalPages]);
+  }, [currentPage, paused, prefersReducedMotion, totalPages]);
 
   if (
     !section.badge ||
@@ -86,7 +90,7 @@ export default function ServiceLinesRebrand({
 
             <Link
               href={section.ctaUrl}
-              className="hidden w-fit items-center gap-2 rounded-full bg-[var(--primary)] px-6 py-3.5 text-sm font-bold text-white shadow-[0_12px_24px_rgba(29,78,216,0.24)] transition-all duration-300 hover:-translate-y-1 hover:bg-[var(--color-primary-strong)] hover:shadow-[0_16px_32px_rgba(29,78,216,0.32)] lg:inline-flex"
+              className="hidden w-fit items-center gap-2 rounded-full bg-[var(--primary)] px-6 py-3.5 text-sm font-bold text-white shadow-[0_12px_24px_rgba(29,78,216,0.24)] transition-all duration-300 hover:-translate-y-1 hover:bg-[var(--color-primary-strong)] hover:shadow-[0_16px_32px_rgba(29,78,216,0.32)] motion-reduce:transition-none motion-reduce:hover:translate-y-0 lg:inline-flex"
             >
               {section.ctaLabel}
               <ArrowRightIcon />
@@ -101,36 +105,35 @@ export default function ServiceLinesRebrand({
             onBlurCapture={() => setPaused(false)}
           >
             <div
-              className="flex transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]"
-              style={{ transform: `translate3d(-${currentPage * 100}%,0,0)` }}
+              key={`service-page-${visiblePageIndex}`}
+              className="grid w-full gap-5 motion-safe:animate-[service-page-enter_420ms_cubic-bezier(0.22,1,0.36,1)] sm:grid-cols-2"
             >
-              {pages.map((page, pageIndex) => (
-                <div
-                  key={`service-page-${pageIndex}`}
-                  className="grid w-full shrink-0 gap-5 sm:grid-cols-2"
-                >
-                  {page.map((card) => (
-                    <ServiceCard key={card.id} card={card} />
-                  ))}
-                </div>
+              {visiblePage.map((card) => (
+                <ServiceCard key={card.id} card={card} />
               ))}
             </div>
 
             {totalPages > 1 ? (
-              <div className="mt-8 flex items-center justify-center gap-2">
+              <div className="mt-8 flex items-center justify-center" role="group" aria-label={`Grupo ${currentPage + 1} de ${totalPages} de soluções`}>
                 {pages.map((_, index) => (
                   <button
                     key={index}
                     type="button"
                     aria-label={`Ver grupo ${index + 1} de soluções`}
+                    aria-current={currentPage === index ? "true" : undefined}
                     onClick={() => setCurrentPage(index)}
-                    className={cn(
-                      "h-2 rounded-full transition-all duration-500",
-                      currentPage === index
-                        ? "w-8 bg-[var(--primary)]"
-                        : "w-2 bg-slate-300 hover:bg-slate-400"
-                    )}
-                  />
+                    className="group/dot inline-flex h-11 w-11 items-center justify-center rounded-full focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--primary)]/20"
+                  >
+                    <span
+                      aria-hidden="true"
+                      className={cn(
+                        "h-2 rounded-full transition-[width,background-color] duration-500 motion-reduce:transition-none",
+                        currentPage === index
+                          ? "w-8 bg-[var(--primary)]"
+                          : "w-2 bg-slate-300 group-hover/dot:bg-slate-400"
+                      )}
+                    />
+                  </button>
                 ))}
               </div>
             ) : null}
@@ -140,7 +143,7 @@ export default function ServiceLinesRebrand({
         <div className="mt-10 lg:hidden">
           <Link
             href={section.ctaUrl}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[var(--primary)] px-6 py-4 text-sm font-bold text-white shadow-[0_12px_24px_rgba(29,78,216,0.24)] transition-all duration-300 hover:-translate-y-1 hover:bg-[var(--color-primary-strong)] hover:shadow-[0_16px_32px_rgba(29,78,216,0.32)]"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[var(--primary)] px-6 py-4 text-sm font-bold text-white shadow-[0_12px_24px_rgba(29,78,216,0.24)] transition-all duration-300 hover:-translate-y-1 hover:bg-[var(--color-primary-strong)] hover:shadow-[0_16px_32px_rgba(29,78,216,0.32)] motion-reduce:transition-none motion-reduce:hover:translate-y-0"
           >
             {section.ctaLabel}
             <ArrowRightIcon />
@@ -160,7 +163,7 @@ function ServiceCard({
   const mobileMediaSrc = card.media.mobileSrc || mediaSrc;
 
   return (
-    <article className="group flex min-w-0 flex-1 flex-col overflow-hidden rounded-[32px] border border-white bg-white/60 shadow-[0_8px_30px_rgba(15,23,42,0.04)] backdrop-blur-xl transition-all duration-500 hover:-translate-y-2 hover:border-sky-100 hover:bg-white hover:shadow-[0_24px_50px_rgba(29,78,216,0.08)]">
+    <article className="group flex min-w-0 flex-1 flex-col overflow-hidden rounded-[32px] border border-white bg-white/60 shadow-[0_8px_30px_rgba(15,23,42,0.04)] backdrop-blur-xl transition-all duration-500 hover:-translate-y-2 hover:border-sky-100 hover:bg-white hover:shadow-[0_24px_50px_rgba(29,78,216,0.08)] motion-reduce:transition-none motion-reduce:hover:translate-y-0">
       <div className="relative aspect-video overflow-hidden p-2 pb-0">
         <div className="relative h-full w-full overflow-hidden rounded-[24px] bg-slate-100">
           {card.media.type === "video" || /\.(mp4|webm|ogg)$/i.test(mediaSrc) ? (
@@ -168,12 +171,34 @@ function ServiceCard({
               src={mediaSrc}
               mobileSrc={mobileMediaSrc}
               presentation={card.media.presentation}
-              preload="metadata"
+              active
+              deferUntilNearViewport
+              preload="none"
               poster={card.media.poster}
-              className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.05]"
+              className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.05] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
             />
           ) : (
-            <PresentedImage src={mediaSrc} mobileSrc={mobileMediaSrc} presentation={card.media.presentation} alt={card.media.alt || card.title} className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.05]" loading="lazy" decoding="async" />
+            <PresentedImage
+              src={mediaSrc}
+              mobileSrc={mobileMediaSrc}
+              presentation={card.media.presentation}
+              width={card.media.width}
+              height={card.media.height}
+              thumbnailUrl={card.media.thumbnailUrl}
+              thumbnailWidth={card.media.thumbnailWidth}
+              thumbnailHeight={card.media.thumbnailHeight}
+              mediumUrl={card.media.mediumUrl}
+              mediumWidth={card.media.mediumWidth}
+              mediumHeight={card.media.mediumHeight}
+              largeUrl={card.media.largeUrl}
+              largeWidth={card.media.largeWidth}
+              largeHeight={card.media.largeHeight}
+              sizes="(max-width: 639px) calc(100vw - 3rem), (max-width: 1023px) 50vw, 35vw"
+              alt={card.media.alt || card.title}
+              className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.05] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+              loading="lazy"
+              decoding="async"
+            />
           )}
           <div className="absolute inset-0 bg-gradient-to-b from-slate-900/30 via-transparent to-transparent opacity-80" />
           <div className="absolute left-4 top-4">

@@ -29,14 +29,14 @@ const fallbackMetadata: Metadata = {
     description:
       "História, cultura, cobertura e disciplina operacional para crescer com consistência.",
     url: seo.absoluteUrl(site.about),
-    images: [{ url: seo.absoluteUrl("/caminhoneiro1.webp") }],
+    images: [{ url: seo.absoluteUrl("/motorista-rodogarcia.abbf7875cfae.webp") }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Sobre a Rodogarcia | Logística com visão de longo prazo",
     description:
       "Veja como a Rodogarcia combina experiência operacional, capilaridade e consistência.",
-    images: [seo.absoluteUrl("/caminhoneiro1.webp")],
+    images: [seo.absoluteUrl("/motorista-rodogarcia.abbf7875cfae.webp")],
   },
   robots: {
     index: true,
@@ -83,7 +83,7 @@ const FALLBACK_ABOUT_PAGE: AboutPageContent = {
     title: "Mais de 35 anos conectando o Brasil",
     description:
       "Desde 1989, transformando a logística com excelência, tecnologia e compromisso com cada entrega.",
-    media: { src: "/caminhoneiro1.webp", alt: "Operação Rodogarcia em movimento" },
+    media: { src: "/motorista-rodogarcia.abbf7875cfae.webp", alt: "Operação Rodogarcia em movimento" },
     buttons: [
       { label: "Solicitar cotação", url: site.quote },
       { label: "Conhecer serviços", url: site.services },
@@ -97,13 +97,13 @@ const FALLBACK_ABOUT_PAGE: AboutPageContent = {
     certificateText: "SASSMAQ, ISO 9001 e licenças operacionais ativas.",
     certificateUrl: "",
     certifications: [
-      { title: "ISO 9001", description: "Gestão da qualidade aplicada em cada camada da operação.", image: { src: "/certificados/LOGO ISO 9001.svg", alt: "Certificado ISO 9001" } },
+      { title: "ISO 9001", description: "Gestão da qualidade aplicada em cada camada da operação.", image: { src: "/certificados/iso-9001.9371c4a6c19f.webp", alt: "Certificado ISO 9001" } },
       { title: "SASSMAQ", description: "Segurança, saúde e meio ambiente em processos sensíveis.", image: { src: "/certificados/certificado-sassmaq.webp", alt: "Certificado SASSMAQ" } },
       { title: "EcoVadis", description: "Maturidade em sustentabilidade e responsabilidade corporativa.", image: { src: "/certificados/ecovadis.webp", alt: "Certificação EcoVadis" } },
       { title: "Licença PF", description: "Autorização para operações que exigem controles adicionais.", image: { src: "/certificados/pf.webp", alt: "Licença Polícia Federal" } },
-      { title: "Polícia Civil SP", description: "Habilitação estadual alinhada a operações com governança ampliada.", image: { src: "/certificados/pc-sp.webp", alt: "Licença Polícia Civil de São Paulo" } },
+      { title: "Polícia Civil SP", description: "Habilitação estadual alinhada a operações com governança ampliada.", image: { src: "/certificados/policia-civil-sp.57269b3e1bdd.webp", alt: "Licença Polícia Civil de São Paulo" } },
       { title: "Exército Brasileiro", description: "Autorização conectada a rotinas com requisitos extras de controle.", image: { src: "/certificados/exercito-br.webp", alt: "Certificado Exército Brasileiro" } },
-      { title: "IBAMA", description: "Conformidade e controle rigoroso em operações com impacto e regulamentação ambiental.", image: { src: "/certificados/ibama.webp", alt: "Certificado IBAMA" } },
+      { title: "IBAMA", description: "Conformidade e controle rigoroso em operações com impacto e regulamentação ambiental.", image: { src: "/certificados/ibama.7198f261a1ee.webp", alt: "Certificado IBAMA" } },
     ],
   },
   finalCta: {
@@ -127,9 +127,7 @@ export default async function SobrePage() {
         title={aboutPage.hero.title}
         description={aboutPage.hero.description}
         stats={ABOUT_STATS}
-        image={aboutPage.hero.media.src}
-        imageAlt={aboutPage.hero.media.alt}
-        imagePresentation={aboutPage.hero.media.presentation}
+        image={aboutPage.hero.media}
         buttons={aboutPage.hero.buttons.map((button, index) => ({
           label: button.label,
           href: button.url,

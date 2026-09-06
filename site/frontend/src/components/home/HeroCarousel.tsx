@@ -8,10 +8,13 @@ import {
   type CSSProperties,
   type TouchEvent,
 } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import type { HomeHeroButton, HomeHeroSlide } from "@/types/content";
 import { PresentedVideo } from "@/components/media/PresentedVideo";
 import { PresentedImage } from "@/components/media/PresentedImage";
+import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
+import { mediaObjectPosition } from "@/lib/mediaPresentation";
 
 interface HeroCarouselProps {
   slides: HomeHeroSlide[];
@@ -23,12 +26,12 @@ function isVideoAsset(src: string): boolean {
   return /\.(mp4|webm|ogg)$/i.test(src);
 }
 
-function getDesktopAsset(slide: HomeHeroSlide): string {
-  return slide.media.desktopSrc || slide.media.src;
+function getDesktopAsset(media: HomeHeroSlide["media"]): string {
+  return media.desktopSrc || media.src;
 }
 
-function getMobileAsset(slide: HomeHeroSlide): string {
-  return slide.media.mobileSrc || slide.media.desktopSrc || slide.media.src;
+function getMobileAsset(media: HomeHeroSlide["media"]): string {
+  return media.mobileSrc || media.desktopSrc || media.src;
 }
 
 function getEnabledButtons(slide: HomeHeroSlide): HomeHeroButton[] {
@@ -52,28 +55,61 @@ export default function HeroCarousel({ slides }: HeroCarouselProps) {
   });
   const [current, setCurrent] = useState(0);
   const [paused, setPaused] = useState(false);
+  const [preparedSlides, setPreparedSlides] = useState<Set<number>>(
+    () => new Set([0])
+  );
+  const prefersReducedMotion = usePrefersReducedMotion();
   const touchStartXRef = useRef<number | null>(null);
   const touchStartYRef = useRef<number | null>(null);
+  const mediaCleanupRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (current < activeSlides.length) return;
     setCurrent(0);
+    setPreparedSlides(new Set([0]));
   }, [activeSlides.length, current]);
 
   const advanceSlide = useEffectEvent(() => {
-    setCurrent((previous) => (previous + 1) % activeSlides.length);
+    goTo(current + 1);
   });
 
   useEffect(() => {
-    if (activeSlides.length <= 1 || paused) return;
+    if (activeSlides.length <= 1 || paused || prefersReducedMotion) return;
     const timeout = window.setTimeout(() => advanceSlide(), AUTO_ADVANCE_MS);
     return () => window.clearTimeout(timeout);
-  }, [activeSlides.length, advanceSlide, current, paused]);
+  }, [activeSlides.length, advanceSlide, current, paused, prefersReducedMotion]);
+
+  useEffect(() => {
+    if (activeSlides.length <= 1) return;
+    const timeout = window.setTimeout(() => {
+      setPreparedSlides(new Set([current, (current + 1) % activeSlides.length]));
+    }, 1200);
+    return () => window.clearTimeout(timeout);
+  }, [activeSlides.length, current]);
+
+  useEffect(() => () => {
+    if (mediaCleanupRef.current !== null) {
+      window.clearTimeout(mediaCleanupRef.current);
+    }
+  }, []);
 
   if (activeSlides.length === 0) return null;
 
   function goTo(index: number) {
-    setCurrent(((index % activeSlides.length) + activeSlides.length) % activeSlides.length);
+    const next = ((index % activeSlides.length) + activeSlides.length) % activeSlides.length;
+    if (next === current) return;
+
+    const following = (next + 1) % activeSlides.length;
+    setPreparedSlides(new Set([current, next, following]));
+    setCurrent(next);
+
+    if (mediaCleanupRef.current !== null) {
+      window.clearTimeout(mediaCleanupRef.current);
+    }
+    mediaCleanupRef.current = window.setTimeout(() => {
+      setPreparedSlides(new Set([next, following]));
+      mediaCleanupRef.current = null;
+    }, 800);
   }
 
   function handleTouchStart(event: TouchEvent<HTMLElement>) {
@@ -114,7 +150,7 @@ export default function HeroCarousel({ slides }: HeroCarouselProps) {
     >
       <div className="home-hero-viewport relative overflow-hidden">
         <div
-          className="flex transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]"
+          className="flex transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none"
           style={{ transform: `translate3d(-${current * 100}%, 0, 0)` }}
         >
           {activeSlides.map((slide, index) => {
@@ -124,26 +160,35 @@ export default function HeroCarousel({ slides }: HeroCarouselProps) {
             const isImageOnly = slide.mode === "media-only";
             const actions = slide.mode === "text-media-buttons" ? getEnabledButtons(slide) : [];
             const HeadingTag = index === 0 ? "h1" : "h2";
+            const mediaPrepared = preparedSlides.has(index);
 
             return (
               <article
                 key={slide.id}
                 className="home-hero-viewport relative w-full min-w-full shrink-0 overflow-hidden"
                 aria-hidden={!isCurrent}
+                aria-label={
+                  isCurrent && isImageOnly
+                    ? slide.media.alt || "Destaque Rodogarcia"
+                    : undefined
+                }
+                inert={!isCurrent}
               >
                 <div className="absolute inset-0">
-                  <HeroMedia
-                    src={getDesktopAsset(slide)}
-                    mobileSrc={getMobileAsset(slide)}
-                    poster={slide.media.poster}
-                    alt={slide.media.alt || (isImageOnly ? "Destaque Rodogarcia" : "")}
-                    decorative={!isImageOnly}
-                    blurred={!isImageOnly}
-                    priority={index === 0}
-                    active={isCurrent}
-                    presentation={slide.media.presentation}
-                    className="h-full w-full object-cover"
-                  />
+                  {mediaPrepared ? (
+                    isImageOnly ? (
+                      <HeroMedia
+                        media={slide.media}
+                        alt={slide.media.alt || "Destaque Rodogarcia"}
+                        priority={index === 0}
+                        active={isCurrent}
+                        imageSizes="100vw"
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <HeroBackdrop media={slide.media} active={isCurrent} />
+                    )
+                  ) : null}
                   {isImageOnly ? (
                     <>
                       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_34%,rgba(4,10,24,0.18)_58%,rgba(4,10,24,0.86)_100%)]" />
@@ -165,7 +210,7 @@ export default function HeroCarousel({ slides }: HeroCarouselProps) {
                       <HeadingTag className="home-hero-title max-w-[11ch] text-[clamp(3rem,6vw,6rem)] font-bold leading-[0.94] tracking-[-0.065em] text-white">
                         {title}
                       </HeadingTag>
-                      <p className="mt-5 max-w-[58ch] text-base leading-7 text-white/74 sm:text-lg sm:leading-8">
+                      <p className="mt-5 max-w-[58ch] text-base leading-7 text-white/90 drop-shadow-[0_2px_12px_rgba(2,6,23,0.5)] sm:text-lg sm:leading-8">
                         {description}
                       </p>
                       {actions.length > 0 ? (
@@ -179,31 +224,19 @@ export default function HeroCarousel({ slides }: HeroCarouselProps) {
                           ))}
                         </div>
                       ) : null}
-                      <div className="mt-10 overflow-hidden rounded-[28px] lg:hidden">
-                        <HeroMedia
-                          src={getMobileAsset(slide)}
-                          poster={slide.media.poster}
-                          alt={slide.media.alt || title}
-                          active={isCurrent}
-                          priority={index === 0}
-                          presentation={slide.media.presentation}
-                          className="h-[260px] w-full object-contain object-top"
-                        />
-                      </div>
                     </div>
-                    <div className="hidden h-full w-full items-center justify-center lg:flex">
-                      <div className="relative flex h-full w-full items-center justify-center">
-                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_58%_50%,rgba(56,189,248,0.16),transparent_24%)]" />
+                    <div className="relative mt-10 flex w-full items-start justify-center overflow-hidden rounded-[28px] lg:mt-0 lg:h-full lg:items-center lg:overflow-visible lg:rounded-none">
+                      <div className="pointer-events-none absolute inset-0 hidden bg-[radial-gradient(circle_at_58%_50%,rgba(56,189,248,0.16),transparent_24%)] lg:block" />
+                      {mediaPrepared ? (
                         <HeroMedia
-                          src={getDesktopAsset(slide)}
-                          poster={slide.media.poster}
+                          media={slide.media}
                           alt={slide.media.alt || title}
                           active={isCurrent}
                           priority={index === 0}
-                          presentation={slide.media.presentation}
-                          className="relative z-10 max-h-[62vh] w-auto max-w-[min(100%,760px)] object-contain drop-shadow-[0_24px_70px_rgba(2,6,23,0.45)]"
+                          imageSizes="(max-width: 1023px) 100vw, 52vw"
+                          className="relative z-10 h-[260px] w-full object-contain object-top lg:h-auto lg:max-h-[62vh] lg:w-auto lg:max-w-[min(100%,760px)] lg:drop-shadow-[0_24px_70px_rgba(2,6,23,0.45)]"
                         />
-                      </div>
+                      ) : null}
                     </div>
                   </div>
                 ) : null}
@@ -223,20 +256,25 @@ export default function HeroCarousel({ slides }: HeroCarouselProps) {
 
         <div className="absolute inset-x-0 bottom-0 z-20 bg-[linear-gradient(180deg,rgba(6,16,29,0)_0%,rgba(6,16,29,0.56)_52%,rgba(6,16,29,0.78)_100%)]">
           <div className="mx-auto flex max-w-[1320px] items-center justify-center px-6 py-4 sm:px-8 lg:px-10 xl:px-12">
-            <div className="flex items-center justify-center gap-2">
+            <div className="flex items-center justify-center" role="group" aria-label={`Slide ${current + 1} de ${activeSlides.length}`}>
               {activeSlides.map((item, itemIndex) => (
                 <button
                   key={item.id}
                   type="button"
                   aria-label={`Ir para o slide ${itemIndex + 1}`}
-                  aria-pressed={itemIndex === current}
+                  aria-current={itemIndex === current ? "true" : undefined}
                   onClick={() => goTo(itemIndex)}
-                  className={[
-                    "h-2 w-2 rounded-full transition-all duration-300",
-                    "hover:bg-white/50",
-                    itemIndex === current ? "scale-110 bg-white/92" : "bg-white/30",
-                  ].join(" ")}
-                />
+                  className="group/dot inline-flex h-11 w-11 items-center justify-center rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80"
+                >
+                  <span
+                    aria-hidden="true"
+                    className={[
+                      "h-2 w-2 rounded-full transition-[background-color,transform] duration-300 motion-reduce:transition-none",
+                      "group-hover/dot:bg-white/50",
+                      itemIndex === current ? "scale-110 bg-white/92" : "bg-white/30",
+                    ].join(" ")}
+                  />
+                </button>
               ))}
             </div>
           </div>
@@ -247,55 +285,71 @@ export default function HeroCarousel({ slides }: HeroCarouselProps) {
 }
 
 function HeroMedia({
-  src,
-  mobileSrc,
-  poster,
+  media,
   alt,
   active,
   className,
+  imageSizes,
   decorative = false,
-  blurred = false,
   priority = false,
-  presentation,
 }: {
-  src: string;
-  mobileSrc?: string;
-  poster?: string;
+  media: HomeHeroSlide["media"];
   alt: string;
   active: boolean;
   className: string;
+  imageSizes: string;
   decorative?: boolean;
-  blurred?: boolean;
   priority?: boolean;
-  presentation?: HomeHeroSlide["media"]["presentation"];
 }) {
-  const motionClass = blurred
-    ? active
-      ? "scale-[1.1]"
-      : "scale-[1.14]"
-    : active
-      ? "scale-100"
-      : "scale-[1.04]";
-  const filterClass = blurred ? "blur-[14px] opacity-72" : "";
+  const src = getDesktopAsset(media);
+  const mobileSrc = getMobileAsset(media);
+  const motionClass = active ? "scale-100" : "scale-[1.04]";
 
   if (isVideoAsset(src)) {
     return (
       <PresentedVideo
-        className={`${className} ${motionClass} ${filterClass} transition-transform duration-[1400ms] ease-[cubic-bezier(0.16,1,0.3,1)]`}
+        className={`${className} ${motionClass} transition-transform duration-[1400ms] ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none`}
         src={src}
         mobileSrc={mobileSrc}
-        presentation={presentation}
+        presentation={media.presentation}
         mobileBreakpoint={1023}
         active={active}
-        preload={priority ? "auto" : "metadata"}
-        poster={poster || undefined}
-        aria-hidden={decorative}
-        aria-label={decorative ? undefined : alt}
+        preload={priority ? "auto" : "none"}
+        poster={media.poster || undefined}
+        decorative
       />
     );
   }
 
-  return <PresentedImage src={src} mobileSrc={mobileSrc} presentation={presentation} mobileBreakpoint={1023} alt={decorative ? "" : alt} aria-hidden={decorative} className={`${className} ${motionClass} ${filterClass} transition-transform duration-[1400ms] ease-[cubic-bezier(0.16,1,0.3,1)]`} loading={priority ? "eager" : "lazy"} decoding="async" fetchPriority={priority ? "high" : "auto"} />;
+  return <PresentedImage src={src} mobileSrc={mobileSrc} presentation={media.presentation} mobileBreakpoint={1023} width={media.width} height={media.height} thumbnailUrl={media.thumbnailUrl} thumbnailWidth={media.thumbnailWidth} thumbnailHeight={media.thumbnailHeight} mediumUrl={media.mediumUrl} mediumWidth={media.mediumWidth} mediumHeight={media.mediumHeight} largeUrl={media.largeUrl} largeWidth={media.largeWidth} largeHeight={media.largeHeight} alt={decorative ? "" : alt} aria-hidden={decorative} className={`${className} ${motionClass} transition-transform duration-[1400ms] ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none`} sizes={imageSizes} loading={priority ? "eager" : "lazy"} decoding="async" fetchPriority={priority ? "high" : "auto"} />;
+}
+
+function HeroBackdrop({
+  media,
+  active,
+}: {
+  media: HomeHeroSlide["media"];
+  active: boolean;
+}) {
+  const fallback = media.poster || getMobileAsset(media);
+  const src = media.mediumUrl || fallback;
+
+  if (!src || isVideoAsset(src)) return null;
+
+  return (
+    <Image
+      src={src}
+      alt=""
+      aria-hidden="true"
+      fill
+      className={`h-full w-full object-cover blur-[14px] opacity-72 transition-transform duration-[1400ms] ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none ${active ? "scale-[1.1]" : "scale-[1.14]"}`}
+      sizes="384px"
+      loading="eager"
+      decoding="async"
+      fetchPriority="low"
+      style={{ objectPosition: mediaObjectPosition(media.presentation, "desktop") }}
+    />
+  );
 }
 
 function HeroActionLink({
@@ -311,8 +365,8 @@ function HeroActionLink({
     button.url.startsWith("tel:");
   const isOutline = button.variant === "outline";
   const className = [
-    "inline-flex max-w-full min-w-0 items-center justify-center gap-2 rounded-full px-4 py-3 text-sm font-semibold transition-all duration-200 sm:px-5",
-    "hover:-translate-y-0.5",
+    "inline-flex max-w-full min-w-0 items-center justify-center gap-2 rounded-full px-4 py-3 text-sm font-semibold transition-all duration-200 motion-reduce:transition-none sm:px-5",
+    "hover:-translate-y-0.5 motion-reduce:hover:translate-y-0",
     fillMobile ? "w-full sm:w-auto" : "",
     isOutline
       ? "border bg-transparent text-white hover:bg-white/10"
@@ -358,7 +412,7 @@ function SliderArrowButton({
       onClick={onClick}
       aria-label={label}
       title={direction === "left" ? "Anterior" : "Proximo"}
-      className="pointer-events-auto inline-flex h-10 w-10 items-center justify-center text-white/88 transition-colors duration-200 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+      className="pointer-events-auto inline-flex h-11 w-11 items-center justify-center text-white/88 transition-colors duration-200 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 motion-reduce:transition-none"
     >
       <ArrowSliderIcon direction={direction} />
     </button>

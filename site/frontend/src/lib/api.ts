@@ -1,3 +1,4 @@
+import { cache } from "react";
 import type { ApiResponse } from "@/types/api";
 import { api } from "@/lib/routes";
 import type {
@@ -112,11 +113,12 @@ export async function serverFetch<T>(
 
 /**
  * Lê o conteúdo público da API.
- * Chamado em RSC pages para pré-renderizar o conteúdo no servidor.
+ * Chamado por Server Components e deduplicado no mesmo render, mesmo com
+ * `no-store`, para que página, header e rodapé não repitam a leitura pública.
  */
-export async function fetchPublicContent() {
+export const fetchPublicContent = cache(async function fetchPublicContent() {
   return serverFetch<PublicContentResponse>(api.public.content, {
     tags: ["public-content"],
     cache: "no-store",
   });
-}
+});

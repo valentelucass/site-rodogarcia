@@ -40,7 +40,7 @@ export default function FinalQuoteCtaSection() {
               <motion.div whileHover={{ y: -2 }} whileTap={{ scale: 0.99 }} className="min-w-0 sm:w-auto">
                 <Link
                   href={site.contact}
-                  className="inline-flex h-14 w-full min-w-0 items-center justify-center gap-2 rounded-2xl bg-emerald-500 px-4 text-sm font-semibold text-white shadow-[0_18px_44px_rgba(34,197,94,0.35)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-emerald-600 hover:shadow-[0_22px_52px_rgba(22,163,74,0.38)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-emerald-500/24 sm:w-auto sm:px-7"
+                  className="inline-flex h-14 w-full min-w-0 items-center justify-center gap-2 rounded-2xl bg-emerald-700 px-4 text-sm font-semibold text-white shadow-[0_18px_44px_rgba(4,120,87,0.3)] transition-[background-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:bg-emerald-800 hover:shadow-[0_22px_52px_rgba(6,95,70,0.34)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-emerald-400/40 motion-reduce:transition-none motion-reduce:hover:translate-y-0 sm:w-auto sm:px-7"
                 >
                   <span className="min-w-0 truncate">Falar com especialista</span>
                   <ChatCircleDots size={18} weight="bold" className="shrink-0" />

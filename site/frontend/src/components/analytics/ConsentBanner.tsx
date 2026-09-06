@@ -266,7 +266,7 @@ export default function ConsentBanner({ settings, onConsent }: ConsentBannerProp
           ? "fixed inset-0 z-[9998] grid place-items-center bg-slate-950/40 p-3 backdrop-blur-sm"
           : [
               "fixed inset-x-3 bottom-4 z-[9998] mx-auto max-w-[720px] overflow-hidden rounded-[22px]",
-              "border border-[var(--border)] bg-[var(--color-surface)] p-4 shadow-[0_18px_46px_rgba(2,6,23,0.14)] backdrop-blur-md",
+              "border border-[var(--border)] bg-[var(--color-surface-strong)] p-4 shadow-[0_18px_46px_rgba(2,6,23,0.14)]",
               "transition-[opacity,transform] duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none sm:p-5",
               mobilePositionClass,
               closing ? "translate-y-3 scale-[0.98] opacity-0" : "translate-y-0 scale-100 opacity-100",
@@ -276,7 +276,7 @@ export default function ConsentBanner({ settings, onConsent }: ConsentBannerProp
       <div
         className={
           preferencesOpen
-            ? "w-full max-w-[680px] overflow-hidden rounded-[22px] border border-[var(--border)] bg-[var(--color-surface)] p-4 shadow-[0_24px_70px_rgba(2,6,23,0.3)] sm:p-5"
+            ? "w-full max-w-[680px] overflow-hidden rounded-[22px] border border-[var(--border)] bg-[var(--color-surface-strong)] p-4 shadow-[0_24px_70px_rgba(2,6,23,0.3)] sm:p-5"
             : "contents"
         }
       >
@@ -285,7 +285,7 @@ export default function ConsentBanner({ settings, onConsent }: ConsentBannerProp
           <p id={titleId} className="text-sm font-extrabold tracking-[-0.01em] text-[var(--foreground)] sm:text-base">
             {settings.title}
           </p>
-          <p id={descriptionId} className="mt-1.5 text-xs leading-5 text-[var(--color-muted-raw)] sm:text-[13px] sm:leading-6">
+          <p id={descriptionId} className="mt-1.5 text-xs leading-5 text-slate-700 sm:text-[13px] sm:leading-6">
             {settings.description}
           </p>
         </div>
@@ -313,7 +313,7 @@ export default function ConsentBanner({ settings, onConsent }: ConsentBannerProp
               />
               <span>
                 <span className="block font-semibold text-[var(--foreground)]">{category.label}</span>
-                <span className="block text-xs leading-5 text-[var(--color-muted-raw)]">
+                <span className="block text-xs leading-5 text-slate-700">
                   {category.description}
                 </span>
               </span>
@@ -348,7 +348,7 @@ export default function ConsentBanner({ settings, onConsent }: ConsentBannerProp
               Object.fromEntries(settings.categories.map((category) => [category.key, true]))
             )
           }
-          className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[var(--primary)] px-5 py-2.5 text-xs font-extrabold text-white shadow-[0_10px_22px_rgba(29,78,216,0.22)] transition-colors duration-200 hover:bg-[var(--color-primary-strong)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--primary)]/20 sm:order-3"
+          className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[var(--primary)] px-5 py-2.5 text-xs font-extrabold text-white shadow-[0_10px_22px_rgba(29,78,216,0.22)] transition-[background-color,box-shadow] duration-200 hover:bg-[var(--color-primary-strong)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--primary)]/20 motion-reduce:transition-none sm:order-3"
         >
           {settings.acceptAllLabel}
         </button>

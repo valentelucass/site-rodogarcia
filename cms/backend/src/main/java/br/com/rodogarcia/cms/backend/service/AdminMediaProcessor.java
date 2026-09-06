@@ -63,13 +63,37 @@ public final class AdminMediaProcessor {
         DecodedImage decoded = decode(source, mimeType);
         BufferedImage oriented = orient(decoded.image(), decoded.orientation());
         try {
+            EncodedImage optimized = encodeImage(
+                resizeWidth(oriented, settings.webpOptimizedWidth()),
+                settings.webpQuality()
+            );
+            EncodedImage thumbnail = encodeImage(
+                resizeCover(oriented, 420, 260),
+                settings.webpThumbQuality()
+            );
+            EncodedImage medium = encodeImage(
+                resizeWidth(oriented, settings.webpMediumWidth()),
+                settings.webpQuality()
+            );
+            EncodedImage large = encodeImage(
+                resizeWidth(oriented, settings.webpLargeWidth()),
+                settings.webpQuality()
+            );
             return new ProcessedImage(
-                decoded.width(),
-                decoded.height(),
-                encode(resizeWidth(oriented, settings.webpOptimizedWidth()), settings.webpQuality()),
-                encode(resizeCover(oriented, 420, 260), settings.webpThumbQuality()),
-                encode(resizeWidth(oriented, settings.webpMediumWidth()), settings.webpQuality()),
-                encode(resizeWidth(oriented, settings.webpLargeWidth()), settings.webpQuality())
+                oriented.getWidth(),
+                oriented.getHeight(),
+                optimized.bytes(),
+                thumbnail.bytes(),
+                medium.bytes(),
+                large.bytes(),
+                optimized.width(),
+                optimized.height(),
+                thumbnail.width(),
+                thumbnail.height(),
+                medium.width(),
+                medium.height(),
+                large.width(),
+                large.height()
             );
         } catch (IOException | RuntimeException error) {
             if (error instanceof ApiException api) throw api;
@@ -109,7 +133,7 @@ public final class AdminMediaProcessor {
             }
             if (image == null) throw new IOException("Unsupported image");
             guardDimensions(image.getWidth(), image.getHeight());
-            return new DecodedImage(image, image.getWidth(), image.getHeight(), orientation);
+            return new DecodedImage(image, orientation);
         } catch (ApiException error) {
             throw error;
         } catch (IOException | RuntimeException error) {
@@ -222,6 +246,10 @@ public final class AdminMediaProcessor {
             throw new ApiException(503, "Conversão de imagem indisponível nesta plataforma.");
         }
         return WebPCodec.encodeImage(image, quality);
+    }
+
+    private static EncodedImage encodeImage(BufferedImage image, int quality) throws IOException {
+        return new EncodedImage(image.getWidth(), image.getHeight(), encode(image, quality));
     }
 
     private static BufferedImage resizeWidth(BufferedImage source, int targetWidth) {
@@ -376,7 +404,10 @@ public final class AdminMediaProcessor {
         return new String(bytes, offset, length, java.nio.charset.StandardCharsets.ISO_8859_1);
     }
 
-    private record DecodedImage(BufferedImage image, int width, int height, int orientation) {
+    private record DecodedImage(BufferedImage image, int orientation) {
+    }
+
+    private record EncodedImage(int width, int height, byte[] bytes) {
     }
 
     public record ProcessedImage(
@@ -385,7 +416,15 @@ public final class AdminMediaProcessor {
         byte[] optimized,
         byte[] thumbnail,
         byte[] medium,
-        byte[] large
+        byte[] large,
+        int optimizedWidth,
+        int optimizedHeight,
+        int thumbnailWidth,
+        int thumbnailHeight,
+        int mediumWidth,
+        int mediumHeight,
+        int largeWidth,
+        int largeHeight
     ) {
     }
 }

@@ -42,14 +42,14 @@ const fallbackMetadata: Metadata = {
     description:
       "Operações B2B com cobertura nacional, compliance e implantação por etapas.",
     url: seo.absoluteUrl(site.business),
-    images: [{ url: seo.absoluteUrl("/foto4.webp") }],
+    images: [{ url: seo.absoluteUrl("/operacao-indoor-rodogarcia.d6f36f33e258.webp") }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Para Empresas | Rodogarcia Transportes",
     description:
       "Conheça a camada B2B da Rodogarcia para operações corporativas de maior escala.",
-    images: [seo.absoluteUrl("/foto4.webp")],
+    images: [seo.absoluteUrl("/operacao-indoor-rodogarcia.d6f36f33e258.webp")],
   },
   robots: {
     index: true,

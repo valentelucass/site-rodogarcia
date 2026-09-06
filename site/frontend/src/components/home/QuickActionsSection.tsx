@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useMemo, type KeyboardEvent } from "react";
+import { useId, useMemo } from "react";
 import { motion, type Variants } from "framer-motion";
 import { MagnifyingGlass } from "@phosphor-icons/react";
 import type { QuickAction } from "@/types/content";
@@ -164,12 +164,6 @@ export default function QuickActionsSection({ actions }: QuickActionsSectionProp
 }
 
 export function SearchHero({ placeholder, isOpen, onOpen }: SearchHeroProps) {
-  function handleKeyDown(event: KeyboardEvent<HTMLInputElement>) {
-    if (event.key !== "Enter" && event.key !== " ") return;
-    event.preventDefault();
-    onOpen();
-  }
-
   return (
     <div className="group/search relative">
       <div className="pointer-events-none absolute -inset-x-3 -inset-y-2 rounded-[calc(var(--radius-search)_+_12px)] bg-[radial-gradient(circle_at_50%_50%,rgba(29,78,216,0.18),transparent_66%)] opacity-0 blur-2xl transition-opacity duration-300 ease-out group-hover/search:opacity-100 group-focus-within/search:opacity-100" />
@@ -182,26 +176,21 @@ export function SearchHero({ placeholder, isOpen, onOpen }: SearchHeroProps) {
           className="pointer-events-none absolute left-5 top-1/2 z-[2] -translate-y-1/2 text-[var(--primary)] sm:left-6"
         />
 
-        <input
-          type="search"
-          readOnly
-          value=""
-          onFocus={onOpen}
+        <button
+          type="button"
           onClick={onOpen}
-          onKeyDown={handleKeyDown}
           aria-label="Abrir busca do site"
           aria-controls="site-search-panel"
           aria-expanded={isOpen}
-          aria-haspopup="listbox"
-          placeholder={placeholder}
           className={[
-            "peer h-[62px] w-full cursor-text rounded-[var(--radius-search)] border border-[var(--color-action-border)] bg-[var(--color-action-surface)] py-0 pl-[54px] pr-12 text-sm font-extrabold text-[var(--foreground)] shadow-[inset_0_1px_0_var(--color-action-highlight)] outline-none ring-1 ring-[var(--color-action-ring)] backdrop-blur-xl transition-[background-color,border-color,box-shadow,transform] duration-300 ease-out sm:h-[68px] sm:pl-[62px] sm:pr-14 sm:text-base",
-            "placeholder:text-[var(--color-muted-raw)]/70",
+            "peer flex h-[62px] w-full cursor-pointer items-center rounded-[var(--radius-search)] border border-[var(--color-action-border)] bg-[var(--color-action-surface)] py-0 pl-[54px] pr-12 text-left text-sm font-extrabold text-[var(--color-muted-raw)]/70 shadow-[inset_0_1px_0_var(--color-action-highlight)] outline-none ring-1 ring-[var(--color-action-ring)] backdrop-blur-xl transition-[background-color,border-color,box-shadow,transform] duration-300 ease-out sm:h-[68px] sm:pl-[62px] sm:pr-14 sm:text-base",
             "hover:-translate-y-px hover:border-[var(--primary)]/22 hover:bg-[var(--color-action-surface-hover)]",
             "focus:border-[var(--primary)]/42 focus:bg-[var(--color-action-surface-hover)] focus:ring-4 focus:ring-[var(--primary)]/14",
             "focus-visible:outline-none",
           ].join(" ")}
-        />
+        >
+          <span className="truncate">{placeholder}</span>
+        </button>
 
         <span className="pointer-events-none absolute right-5 top-1/2 z-[2] h-2 w-2 -translate-y-1/2 rounded-full bg-[var(--primary)]/50 shadow-[0_0_0_6px_rgba(29,78,216,0.08)] transition-transform duration-300 ease-out peer-hover:scale-110 peer-focus:scale-125 sm:right-6" />
       </div>

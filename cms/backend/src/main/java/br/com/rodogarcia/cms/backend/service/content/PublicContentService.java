@@ -28,6 +28,7 @@ public final class PublicContentService {
     private final MediaSlotsRepository mediaSlotsRepository;
     private final ContentMediaValidator mediaValidator;
     private final StructuredContentSanitizer sanitizer;
+    private final PublicMediaCatalog mediaCatalog;
 
     public PublicContentService(
         JsonMapper mapper,
@@ -35,7 +36,8 @@ public final class PublicContentService {
         SiteTextsRepository siteTextsRepository,
         MediaSlotsRepository mediaSlotsRepository,
         ContentMediaValidator mediaValidator,
-        StructuredContentSanitizer sanitizer
+        StructuredContentSanitizer sanitizer,
+        PublicMediaCatalog mediaCatalog
     ) {
         this.mapper = mapper;
         this.contentRepository = contentRepository;
@@ -43,13 +45,14 @@ public final class PublicContentService {
         this.mediaSlotsRepository = mediaSlotsRepository;
         this.mediaValidator = mediaValidator;
         this.sanitizer = sanitizer;
+        this.mediaCatalog = mediaCatalog;
     }
 
     public ObjectNode publicContent() {
         ObjectNode content = contentRepository.read();
         ObjectNode result = mapper.createObjectNode();
-        result.set("homePage", publicHome(content.get("homePage")));
-        result.set("servicesPage", publicServices(content.get("servicesPage")));
+        result.set("homePage", buildPublicHome(content.get("homePage")));
+        result.set("servicesPage", buildPublicServices(content.get("servicesPage")));
         for (String pageKey : ContentKeys.PAGE_KEYS) {
             result.set(ContentKeys.PAGE_PROPERTIES.get(pageKey), sanitizer.page(pageKey, content.get(ContentKeys.PAGE_PROPERTIES.get(pageKey))));
         }
@@ -57,6 +60,7 @@ public final class PublicContentService {
         result.set("headerNavigation", sanitizer.navigation(content.get("headerNavigation")));
         result.set("units", publicUnits(content.get("units")));
         result.set("siteTexts", siteTextsRepository.read());
+        mediaCatalog.enrich(result);
         return result;
     }
 
@@ -67,6 +71,12 @@ public final class PublicContentService {
     }
 
     public ObjectNode publicHome(JsonNode value) {
+        ObjectNode result = buildPublicHome(value);
+        mediaCatalog.enrich(result);
+        return result;
+    }
+
+    private ObjectNode buildPublicHome(JsonNode value) {
         ObjectNode source = ContentJson.object(value);
         ObjectNode result = emptyHome();
 
@@ -198,6 +208,12 @@ public final class PublicContentService {
     }
 
     public ObjectNode publicServices(JsonNode value) {
+        ObjectNode result = buildPublicServices(value);
+        mediaCatalog.enrich(result);
+        return result;
+    }
+
+    private ObjectNode buildPublicServices(JsonNode value) {
         ObjectNode source = ContentJson.object(value);
         ObjectNode result = mapper.createObjectNode();
         ArrayNode modules = mapper.createArrayNode();

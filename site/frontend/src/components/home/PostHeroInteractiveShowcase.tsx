@@ -117,12 +117,36 @@ export default function PostHeroInteractiveShowcase({
                   mobileSrc={mobileMediaSrc}
                   presentation={activeItem.media.presentation}
                   mobileBreakpoint={1023}
-                  preload="metadata"
-                  poster={activeItem.media.poster}
+                  active={mediaVisible}
+                  deferUntilNearViewport
+                  preload="none"
+                  poster={activeItem.media.poster || undefined}
                   className="aspect-square w-full object-cover"
                 />
               ) : (
-                <PresentedImage key={mediaSrc} src={mediaSrc} mobileSrc={mobileMediaSrc} presentation={activeItem.media.presentation} mobileBreakpoint={1023} alt={activeItem.media.alt || activeItem.title} className="aspect-square w-full object-cover" loading="lazy" decoding="async" />
+                <PresentedImage
+                  key={mediaSrc}
+                  src={mediaSrc}
+                  mobileSrc={mobileMediaSrc}
+                  presentation={activeItem.media.presentation}
+                  mobileBreakpoint={1023}
+                  width={activeItem.media.width}
+                  height={activeItem.media.height}
+                  thumbnailUrl={activeItem.media.thumbnailUrl}
+                  thumbnailWidth={activeItem.media.thumbnailWidth}
+                  thumbnailHeight={activeItem.media.thumbnailHeight}
+                  mediumUrl={activeItem.media.mediumUrl}
+                  mediumWidth={activeItem.media.mediumWidth}
+                  mediumHeight={activeItem.media.mediumHeight}
+                  largeUrl={activeItem.media.largeUrl}
+                  largeWidth={activeItem.media.largeWidth}
+                  largeHeight={activeItem.media.largeHeight}
+                  sizes="(max-width: 1023px) calc(100vw - 3rem), 50vw"
+                  alt={activeItem.media.alt || activeItem.title}
+                  className="aspect-square w-full object-cover"
+                  loading="lazy"
+                  decoding="async"
+                />
               )}
             </div>
           </div>

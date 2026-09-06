@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import type { ResponsiveImageSources } from "@shared/types/media";
 import {
   CaretLeft,
   CaretRight,
@@ -32,7 +33,7 @@ import {
   developerSecondaryButtonClassName,
 } from "@/components/developer/ui";
 
-interface AdminImageRecord {
+interface AdminImageRecord extends ResponsiveImageSources {
   name: string;
   url: string;
   source: "upload" | "content" | "library";
@@ -44,9 +45,6 @@ interface AdminImageRecord {
   uploadedAt?: string;
   originalSize?: number;
   optimizedSize?: number;
-  thumbnailUrl?: string;
-  width?: number;
-  height?: number;
   aspectRatio?: number;
   durationSeconds?: number;
 }

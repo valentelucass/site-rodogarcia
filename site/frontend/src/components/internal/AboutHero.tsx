@@ -5,7 +5,7 @@ import { ActionLink, PageContainer, type PageAction } from "./PageContent";
 import { site } from "@/lib/routes";
 import { cn } from "@/lib/utils";
 import { PresentedImage } from "@/components/media/PresentedImage";
-import type { ResponsiveMediaPresentation } from "@shared/types/media";
+import type { PageMedia } from "@/types/content";
 
 interface StatItem {
   value: string;
@@ -17,9 +17,7 @@ interface AboutHeroProps {
   title: string;
   description: string;
   stats: StatItem[];
-  image: string;
-  imageAlt?: string;
-  imagePresentation?: ResponsiveMediaPresentation;
+  image: PageMedia;
   buttons?: PageAction[];
 }
 
@@ -29,8 +27,6 @@ export function AboutHero({
   description,
   stats,
   image,
-  imageAlt,
-  imagePresentation,
   buttons,
 }: AboutHeroProps) {
   const heroButtons = buttons?.length
@@ -134,7 +130,12 @@ export function AboutHero({
                 transition={{ duration: 1.5, ease: "easeOut" }}
                 className="h-full w-full"
               >
-                <PresentedImage src={image} presentation={imagePresentation} alt={imageAlt || title} className="h-full w-full object-cover opacity-80 mix-blend-luminosity" />
+                <PresentedImage
+                  {...image}
+                  alt={image.alt || title}
+                  sizes="(max-width: 1023px) 100vw, 42vw"
+                  className="h-full w-full object-cover opacity-80 mix-blend-luminosity"
+                />
               </motion.div>
               <div className="pointer-events-none absolute inset-0 z-30 bg-[url('data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMjAwIDIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZmlsdGVyIGlkPSJub2lzZUZpbHRlciI+PGZlVHVyYnVsZW5jZSB0eXBlPSJmcmFjdGFsTm9pc2UiIGJhc2VGcmVxdWVuY3k9IjAuNjUiIG51bU9jdGF2ZXM9IjMiIHN0aXRjaFRpbGVzPSJzdGl0Y2giLz48L2ZpbHRlcj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWx0ZXI9InVybCgjbm9pc2VGaWx0ZXIpIi8+PC9zdmc+')] opacity-[0.1] mix-blend-overlay" />
               <div className="absolute inset-0 z-10 bg-gradient-to-t from-[var(--foreground)] via-transparent to-transparent" />

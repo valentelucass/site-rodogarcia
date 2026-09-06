@@ -488,28 +488,34 @@ const CMS_HELP_TEMPLATES: Record<string, CmsHelpTemplate> = {
     ],
   },
   "global.field.imagem": {
+    summary: "Escolha a imagem deste bloco na Biblioteca. Depois de salvar, o site usa automaticamente o tamanho adequado à tela sem mudar o enquadramento definido para essa imagem.",
     details: [
       { label: "O que controla", value: "A imagem exibida neste bloco." },
       { label: "Origem", value: "O arquivo é escolhido na Biblioteca de mídia interna." },
       { label: "Onde aparece", value: "No bloco visual que está sendo editado em {publicDestination}." },
       { label: "Após salvar", value: "A mídia selecionada substitui a imagem anterior somente nesse bloco." },
+      { label: "Entrega responsiva", value: "Quando a Biblioteca possui versões média e grande, o navegador escolhe a mais adequada à largura da tela. Conteúdo antigo continua usando normalmente o arquivo principal.", technical: true },
       { label: "Proteção", value: "Somente referências internas de mídia validadas podem ser salvas.", technical: true },
     ],
   },
   "global.field.arquivo": {
+    summary: "Escolha o arquivo visual deste bloco. Imagens são entregues no tamanho adequado à tela e vídeos automáticos aguardam sua área se aproximar da tela.",
     details: [
       { label: "O que controla", value: "O arquivo de imagem ou vídeo usado por este bloco." },
       { label: "De onde vem", value: "Da Biblioteca de mídia do CMS ou de um upload validado. Imagens enviadas em PNG, JPG, AVIF ou WebP são gravadas como WebP otimizado; vídeos permanecem no formato de vídeo." },
       { label: "Onde aparece", value: "Na área visual do bloco que está aberto em {publicDestination}." },
       { label: "Após salvar", value: "A mídia anterior é substituída somente nessa área de {publicDestination}." },
+      { label: "Carregamento", value: "As versões responsivas de imagem e o poster do vídeo são preservados. Vídeos visuais automáticos permanecem silenciosos, recebem o arquivo apenas perto da tela e só reproduzem quando ficam visíveis.", technical: true },
     ],
   },
   "global.field.arquivo-selecionado": {
+    summary: "Confira ou troque o arquivo deste bloco. O site mantém o conteúdo legado compatível e aproveita automaticamente as versões responsivas disponíveis na Biblioteca.",
     details: [
       { label: "O que controla", value: "O arquivo de imagem ou vídeo já escolhido para este bloco." },
       { label: "De onde vem", value: "Da Biblioteca de mídia interna ou de um upload feito pelo CMS. Imagens novas são convertidas para WebP otimizado antes de entrarem na Biblioteca." },
       { label: "Onde aparece", value: "No espaço visual ligado a este formulário em {publicDestination}." },
       { label: "Após salvar", value: "Troca somente a mídia deste bloco de {publicDestination}; os demais blocos continuam iguais." },
+      { label: "Entrega responsiva", value: "O arquivo principal continua sendo o fallback; versões média e grande validadas são usadas apenas quando ajudam o navegador a baixar menos dados.", technical: true },
       { label: "Proteção", value: "O CMS aceita apenas referências internas de mídia que passaram pela validação.", technical: true },
     ],
   },
