@@ -11,6 +11,7 @@ $repositoryPath = [IO.Path]::GetFullPath($RepositoryRoot).TrimEnd([char]92) + [I
 $serviceToken = [string]$env:LANDING_BUILDER_SERVICE_TOKEN
 $storageRoot = [string]$env:LANDING_BUILDER_STORAGE_ROOT
 $ffmpegPath = [string]$env:FFMPEG_PATH
+$ffprobePath = [string]$env:FFPROBE_PATH
 $errors = [System.Collections.Generic.List[string]]::new()
 
 if ([string]::IsNullOrWhiteSpace($serviceToken) -or $serviceToken.Length -lt 32 -or $serviceToken -match '(?i)altere-para|change-me|example|placeholder') {
@@ -29,6 +30,15 @@ if ([string]::IsNullOrWhiteSpace($ffmpegPath) -or -not [IO.Path]::IsPathRooted($
   $resolvedFfmpegPath = [IO.Path]::GetFullPath($ffmpegPath)
   if ($resolvedFfmpegPath.StartsWith($repositoryPath, [StringComparison]::OrdinalIgnoreCase) -or -not (Test-Path -LiteralPath $resolvedFfmpegPath -PathType Leaf)) {
     $errors.Add('FFMPEG_PATH deve apontar para executavel existente fora do repositorio.')
+  }
+}
+
+if ([string]::IsNullOrWhiteSpace($ffprobePath) -or -not [IO.Path]::IsPathRooted($ffprobePath)) {
+  $errors.Add('FFPROBE_PATH absoluto e obrigatorio.')
+} else {
+  $resolvedFfprobePath = [IO.Path]::GetFullPath($ffprobePath)
+  if ($resolvedFfprobePath.StartsWith($repositoryPath, [StringComparison]::OrdinalIgnoreCase) -or -not (Test-Path -LiteralPath $resolvedFfprobePath -PathType Leaf)) {
+    $errors.Add('FFPROBE_PATH deve apontar para executavel existente fora do repositorio.')
   }
 }
 

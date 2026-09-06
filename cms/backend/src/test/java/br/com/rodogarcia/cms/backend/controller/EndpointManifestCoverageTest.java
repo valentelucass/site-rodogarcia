@@ -25,8 +25,8 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
 @SpringBootTest(classes = {
-    CmsBackendApplication.class,
-    EndpointManifestCoverageTest.IsolatedConfiguration.class
+    EndpointManifestCoverageTest.IsolatedConfiguration.class,
+    CmsBackendApplication.class
 })
 class EndpointManifestCoverageTest {
 
