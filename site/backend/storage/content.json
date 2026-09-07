@@ -49,7 +49,7 @@
           "description": "Seguranca e eficiencia em movimento para todo o Brasil desde 1989.",
           "media": {
             "type": "image",
-            "src": "/public/foto5.webp",
+            "src": "/public/capilaridade-rodogarcia.d6d0bb115823.webp",
             "alt": "Operacao Rodogarcia",
             "poster": "",
             "desktopSrc": "",
@@ -316,7 +316,7 @@
           "description": "Estrutura robusta para entregas em todo o Brasil com padrão de qualidade em cada etapa.",
           "media": {
             "type": "image",
-            "src": "/public/foto5.webp",
+            "src": "/public/capilaridade-rodogarcia.d6d0bb115823.webp",
             "alt": "Capilaridade operacional Rodogarcia",
             "poster": "",
             "desktopSrc": "",
@@ -2175,7 +2175,7 @@
       "id": "hero-1",
       "title": "Frete rápido sem interrupções.",
       "description": "Segurança e eficiência em movimento para todo o Brasil desde 1989.",
-      "image": "/public/foto5.webp",
+      "image": "/public/capilaridade-rodogarcia.d6d0bb115823.webp",
       "active": true,
       "order": 2,
       "buttons": [
@@ -2339,7 +2339,7 @@
       "id": "dna-2",
       "title": "Capilaridade para chegar mais longe",
       "text": "Estrutura robusta para entregas em todo o Brasil com padrão de qualidade em cada etapa.",
-      "image": "/public/foto5.webp",
+      "image": "/public/capilaridade-rodogarcia.d6d0bb115823.webp",
       "active": true,
       "order": 1
     },

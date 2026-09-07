@@ -43,12 +43,21 @@ const nextBuildDistDir = process.env.NEXT_BUILD_DIST_DIR?.trim() || ".next";
 // servidor para que um rollback não fique preso no navegador.
 const immutablePublicAssetPaths = [
   "/36-anos-rodogarcia.4c43a61efb46.webp",
+  "/capilaridade-rodogarcia.d6d0bb115823.webp",
   "/motorista-rodogarcia.abbf7875cfae.webp",
   "/operacao-indoor-rodogarcia.d6f36f33e258.webp",
+  "/certificados/ecovadis-marquee.328117d0b616.webp",
+  "/certificados/exercito-brasileiro-marquee.25640e0eb885.webp",
+  "/certificados/ibama-marquee.4cdbe07db023.webp",
+  "/certificados/iso-9001-marquee.96db5a941c71.webp",
+  "/certificados/policia-civil-sp-marquee.cf85d95a8c02.webp",
+  "/certificados/policia-federal-marquee.e06c0a6ec034.webp",
+  "/certificados/sassmaq-marquee.2bd290b6d955.webp",
   "/certificados/ibama.7198f261a1ee.webp",
   "/certificados/iso-9001.9371c4a6c19f.webp",
   "/certificados/policia-civil-sp.57269b3e1bdd.webp",
   "/favicon-rodogarcia-20260718.svg",
+  "/logo-rodogarcia.f073ee2cad50.svg",
   "/home-atendimento-poster.741b9476c78e.webp",
   "/home-atendimento-silent.c9c72d26fc63.webm",
   "/home-caminhoes-poster.f5746017ec72.webp",
@@ -129,6 +138,9 @@ const nextConfig = {
   // manualmente. Em todos os fluxos normais o diretório continua sendo .next.
   distDir: nextBuildDistDir,
   output: "standalone",
+  images: {
+    qualities: [45, 65, 70, 75],
+  },
   poweredByHeader: false,
   productionBrowserSourceMaps: false,
   experimental: {

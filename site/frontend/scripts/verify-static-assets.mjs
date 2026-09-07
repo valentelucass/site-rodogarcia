@@ -67,6 +67,25 @@ const assets = [
     minPsnr: 35,
     sha256: "abbf7875cfae6a21a6716fe33528f243a4a8dff29f05f1248f73bafcf2cc49b2",
   },
+  {
+    url: "/capilaridade-rodogarcia.d6d0bb115823.webp",
+    legacyUrl: "/foto5.webp",
+    width: 1280,
+    height: 551,
+    maxBytes: 45_000,
+    minPsnr: 35,
+    sha256: "d6d0bb1158234a8195ea9c1bb20b7b90baddea00198a2f092b87b95642e46a37",
+  },
+];
+
+const marqueeAssets = [
+  { url: "/certificados/iso-9001-marquee.96db5a941c71.webp", legacyUrl: "/certificados/iso-9001.9371c4a6c19f.webp", maxBytes: 5_000, sha256: "96db5a941c71ffd818940ec7c6f5c414e768522dbc353415d84c3b1e11c1f233" },
+  { url: "/certificados/sassmaq-marquee.2bd290b6d955.webp", legacyUrl: "/certificados/certificado-sassmaq.webp", maxBytes: 4_000, sha256: "2bd290b6d9550f0b713ed8ed0194fdd5b799bfc89b14c6c1d3751953f4a0260e" },
+  { url: "/certificados/ecovadis-marquee.328117d0b616.webp", legacyUrl: "/certificados/ecovadis.webp", maxBytes: 2_500, sha256: "328117d0b616f51b2a3a30ab0b88196c386d2e3c6478e059f79bf0f83f9def4d" },
+  { url: "/certificados/policia-federal-marquee.e06c0a6ec034.webp", legacyUrl: "/certificados/pf.webp", maxBytes: 6_000, sha256: "e06c0a6ec034d6f21389f196cff09ee120d69177a999ba4db049fc8d13aa8bfa" },
+  { url: "/certificados/policia-civil-sp-marquee.cf85d95a8c02.webp", legacyUrl: "/certificados/policia-civil-sp.57269b3e1bdd.webp", maxBytes: 5_000, sha256: "cf85d95a8c0296b1c60f9ad4bb3d18fba29f332b486acaf656ee3a2e8f05a0b1" },
+  { url: "/certificados/exercito-brasileiro-marquee.25640e0eb885.webp", legacyUrl: "/certificados/exercito-br.webp", maxBytes: 4_000, sha256: "25640e0eb8850fa16f161182446f3898c5b7a669cff7b82149457a01f4d84df3" },
+  { url: "/certificados/ibama-marquee.4cdbe07db023.webp", legacyUrl: "/certificados/ibama.7198f261a1ee.webp", maxBytes: 4_500, sha256: "4cdbe07db0232760328abcb02b256ef02f2a130f0ab1a19ca48ae1ae1d3e60a1" },
 ];
 
 const referenceFiles = [
@@ -81,6 +100,7 @@ const referenceFiles = [
 
 const additionalImmutableAssets = [
   { url: "/favicon-rodogarcia-20260718.svg", sha256: "e48f60dc912be33b9c4af9bfecf4529f33e2abb5868616c1d4c7a25c314b3de1" },
+  { url: "/logo-rodogarcia.f073ee2cad50.svg", sha256: "f073ee2cad5057c59e55293c539353bafa5c56890286d2b3c4d660d21afe7391" },
   { url: "/home-atendimento-poster.741b9476c78e.webp", sha256: "741b9476c78ebfbf8c0fbdec8149ca0f472b073cde9001f31c51540badbb88b5" },
   { url: "/home-atendimento-silent.c9c72d26fc63.webm", sha256: "c9c72d26fc636ebbca1d66efd81f6a845d118c022dfbe852c101527566cbc58b" },
   { url: "/home-caminhoes-poster.f5746017ec72.webp", sha256: "f5746017ec72d30f33ba3f871ebbbe99bd5f573f86259671405062f1511410b2" },
@@ -104,6 +124,7 @@ const mutableAssetUrls = [
   "/certificados/pc-sp.webp",
   "/foto2.webp",
   "/foto4.webp",
+  "/foto5.webp",
   "/Vídeo_de_Operação_Gerado.webm",
 ];
 
@@ -167,6 +188,23 @@ async function verifyAsset(asset) {
   }
 }
 
+async function verifyMarqueeAsset(asset) {
+  const [optimizedBytes, legacyStats] = await Promise.all([
+    fs.readFile(publicPath(asset.url)),
+    fs.stat(publicPath(asset.legacyUrl)),
+  ]);
+  const metadata = await sharp(optimizedBytes, { failOn: "error" }).metadata();
+  const digest = crypto.createHash("sha256").update(optimizedBytes).digest("hex");
+
+  assert.equal(metadata.format, "webp", `${asset.url} precisa continuar em WebP`);
+  assert.equal(metadata.width, 340, `${asset.url} mudou de largura`);
+  assert.equal(metadata.height, 176, `${asset.url} mudou de altura`);
+  assert.ok(optimizedBytes.length <= asset.maxBytes, `${asset.url} excedeu ${asset.maxBytes} bytes`);
+  assert.ok(optimizedBytes.length < legacyStats.size, `${asset.url} não reduziu o arquivo de origem`);
+  assert.equal(digest, asset.sha256, `${asset.url} mudou sem receber um novo nome versionado`);
+  assert.ok(asset.url.includes(digest.slice(0, 12)), `${asset.url} não contém o hash do conteúdo`);
+}
+
 async function verifyReferences() {
   const sources = await Promise.all(
     referenceFiles.map(async (relativePath) => ({
@@ -187,6 +225,10 @@ async function verifyReferences() {
       `A URL legada ${asset.legacyUrl} ainda é usada por ${lingeringReferences.join(", ")}`
     );
   }
+
+  for (const asset of marqueeAssets) {
+    assert.ok(combined.includes(asset.url), `A faixa da Home não referencia ${asset.url}`);
+  }
 }
 
 async function verifyCacheHeaders() {
@@ -202,6 +244,7 @@ async function verifyCacheHeaders() {
 
   for (const immutableAsset of [
     ...assets.map(({ url, sha256 }) => ({ url, sha256 })),
+    ...marqueeAssets.map(({ url, sha256 }) => ({ url, sha256 })),
     ...additionalImmutableAssets,
   ]) {
     const { url, sha256 } = immutableAsset;
@@ -216,7 +259,7 @@ async function verifyCacheHeaders() {
   }
 }
 
-await Promise.all(assets.map(verifyAsset));
+await Promise.all([...assets.map(verifyAsset), ...marqueeAssets.map(verifyMarqueeAsset)]);
 await Promise.all([verifyReferences(), verifyCacheHeaders()]);
 
 const legacyBytes = (
@@ -227,7 +270,7 @@ const optimizedBytes = (
 ).reduce((total, stats) => total + stats.size, 0);
 
 console.log(
-  `[static-assets] OK: ${assets.length} derivados, ${legacyBytes} -> ${optimizedBytes} bytes (${Math.round(
+  `[static-assets] OK: ${assets.length} imagens e ${marqueeAssets.length} selos compactos, ${legacyBytes} -> ${optimizedBytes} bytes (${Math.round(
     (1 - optimizedBytes / legacyBytes) * 100
   )}% de redução), referências e cache validados.`
 );

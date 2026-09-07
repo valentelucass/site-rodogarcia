@@ -1,14 +1,9 @@
-"use client";
-
-import { useRef } from "react";
 import Link from "next/link";
-import { ArrowRight, ArrowUpRight } from "@phosphor-icons/react";
+import { ArrowRight, ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
 import { external, site } from "@/lib/routes";
-import { motion, useScroll, useTransform } from "framer-motion";
 import type { HomeHeroButton } from "@/types/content";
 
 export default function TrackingLookupSection({ buttons }: { buttons?: HomeHeroButton[] }) {
-  const containerRef = useRef<HTMLElement>(null);
   const primaryButton = buttons?.[0] ?? {
     label: "Rastrear agora",
     url: external.tracking,
@@ -19,28 +14,8 @@ export default function TrackingLookupSection({ buttons }: { buttons?: HomeHeroB
     url: site.help,
     enabled: true,
   };
-  
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["end 400px", "end 0px"],
-  });
-
-  const filter = useTransform(
-    scrollYProgress,
-    [0, 0.25, 0.5, 0.75, 1],
-    ["blur(0px)", "blur(1px)", "blur(4px)", "blur(12px)", "blur(24px)"]
-  );
-
-  const opacity = useTransform(
-    scrollYProgress,
-    [0, 0.5, 1],
-    [1, 0.9, 0.6]
-  );
-
   return (
-    <motion.section
-      ref={containerRef}
-      style={{ filter, opacity, willChange: "filter, opacity" }}
+    <section
       className="relative overflow-hidden py-16 sm:py-20 lg:py-24"
       aria-labelledby="tracking-section-title"
     >
@@ -102,6 +77,6 @@ export default function TrackingLookupSection({ buttons }: { buttons?: HomeHeroB
           </div>
         </div>
       </div>
-    </motion.section>
+    </section>
   );
 }

@@ -1,10 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { useCallback, useEffect, useMemo, useRef, useState, type TouchEvent } from "react";
+import Image from "next/image";
 import { CaretLeft, CaretRight, Quotes, Star } from "@phosphor-icons/react";
 import type { HomeFeedback, HomeSocialProof } from "@/types/content";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
+import { canonicalPublicMediaUrl } from "@/lib/publicMedia";
 
 interface TestimonialsCarouselProps {
   section: HomeSocialProof;
@@ -81,6 +82,8 @@ export default function TestimonialsCarousel({ section }: TestimonialsCarouselPr
   const [currentIndex, setCurrentIndex] = useState(0);
   const totalSlides = items.length;
   const prefersReducedMotion = usePrefersReducedMotion();
+  const touchStartXRef = useRef<number | null>(null);
+  const touchStartYRef = useRef<number | null>(null);
 
   const goToTestimonial = useCallback((index: number) => {
     setCurrentIndex(() => wrapIndex(index, totalSlides));
@@ -99,6 +102,32 @@ export default function TestimonialsCarousel({ section }: TestimonialsCarouselPr
 
     return () => window.clearInterval(timer);
   }, [prefersReducedMotion, totalSlides]);
+
+  function handleTouchStart(event: TouchEvent<HTMLDivElement>) {
+    const touch = event.touches[0];
+    touchStartXRef.current = touch?.clientX ?? null;
+    touchStartYRef.current = touch?.clientY ?? null;
+  }
+
+  function clearTouchGesture() {
+    touchStartXRef.current = null;
+    touchStartYRef.current = null;
+  }
+
+  function handleTouchEnd(event: TouchEvent<HTMLDivElement>) {
+    const startX = touchStartXRef.current;
+    const startY = touchStartYRef.current;
+    const touch = event.changedTouches[0];
+    clearTouchGesture();
+
+    if (startX === null || startY === null || !touch || totalSlides < 2) return;
+
+    const deltaX = touch.clientX - startX;
+    const deltaY = touch.clientY - startY;
+    if (Math.abs(deltaX) < 48 || Math.abs(deltaX) <= Math.abs(deltaY)) return;
+
+    goToTestimonial(deltaX > 0 ? currentIndex - 1 : currentIndex + 1);
+  }
 
   const displayedItems = displayFeedbacks(items, currentIndex);
   if (!section.title || displayedItems.length === 0) return null;
@@ -121,32 +150,30 @@ export default function TestimonialsCarousel({ section }: TestimonialsCarouselPr
           </h2>
         </div>
 
-        <div className={`mx-auto mt-10 grid max-w-6xl items-center gap-4 sm:mt-12 ${displayedItems.length === 1 ? "max-w-xl" : "sm:grid-cols-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.32fr)_minmax(0,1fr)] lg:gap-6"}`}>
-          <AnimatePresence initial={false} mode="popLayout">
-            {displayedItems.map(({ feedback, position }) => {
-              const isCurrent = position === "current";
-              return (
-                <motion.article
+        <div
+          className={`mx-auto mt-10 grid max-w-6xl touch-pan-y items-center gap-4 sm:mt-12 ${displayedItems.length === 1 ? "max-w-xl" : "sm:grid-cols-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.32fr)_minmax(0,1fr)] lg:gap-6"}`}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+          onTouchCancel={clearTouchGesture}
+        >
+          {displayedItems.map(({ feedback, position }) => {
+            const isCurrent = position === "current";
+            const photoUrl = canonicalPublicMediaUrl(feedback.photo);
+            return (
+                <article
                   key={feedback.id}
-                  layout={!prefersReducedMotion}
-                  initial={prefersReducedMotion ? false : { opacity: 0, scale: 0.88, y: 20 }}
-                  animate={{
-                    opacity: isCurrent ? 1 : 0.74,
-                    scale: isCurrent ? 1 : 0.86,
-                    y: isCurrent ? 0 : 12,
-                  }}
-                  exit={{ opacity: 0, scale: 0.82, y: -12 }}
-                  transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-                  className={`relative overflow-hidden rounded-[28px] border bg-white text-center shadow-[0_18px_44px_rgba(3,10,26,0.2)] ${isCurrent ? "z-10 border-white p-6 sm:p-8 lg:p-9" : "hidden border-white/80 p-5 sm:block sm:p-6"}`}
+                  className={`relative overflow-hidden rounded-[28px] border bg-white text-center shadow-[0_18px_44px_rgba(3,10,26,0.2)] transition-[opacity,transform] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none ${isCurrent ? "z-10 translate-y-0 scale-100 border-white p-6 opacity-100 sm:p-8 lg:p-9" : "hidden translate-y-3 scale-[0.86] border-white/80 p-5 opacity-75 sm:block sm:p-6"}`}
                 >
-                  <div className={`mx-auto flex shrink-0 items-center justify-center overflow-hidden rounded-full border border-slate-200 bg-[linear-gradient(145deg,#eff6ff,#dbeafe)] text-[var(--primary)] shadow-[0_10px_24px_rgba(15,23,42,0.08)] ${isCurrent ? "h-24 w-24 sm:h-28 sm:w-28" : "h-16 w-16 sm:h-20 sm:w-20"}`}>
-                    {feedback.photo ? (
-                      <img
-                        src={feedback.photo}
+                  <div className={`relative mx-auto flex shrink-0 items-center justify-center overflow-hidden rounded-full border border-slate-200 bg-[linear-gradient(145deg,#eff6ff,#dbeafe)] text-[var(--primary)] shadow-[0_10px_24px_rgba(15,23,42,0.08)] ${isCurrent ? "h-24 w-24 sm:h-28 sm:w-28" : "h-16 w-16 sm:h-20 sm:w-20"}`}>
+                    {photoUrl ? (
+                      <Image
+                        src={photoUrl}
                         alt={`Foto de ${feedback.name}`}
+                        fill
+                        sizes={isCurrent ? "(max-width: 639px) 96px, 112px" : "(max-width: 639px) 64px, 80px"}
+                        quality={65}
                         className="h-full w-full object-cover"
                         loading="lazy"
-                        decoding="async"
                       />
                     ) : (
                       <span className={`font-bold tracking-[-0.08em] ${isCurrent ? "text-3xl" : "text-xl"}`} aria-hidden="true">{initials(feedback.name)}</span>
@@ -171,15 +198,15 @@ export default function TestimonialsCarousel({ section }: TestimonialsCarouselPr
                   <div className="mt-3 flex justify-center gap-1" role="img" aria-label={`${feedback.rating} de 5 estrelas`}>
                     {renderStars(feedback.rating)}
                   </div>
-                </motion.article>
-              );
-            })}
-          </AnimatePresence>
+                </article>
+            );
+          })}
         </div>
 
         {totalSlides > 1 ? (
           <div className="mt-8 flex items-center justify-center gap-1 sm:mt-10 sm:gap-4">
             <TestimonialNavButton label="Depoimento anterior" direction="previous" onClick={() => goToTestimonial(currentIndex - 1)} />
+            <p className="sr-only sm:hidden">Deslize para a esquerda ou direita para trocar de depoimento.</p>
             <div className="flex min-w-0 items-center overflow-x-auto" role="group" aria-label={`Depoimento ${currentIndex + 1} de ${totalSlides}`}>
               {items.map((item, index) => (
                 <button
@@ -211,7 +238,7 @@ function TestimonialNavButton({ label, direction, onClick }: { label: string; di
       type="button"
       aria-label={label}
       onClick={onClick}
-      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/15 bg-white/[0.075] text-white/85 shadow-[0_12px_28px_rgba(2,6,23,0.24)] backdrop-blur-md transition-[background-color,border-color,transform,color] duration-200 hover:-translate-y-px hover:border-white/25 hover:bg-white/[0.14] hover:text-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/20 motion-reduce:transition-none motion-reduce:hover:translate-y-0"
+      className="hidden h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/15 bg-white/[0.075] text-white/85 shadow-[0_12px_28px_rgba(2,6,23,0.24)] backdrop-blur-md transition-[background-color,border-color,transform,color] duration-200 hover:-translate-y-px hover:border-white/25 hover:bg-white/[0.14] hover:text-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/20 motion-reduce:transition-none motion-reduce:hover:translate-y-0 sm:flex"
     >
       {direction === "previous" ? <CaretLeft size={20} weight="bold" aria-hidden="true" /> : <CaretRight size={20} weight="bold" aria-hidden="true" />}
     </button>

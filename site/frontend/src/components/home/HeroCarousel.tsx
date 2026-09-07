@@ -21,6 +21,7 @@ interface HeroCarouselProps {
 }
 
 const AUTO_ADVANCE_MS = 6500;
+const PREPARE_NEXT_SLIDE_MS = 5000;
 
 function isVideoAsset(src: string): boolean {
   return /\.(mp4|webm|ogg)$/i.test(src);
@@ -83,7 +84,7 @@ export default function HeroCarousel({ slides }: HeroCarouselProps) {
     if (activeSlides.length <= 1) return;
     const timeout = window.setTimeout(() => {
       setPreparedSlides(new Set([current, (current + 1) % activeSlides.length]));
-    }, 1200);
+    }, PREPARE_NEXT_SLIDE_MS);
     return () => window.clearTimeout(timeout);
   }, [activeSlides.length, current]);
 
@@ -332,7 +333,7 @@ function HeroBackdrop({
   active: boolean;
 }) {
   const fallback = media.poster || getMobileAsset(media);
-  const src = media.mediumUrl || fallback;
+  const src = media.thumbnailUrl || media.mediumUrl || fallback;
 
   if (!src || isVideoAsset(src)) return null;
 
@@ -343,8 +344,9 @@ function HeroBackdrop({
       aria-hidden="true"
       fill
       className={`h-full w-full object-cover blur-[14px] opacity-72 transition-transform duration-[1400ms] ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none ${active ? "scale-[1.1]" : "scale-[1.14]"}`}
-      sizes="384px"
-      loading="eager"
+      sizes="128px"
+      quality={45}
+      loading="lazy"
       decoding="async"
       fetchPriority="low"
       style={{ objectPosition: mediaObjectPosition(media.presentation, "desktop") }}

@@ -106,16 +106,16 @@ export default function DeveloperShell({
                 <DevTopbar onOpenNavigation={() => setMobileOpen(true)} darkTheme={darkTheme} onToggleTheme={toggleTheme} />
                 <div className="flex-1">{accessDenied ? <div className="mx-auto max-w-xl px-6 py-20 text-center"><h1 className="text-2xl font-bold text-[var(--foreground)]">Acesso não permitido</h1><p className="mt-3 text-sm text-[var(--color-muted-raw)]">Sua conta não tem permissão para esta área.</p></div> : children}</div>
                 <footer className="mt-auto w-full border-t border-[rgba(15,23,42,0.08)] bg-white/66 px-4 py-3 text-xs text-[var(--color-muted-raw)] backdrop-blur-sm sm:px-5 lg:px-6">
+                  <span>© Rodogarcia. Todos os direitos reservados.</span>
+                  {" \u00B7 "}
                   <a
                     href={external.developerProfile}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="font-semibold tracking-[-0.02em] text-[var(--foreground)] transition-colors hover:text-[var(--primary)]"
                   >
-                    Feito por Lucas
+                    Desenvolvido por Lucas Andrade
                   </a>
-                  {" \u00B7 "}
-                  <span>Painel interno Rodogarcia</span>
                 </footer>
               </div>
             </div>

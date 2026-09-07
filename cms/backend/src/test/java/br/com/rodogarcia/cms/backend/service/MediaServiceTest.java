@@ -98,6 +98,25 @@ class MediaServiceTest {
     }
 
     @Test
+    void summarizesLibraryWithoutOpeningEachMediaFile() throws Exception {
+        MediaTestContext context = new MediaTestContext(root, CLOCK);
+        context.media.save("enviada.png", "image/png", png(32, 24), null);
+        Files.createDirectories(context.properties.frontendPublicDir());
+        Files.write(context.properties.frontendPublicDir().resolve("em-uso.png"), png(80, 45));
+        Files.write(context.properties.frontendPublicDir().resolve("solta.png"), png(80, 45));
+        context.store.write(
+            context.properties.storagePaths().siteTexts(),
+            context.mapper.createObjectNode().put("imagem", "/em-uso.png")
+        );
+
+        ObjectNode summary = context.media.adminImageSummary();
+
+        assertThat(summary.path("total").intValue()).isEqualTo(3);
+        assertThat(summary.path("uploads").intValue()).isEqualTo(1);
+        assertThat(summary.path("usedInContent").intValue()).isEqualTo(1);
+    }
+
+    @Test
     void rejectsMimeSpoofingBeforeWritingAnything() {
         MediaTestContext context = new MediaTestContext(root, CLOCK);
         assertThatThrownBy(() -> context.media.save(

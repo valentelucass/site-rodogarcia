@@ -102,11 +102,15 @@ interface DashboardPopup {
 }
 
 interface DashboardLeads {
-  leads: Array<{ createdAt?: string }>;
+  total: number;
 }
 
 interface DashboardImages {
-  images: Array<{ source: string; usedInContent: boolean }>;
+  summary: {
+    total: number;
+    uploads: number;
+    usedInContent: number;
+  };
 }
 
 interface OptionalDashboardData<T> {
@@ -144,8 +148,10 @@ const EMPTY_ANALYTICS: DashboardAnalytics = {
 };
 
 const EMPTY_POPUP: DashboardPopup = {};
-const EMPTY_LEADS: DashboardLeads = { leads: [] };
-const EMPTY_IMAGES: DashboardImages = { images: [] };
+const EMPTY_LEADS: DashboardLeads = { total: 0 };
+const EMPTY_IMAGES: DashboardImages = {
+  summary: { total: 0, uploads: 0, usedInContent: 0 },
+};
 
 function optionalDashboardData<T>(
   response: ApiRequestResult<T>,
@@ -242,8 +248,8 @@ export default function DeveloperDashboardPage() {
           apiRequest<{ content: ContentSummary }>(api.admin.content),
           apiRequest<DashboardAnalytics>(`${api.analytics.stats}?days=30`),
           apiRequest<DashboardPopup>(`${api.popup.events}?days=30`),
-          apiRequest<DashboardLeads>(`${api.admin.leads}?limit=200`),
-          apiRequest<DashboardImages>(api.admin.images),
+          apiRequest<DashboardLeads>(`${api.admin.leads}?summary=true&limit=1`),
+          apiRequest<DashboardImages>(api.admin.imagesSummary),
         ]);
 
       if (!contentRes.success) {
@@ -283,7 +289,6 @@ export default function DeveloperDashboardPage() {
 
     const analytics = data.analytics.data;
     const popup = data.popup.data;
-    const images = data.images.data;
     const homePage = data.content.homePage;
     const heroSlides = homePage?.hero?.slides ?? [];
     const section1Items = homePage?.section1?.items ?? [];
@@ -293,6 +298,7 @@ export default function DeveloperDashboardPage() {
     const quickActions = homePage?.quickActions ?? [];
     const homeFeedbacks = homePage?.socialProof?.feedbacks ?? [];
     const careersJobs = data.content.careersPage?.jobs ?? [];
+    const mediaSummary = data.images.data.summary;
 
     const heroActive = heroSlides.filter((item) => item.active !== false).length;
     const operationsActive = operationItems.filter((item) => item.active !== false).length;
@@ -303,10 +309,10 @@ export default function DeveloperDashboardPage() {
     ).length;
     const regionalUnitsActive = regionalUnits.filter((item) => item.active !== false).length;
     const uploadImages = data.images.available
-      ? images.images.filter((item) => item.source === "upload").length
+      ? mediaSummary.uploads
       : null;
     const contentImages = data.images.available
-      ? images.images.filter((item) => item.usedInContent).length
+      ? mediaSummary.usedInContent
       : null;
     const editableItems =
       heroSlides.length +
@@ -489,7 +495,7 @@ export default function DeveloperDashboardPage() {
             />
             <DashboardMetric
               title="Leads capturados"
-              value={data.leads.available ? data.leads.data.leads.length.toLocaleString("pt-BR") : "—"}
+              value={data.leads.available ? data.leads.data.total.toLocaleString("pt-BR") : "—"}
               icon={CursorClick}
               helper={data.leads.available ? "Contatos pelo popup." : unavailableMetricHelper("Os leads")}
             />
@@ -578,7 +584,7 @@ export default function DeveloperDashboardPage() {
                   },
                   {
                     label: "Assets da biblioteca",
-                    value: data.images.available ? data.images.data.images.length.toLocaleString("pt-BR") : "—",
+                    value: data.images.available ? data.images.data.summary.total.toLocaleString("pt-BR") : "—",
                     icon: ImagesSquare,
                   },
                 ].map((item) => (

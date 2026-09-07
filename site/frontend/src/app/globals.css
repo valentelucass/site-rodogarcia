@@ -398,26 +398,6 @@
   100% { transform: translateX(-50%); }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .certifications-marquee-viewport {
-    overflow: visible;
-    -webkit-mask-image: none !important;
-    mask-image: none !important;
-  }
-
-  .certifications-marquee {
-    animation: none !important;
-    transform: translateX(0) !important;
-    width: 100%;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-
-  .certifications-marquee-copy {
-    display: none;
-  }
-}
-
 .presented-media-position {
   object-position: var(--presented-media-position-desktop, 50% 50%);
 }

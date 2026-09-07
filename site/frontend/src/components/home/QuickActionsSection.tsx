@@ -1,7 +1,6 @@
 "use client";
 
 import { useId, useMemo } from "react";
-import { motion, type Variants } from "framer-motion";
 import { MagnifyingGlass } from "@phosphor-icons/react";
 import type { QuickAction } from "@/types/content";
 import { useSiteSearch } from "@/components/search/SiteSearchProvider";
@@ -22,25 +21,6 @@ interface ActionsListProps {
   actions: QuickAction[];
   compactDesktop?: boolean;
 }
-
-const primaryActionsVariants: Variants = {
-  hidden: {},
-  visible: {
-    transition: {
-      staggerChildren: 0.065,
-      delayChildren: 0.08,
-    },
-  },
-};
-
-const primaryActionVariants: Variants = {
-  hidden: { opacity: 0, y: 10 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.34, ease: "easeOut" },
-  },
-};
 
 function hasActionTarget(action: QuickAction) {
   const rawAction = action as QuickAction & {
@@ -224,7 +204,7 @@ export function PrimaryActionsGrid({ actions, compactDesktop = false }: ActionsL
   if (actions.length === 0) return null;
 
   return (
-    <motion.div
+    <div
       className={cn(
         "grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-3.5 lg:gap-4",
         compactDesktop ? "lg:grid-cols-2" : "lg:grid-cols-3",
@@ -232,20 +212,16 @@ export function PrimaryActionsGrid({ actions, compactDesktop = false }: ActionsL
       )}
       role="list"
       aria-label="Ações principais"
-      variants={primaryActionsVariants}
-      initial="hidden"
-      whileInView="visible"
-      viewport={{ once: true, margin: "-80px" }}
     >
       {actions.map((action) => (
-        <motion.div key={action.id} role="listitem" className="min-w-0" variants={primaryActionVariants}>
+        <div key={action.id} role="listitem" className="min-w-0">
           <QuickActionButton
             action={action}
             variant="primary"
             disabled={isDisabledAction(action)}
           />
-        </motion.div>
+        </div>
       ))}
-    </motion.div>
+    </div>
   );
 }

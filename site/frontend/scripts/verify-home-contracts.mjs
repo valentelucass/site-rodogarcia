@@ -60,8 +60,16 @@ async function verifyLoadingAndDomContracts() {
     search,
     home,
     presentedVideo,
+    presentedImage,
+    publicMedia,
+    finalCta,
+    tracking,
+    testimonials,
+    quickActions,
+    proxy,
     rootLayout,
     headerLoader,
+    globalStyles,
   ] = await Promise.all([
     source("src/components/home/HeroCarousel.tsx"),
     source("src/components/home/OperationsCarousel.tsx"),
@@ -71,13 +79,24 @@ async function verifyLoadingAndDomContracts() {
     source("src/components/search/SiteSearchPanel.tsx"),
     source("src/app/page.tsx"),
     source("src/components/media/PresentedVideo.tsx"),
+    source("src/components/media/PresentedImage.tsx"),
+    source("src/lib/publicMedia.ts"),
+    source("src/components/home/FinalQuoteCtaSection.tsx"),
+    source("src/components/home/TrackingLookupSection.tsx"),
+    source("src/components/home/TestimonialsCarousel.tsx"),
+    source("src/components/home/QuickActionsSection.tsx"),
+    source("src/proxy.ts"),
     source("src/app/layout.tsx"),
     source("src/components/layout/SiteHeaderLoader.tsx"),
+    source("src/app/globals.css"),
   ]);
 
   assert.match(hero, /preparedSlides/);
   assert.match(hero, /<HeroBackdrop\b/);
-  assert.match(hero, /sizes="384px"/);
+  assert.match(hero, /PREPARE_NEXT_SLIDE_MS\s*=\s*5000/);
+  assert.match(hero, /media\.thumbnailUrl\s*\|\|\s*media\.mediumUrl/);
+  assert.match(hero, /sizes="128px"/);
+  assert.match(hero, /quality=\{45\}/);
   assert.equal(count(hero, /<HeroMedia\b/g), 2, "Hero voltou a duplicar árvores de mídia.");
   assert.match(hero, /imageSizes="100vw"/);
   assert.match(hero, /imageSizes="\(max-width: 1023px\) 100vw, 52vw"/);
@@ -90,6 +109,11 @@ async function verifyLoadingAndDomContracts() {
     "Operações deve manter uma única árvore responsiva."
   );
   assert.match(operations, /sizes=\{active\s*\?/);
+  assert.match(
+    operations,
+    /useState\([\s\S]{0,180}window\.matchMedia\(DESKTOP_QUERY\)\.matches/,
+    "Desktop deve iniciar no layout correto sem uma medição móvel transitória."
+  );
   assert.match(services, /visiblePage\.map\(/);
   assert.doesNotMatch(services, /pages\.map\(\(page/);
 
@@ -101,8 +125,14 @@ async function verifyLoadingAndDomContracts() {
   assert.match(header, /prefetch=\{[^\n]*drawerOpen/);
   assert.match(search, /prefetch=\{open\}/);
   assert.match(home, /Promise\.all\(/);
-  assert.match(home, /src=\{cert\.src\}[\s\S]{0,180}width=\{170\}[\s\S]{0,80}height=\{88\}/);
+  assert.match(home, /src=\{cert\.src\}[\s\S]{0,180}width=\{340\}[\s\S]{0,80}height=\{176\}/);
   assert.match(home, /certifications-marquee-copy/);
+  assert.match(globalStyles, /@keyframes certifications-marquee/);
+  assert.doesNotMatch(
+    globalStyles,
+    /\.certifications-marquee\s*\{[\s\S]{0,240}animation:\s*none\s*!important/,
+    "A faixa de certificações não pode voltar a ser convertida em grade estática."
+  );
   assert.match(rootLayout, /<Suspense/);
   assert.doesNotMatch(rootLayout, /fetchPublicContent/);
   assert.match(headerLoader, /await fetchPublicContent\(\)/);
@@ -111,8 +141,48 @@ async function verifyLoadingAndDomContracts() {
   assert.match(presentedVideo, /sourcesAttached\s*&&\s*responsiveMobileSrc/);
   assert.match(presentedVideo, /effectivePoster\s*\?\s*preload\s*:\s*"metadata"/);
   assert.match(presentedVideo, /shouldAttachDeferredSource[\s\S]{0,300}\|\|\s*!effectivePoster/);
+  assert.match(
+    presentedVideo,
+    /attachedPoster\s*=\s*!deferUntilNearViewport\s*\|\|\s*wasInViewport[\s\S]{0,100}\?\s*effectivePoster\s*:\s*""/,
+    "Vídeos adiados não devem baixar o poster antes de alcançar a viewport."
+  );
+  assert.match(presentedVideo, /poster=\{attachedPoster\s*\|\|\s*undefined\}/);
   assert.match(presentedVideo, /prefers-reduced-motion:\s*reduce/);
   assert.match(presentedVideo, /saveData/);
+  assert.match(presentedVideo, /rootMargin:\s*"0px"/);
+  assert.match(presentedVideo, /resolvePublicVideoPoster/);
+  assert.match(presentedImage, /thumbnailUrl/);
+  assert.match(presentedImage, /buildOptimizedSrcSet/);
+  assert.match(
+    presentedImage,
+    /VERIFIED_DERIVATIVE_BRIDGE_WIDTHS\s*=\s*\[640\]/,
+    "Imagens com derivadas devem cobrir a lacuna móvel entre 420w e 960w."
+  );
+  assert.match(
+    presentedImage,
+    /const sourceUrl\s*=\s*canonicalPublicMediaUrl\(optimizerSourceUrl\)/,
+    "A origem usada pelo otimizador precisa continuar restrita a mídia interna."
+  );
+  assert.match(
+    presentedImage,
+    /nextOptimizedImageUrl\([\s\S]{0,120}sourceUrl,[\s\S]{0,80}candidateWidth,[\s\S]{0,120}VERIFIED_DERIVATIVE_BRIDGE_QUALITY/,
+    "O candidato intermediário deve passar pelo otimizador somente após normalizar a URL interna."
+  );
+  assert.match(presentedImage, /preload\(/);
+  assert.match(presentedImage, /imageSrcSet:\s*srcSet\s*\|\|\s*undefined/);
+  assert.match(publicMedia, /"\/foto2\.webp":\s*"\/36-anos-rodogarcia/);
+  assert.match(publicMedia, /VIDEO_POSTERS/);
+  assert.doesNotMatch(
+    [finalCta, tracking, testimonials, quickActions].join("\n"),
+    /framer-motion/,
+    "A Home não deve carregar Framer Motion para transições simples."
+  );
+  assert.match(
+    proxy,
+    /"private, no-store, no-cache, max-age=0, must-revalidate, NO-TRANSFORM"/,
+    "Documentos devem manter no-store e permitir gzip na origem sem liberar transformações intermediárias."
+  );
+  assert.match(proxy, /'strict-dynamic'/);
 }
 
 async function verifyAccessibilityContracts() {
@@ -129,7 +199,16 @@ async function verifyAccessibilityContracts() {
   assert.match(quickActions, /type="button"/);
   assert.match(testimonials, /role="img"\s+aria-label=\{`\$\{feedback\.rating\} de 5 estrelas`\}/);
   assert.doesNotMatch(testimonials, /h-6 w-6/);
-  assert.match(consent, /transition-\[background-color,box-shadow\]/);
+  assert.match(testimonials, /onTouchStart=\{handleTouchStart\}/);
+  assert.match(testimonials, /onTouchEnd=\{handleTouchEnd\}/);
+  assert.match(testimonials, /touch-pan-y/);
+  assert.match(testimonials, /hidden h-11 w-11[\s\S]{0,600}sm:flex/);
+  assert.match(consent, /transition-\[background-color\]/);
+  assert.doesNotMatch(
+    consent,
+    /transition-colors[^\"]*\"\s*>\s*\{settings\.acceptAllLabel\}/,
+    "Aceitar todos não deve animar outline-color."
+  );
   assert.match(hero, /inert=\{!isCurrent\}/);
   assert.match(hero, /h-11 w-11/);
   assert.match(services, /h-11 w-11/);

@@ -21,6 +21,11 @@ public class LeadController {
 
     @GetMapping("/leads")
     public Map<String, Object> list(HttpServletRequest request) {
-        return leads.listUnified(AuditService.queryParameters(request));
+        Map<String, String> filters = AuditService.queryParameters(request);
+        Map<String, Object> result = leads.listUnified(filters);
+        if ("true".equalsIgnoreCase(filters.get("summary"))) {
+            return Map.of("total", result.get("total"));
+        }
+        return result;
     }
 }

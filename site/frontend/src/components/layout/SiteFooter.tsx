@@ -36,7 +36,7 @@ export async function SiteFooter() {
           <div className="col-span-2 flex flex-col gap-5 border-b border-white/10 pb-8 sm:col-span-2 lg:col-span-1 lg:border-b-0 lg:pb-0">
             <Link href={site.home} aria-label="Rodogarcia - Página inicial">
               <Image
-                src="/logo.svg"
+                src="/logo-rodogarcia.f073ee2cad50.svg"
                 alt="Rodogarcia"
                 width={160}
                 height={30}

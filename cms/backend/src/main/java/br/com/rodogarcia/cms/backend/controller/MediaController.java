@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import tools.jackson.databind.JsonNode;
@@ -29,9 +30,12 @@ public final class MediaController {
     }
 
     @GetMapping("/api/admin/images")
-    public ObjectNode images() {
+    public ObjectNode images(
+        @RequestParam(name = "summary", defaultValue = "false") boolean summary
+    ) {
         ObjectNode response = mediaNode();
-        response.set("images", media.listAdminImages());
+        if (summary) response.set("summary", media.adminImageSummary());
+        else response.set("images", media.listAdminImages());
         return response;
     }
 

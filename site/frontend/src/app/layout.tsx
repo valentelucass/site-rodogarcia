@@ -12,14 +12,14 @@ import { seo } from "@/lib/routes";
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: "variable",
   variable: "--font-display",
   display: "swap",
 });
 
 const plusJakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
+  weight: "variable",
   variable: "--font-body",
   display: "swap",
 });
@@ -57,7 +57,7 @@ const structuredData = {
   "@type": ["Organization", "LocalBusiness"],
   name: "Rodogarcia Transportes",
   url: seo.baseUrl,
-  logo: seo.absoluteUrl("/logo.svg"),
+  logo: seo.absoluteUrl("/logo-rodogarcia.f073ee2cad50.svg"),
   image: seo.absoluteUrl(seo.defaultOgImage),
   description:
     "Soluções logísticas nacionais com transporte fracionado, distribuição e cargas especiais.",

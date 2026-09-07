@@ -6,7 +6,6 @@ const backendUrl = (
   "http://127.0.0.1:31013"
 ).replace(/\/+$/, "");
 const isProduction = process.env.NODE_ENV === "production";
-const publicSiteUrl = (process.env.NEXT_PUBLIC_SITE_URL || "http://127.0.0.1:35180").replace(/\/+$/, "");
 const landingBuilderPublicUrl = process.env.LANDING_BUILDER_PUBLIC_URL?.trim().replace(/\/+$/, "") ?? "";
 const nextBuildDistDir = process.env.NEXT_BUILD_DIST_DIR?.trim() || ".next";
 
@@ -14,36 +13,7 @@ if (![".next", ".next.test"].includes(nextBuildDistDir)) {
   throw new Error("NEXT_BUILD_DIST_DIR deve ser .next ou .next.test.");
 }
 
-const publicSiteOrigin = (() => {
-  try {
-    return new URL(publicSiteUrl).origin;
-  } catch {
-    return "";
-  }
-})();
-
-function buildContentSecurityPolicy() {
-  return [
-    "default-src 'self'",
-    ["script-src", "'self'", "'unsafe-inline'", isProduction ? "" : "'unsafe-eval'"],
-    ["connect-src", "'self'"],
-    ["img-src", "'self'", "data:", "blob:", publicSiteOrigin],
-    ["media-src", "'self'", "blob:", publicSiteOrigin],
-    "style-src 'self' 'unsafe-inline'",
-    "font-src 'self' data:",
-    ["frame-src", "'self'", publicSiteOrigin],
-    "frame-ancestors 'none'",
-    "object-src 'none'",
-    "base-uri 'self'",
-    "form-action 'self'",
-    "manifest-src 'self'",
-  ]
-    .map((directive) => (Array.isArray(directive) ? directive.filter(Boolean).join(" ") : directive))
-    .join("; ");
-}
-
 const securityHeaders = [
-  { key: "Content-Security-Policy", value: buildContentSecurityPolicy() },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "X-Frame-Options", value: "DENY" },

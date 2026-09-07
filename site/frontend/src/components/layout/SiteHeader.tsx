@@ -238,11 +238,10 @@ export function SiteHeader({
             }}
           >
             <Image
-              src="/logo.svg"
+              src="/logo-rodogarcia.f073ee2cad50.svg"
               alt="Rodogarcia"
               width={160}
               height={30}
-              priority
               className={[
                 "transition-all duration-[400ms] ease-out",
                 useLightChrome ? "brightness-0 invert drop-shadow-md" : "",
@@ -298,7 +297,7 @@ export function SiteHeader({
         ].join(" ")}
       >
         <div className="flex items-center justify-between border-b border-black/8 px-6 py-5">
-          <Image src="/logo.svg" alt="Rodogarcia" width={140} height={26} />
+          <Image src="/logo-rodogarcia.f073ee2cad50.svg" alt="Rodogarcia" width={140} height={26} />
           <button
             type="button"
             aria-label="Fechar menu"

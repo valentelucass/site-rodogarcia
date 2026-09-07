@@ -1291,6 +1291,37 @@ async function runBrowserSmoke(tmpDir, browserExecutable) {
         return false;
       }
     });
+    const heroImageContract = await evaluateInPage(
+      cdp,
+      sessionId,
+      `(() => {
+        const image = document.querySelector('img[fetchpriority="high"]');
+        const preload = Array.from(document.querySelectorAll('link[rel="preload"][as="image"]'))
+          .find((candidate) => candidate.imageSrcset || candidate.getAttribute("imagesrcset"));
+        if (!image) return null;
+        return {
+          width: Number(image.getAttribute("width") || 0),
+          height: Number(image.getAttribute("height") || 0),
+          srcset: image.getAttribute("srcset") || "",
+          has640Candidate: (image.getAttribute("srcset") || "")
+            .split(",")
+            .some((candidate) => candidate.trim().endsWith(" 640w")),
+          currentSrc: image.currentSrc || image.src || "",
+          preloadSrcset: preload?.imageSrcset || preload?.getAttribute("imagesrcset") || ""
+        };
+      })()`
+    );
+    const deferredVideoContract = await evaluateInPage(
+      cdp,
+      sessionId,
+      `(() => {
+        const videos = Array.from(document.querySelectorAll('video[preload="none"]'));
+        return {
+          count: videos.length,
+          postersAttached: videos.filter((video) => Boolean(video.getAttribute("poster"))).length
+        };
+      })()`
+    );
 
     await evaluateInPage(
       cdp,
@@ -1346,6 +1377,24 @@ async function runBrowserSmoke(tmpDir, browserExecutable) {
           return false;
         }
       });
+    const cmsSecurityStart = securityErrors.length;
+    const cmsExceptionsStart = exceptions.length;
+    const cmsCriticalAssetsStart = failedCriticalAssets.length;
+    await cdp.send("Page.navigate", { url: `${FRONTEND_URL}/admin/auth/entrar` }, sessionId);
+    await waitForPageCondition(
+      cdp,
+      sessionId,
+      'document.readyState === "complete" && Boolean(document.getElementById("email"))'
+    );
+    await sleep(1000);
+    const cmsLoginLoaded = await evaluateInPage(
+      cdp,
+      sessionId,
+      'Boolean(document.querySelector("form") && document.getElementById("email") && document.getElementById("password"))'
+    );
+    const cmsSecurityErrors = securityErrors.slice(cmsSecurityStart);
+    const cmsExceptions = exceptions.slice(cmsExceptionsStart);
+    const cmsCriticalAssets = failedCriticalAssets.slice(cmsCriticalAssetsStart);
     removeEventListener();
 
     return [
@@ -1358,6 +1407,20 @@ async function runBrowserSmoke(tmpDir, browserExecutable) {
         "BROWSER initial viewport does not download WebM",
         webmRequests.length === 0,
         `requests=${webmRequests.length}${webmRequests.length ? `; urls=${webmRequests.join(",")}` : ""}`
+      ),
+      result(
+        "BROWSER LCP image has intrinsic dimensions, responsive sources and preload",
+        heroImageContract?.width > 0 &&
+          heroImageContract?.height > 0 &&
+          heroImageContract?.has640Candidate === true &&
+          Boolean(heroImageContract?.currentSrc) &&
+          heroImageContract?.preloadSrcset === heroImageContract?.srcset,
+        `width=${heroImageContract?.width ?? 0}; height=${heroImageContract?.height ?? 0}; candidate-640=${heroImageContract?.has640Candidate === true}; current-src=${heroImageContract?.currentSrc ? "present" : "missing"}; preload-matches=${heroImageContract?.preloadSrcset === heroImageContract?.srcset}; srcset=${String(heroImageContract?.srcset || "missing").slice(0, 500)}`
+      ),
+      result(
+        "BROWSER below-fold videos defer their posters",
+        deferredVideoContract?.count > 0 && deferredVideoContract?.postersAttached === 0,
+        `videos=${deferredVideoContract?.count ?? 0}; posters-attached=${deferredVideoContract?.postersAttached ?? 0}`
       ),
       result(
         "BROWSER initial viewport defers regional map",
@@ -1373,6 +1436,14 @@ async function runBrowserSmoke(tmpDir, browserExecutable) {
         "BROWSER campaign fallback executes its nonce script",
         campaignRequested && campaignInteraction === "true",
         `requested=${campaignRequested}; interaction=${String(campaignInteraction)}`
+      ),
+      result(
+        "BROWSER CMS login loads Zod without CSP violations",
+        cmsLoginLoaded &&
+          cmsSecurityErrors.length === 0 &&
+          cmsExceptions.length === 0 &&
+          cmsCriticalAssets.length === 0,
+        `login=${cmsLoginLoaded}; security=${cmsSecurityErrors.length}; exceptions=${cmsExceptions.length}; critical-assets=${cmsCriticalAssets.length}`
       ),
     ];
   } catch (error) {
@@ -1686,7 +1757,9 @@ async function runChecks(logsAccessor) {
     });
   }
 
-  const { response: publicHome } = await request("/");
+  const { response: publicHome } = await request("/", {
+    headers: { "Accept-Encoding": "gzip" },
+  });
   const publicHomeBody = await publicHome.text();
   const publicCsp = String(publicHome.headers.get("content-security-policy") || "");
   const scriptDirective = publicCsp
@@ -1714,6 +1787,20 @@ async function runChecks(logsAccessor) {
       !scriptDirective.includes("'unsafe-inline'") &&
       !scriptDirective.includes("'unsafe-eval'"),
     detail: `nonce=${publicNonce ? "present" : "missing"}; strict=${scriptDirective.includes("'strict-dynamic'")}`,
+  });
+  const publicCacheControl = String(publicHome.headers.get("cache-control") || "").toLowerCase();
+  const publicContentEncoding = String(publicHome.headers.get("content-encoding") || "").toLowerCase();
+  const publicVary = String(publicHome.headers.get("vary") || "").toLowerCase();
+  results.push({
+    name: "PUBLIC documents compress at the origin without allowing intermediary transformations",
+    pass:
+      publicHome.status === 200 &&
+      publicCacheControl.includes("private") &&
+      publicCacheControl.includes("no-store") &&
+      publicCacheControl.includes("no-transform") &&
+      publicContentEncoding === "gzip" &&
+      publicVary.includes("accept-encoding"),
+    detail: `cache-control=${publicCacheControl || "missing"}; content-encoding=${publicContentEncoding || "missing"}; vary=${publicVary || "missing"}`,
   });
 
   const executableScripts = Array.from(publicHomeBody.matchAll(/<script\b([^>]*)>/gi));
@@ -1770,7 +1857,17 @@ async function runChecks(logsAccessor) {
   }
 
   const { response: cmsGatewayLogin } = await request("/admin/auth/entrar");
+  const cmsGatewayBody = await cmsGatewayLogin.text();
   const cmsGatewayCsp = String(cmsGatewayLogin.headers.get("content-security-policy") || "");
+  const cmsGatewayScriptDirective = cmsGatewayCsp
+    .split(";")
+    .map((directive) => directive.trim())
+    .find((directive) => directive.startsWith("script-src ")) || "";
+  const cmsGatewayNonce = cmsGatewayScriptDirective.match(/'nonce-([^']+)'/)?.[1] || "";
+  const cmsGatewayScripts = Array.from(cmsGatewayBody.matchAll(/<script\b([^>]*)>/gi));
+  const invalidCmsGatewayScripts = cmsGatewayScripts.filter(
+    (match) => (match[1].match(/\bnonce=["']([^"']+)["']/i)?.[1] || "") !== cmsGatewayNonce
+  );
   results.push({
     name: "CMS GATEWAY noindex",
     pass: String(cmsGatewayLogin.headers.get("x-robots-tag") || "").includes("noindex"),
@@ -1782,6 +1879,24 @@ async function runChecks(logsAccessor) {
       cmsGatewayLogin.headers.get("x-frame-options") === "DENY" &&
       cmsGatewayCsp.includes("frame-ancestors 'none'"),
     detail: `x-frame-options=${cmsGatewayLogin.headers.get("x-frame-options") || "(ausente)"}`,
+  });
+  results.push({
+    name: "CMS GATEWAY uses a strict per-request nonce",
+    pass:
+      cmsGatewayLogin.status === 200 &&
+      Boolean(cmsGatewayNonce) &&
+      cmsGatewayScriptDirective.includes("'strict-dynamic'") &&
+      !cmsGatewayScriptDirective.includes("'unsafe-inline'") &&
+      !cmsGatewayScriptDirective.includes("'unsafe-eval'") &&
+      cmsGatewayScripts.length > 0 &&
+      invalidCmsGatewayScripts.length === 0,
+    detail: `nonce=${cmsGatewayNonce ? "present" : "missing"}; invalid-scripts=${invalidCmsGatewayScripts.length}`,
+  });
+  const cmsGatewayCacheControl = String(cmsGatewayLogin.headers.get("cache-control") || "").toLowerCase();
+  results.push({
+    name: "CMS GATEWAY documents are never shared from cache",
+    pass: cmsGatewayCacheControl.includes("private") && cmsGatewayCacheControl.includes("no-store"),
+    detail: `cache-control=${cmsGatewayCacheControl || "missing"}`,
   });
 
   const { response: preview } = await request("/?preview=cms");
@@ -1835,7 +1950,17 @@ async function runChecks(logsAccessor) {
   });
 
   const cmsDirect = await fetch(`${CMS_URL}/admin/auth/entrar`, { redirect: "manual" });
+  const cmsDirectBody = await cmsDirect.text();
   const cmsDirectCsp = String(cmsDirect.headers.get("content-security-policy") || "");
+  const cmsDirectScriptDirective = cmsDirectCsp
+    .split(";")
+    .map((directive) => directive.trim())
+    .find((directive) => directive.startsWith("script-src ")) || "";
+  const cmsDirectNonce = cmsDirectScriptDirective.match(/'nonce-([^']+)'/)?.[1] || "";
+  const cmsDirectScripts = Array.from(cmsDirectBody.matchAll(/<script\b([^>]*)>/gi));
+  const invalidCmsDirectScripts = cmsDirectScripts.filter(
+    (match) => (match[1].match(/\bnonce=["']([^"']+)["']/i)?.[1] || "") !== cmsDirectNonce
+  );
   results.push({
     name: "CMS STANDALONE framing",
     pass:
@@ -1843,6 +1968,18 @@ async function runChecks(logsAccessor) {
       cmsDirect.headers.get("x-frame-options") === "DENY" &&
       cmsDirectCsp.includes("frame-ancestors 'none'"),
     detail: `status=${cmsDirect.status}; x-frame-options=${cmsDirect.headers.get("x-frame-options") || "(ausente)"}`,
+  });
+  results.push({
+    name: "CMS STANDALONE uses a strict per-request nonce",
+    pass:
+      cmsDirect.status === 200 &&
+      Boolean(cmsDirectNonce) &&
+      cmsDirectScriptDirective.includes("'strict-dynamic'") &&
+      !cmsDirectScriptDirective.includes("'unsafe-inline'") &&
+      !cmsDirectScriptDirective.includes("'unsafe-eval'") &&
+      cmsDirectScripts.length > 0 &&
+      invalidCmsDirectScripts.length === 0,
+    detail: `nonce=${cmsDirectNonce ? "present" : "missing"}; invalid-scripts=${invalidCmsDirectScripts.length}`,
   });
 
   const crossOriginLogin = await request("/api/auth/login", {

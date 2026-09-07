@@ -348,14 +348,14 @@ export default function ConsentBanner({ settings, onConsent }: ConsentBannerProp
               Object.fromEntries(settings.categories.map((category) => [category.key, true]))
             )
           }
-          className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[var(--primary)] px-5 py-2.5 text-xs font-extrabold text-white shadow-[0_10px_22px_rgba(29,78,216,0.22)] transition-[background-color,box-shadow] duration-200 hover:bg-[var(--color-primary-strong)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--primary)]/20 motion-reduce:transition-none sm:order-3"
+          className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[var(--primary)] px-5 py-2.5 text-xs font-extrabold text-white shadow-[0_10px_22px_rgba(29,78,216,0.22)] transition-[background-color] duration-200 hover:bg-[var(--color-primary-strong)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--primary)]/20 motion-reduce:transition-none sm:order-3"
         >
           {settings.acceptAllLabel}
         </button>
         <button
           type="button"
           onClick={() => decide("rejected", rejectedCategories)}
-          className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--color-surface-strong)] px-5 py-2.5 text-xs font-bold text-[var(--color-foreground-soft)] transition-colors duration-200 hover:border-[var(--color-border-strong)] hover:bg-[var(--color-surface-2)] hover:text-[var(--foreground)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--primary)]/20 sm:order-1"
+          className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--color-surface-strong)] px-5 py-2.5 text-xs font-bold text-[var(--color-foreground-soft)] transition-[background-color,border-color,color] duration-200 hover:border-[var(--color-border-strong)] hover:bg-[var(--color-surface-2)] hover:text-[var(--foreground)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--primary)]/20 sm:order-1"
         >
           {settings.rejectLabel}
         </button>
@@ -369,7 +369,7 @@ export default function ConsentBanner({ settings, onConsent }: ConsentBannerProp
             setPreferencesPage(0);
             setPreferencesOpen(true);
           }}
-          className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--color-surface-strong)] px-5 py-2.5 text-xs font-bold text-[var(--color-foreground-soft)] transition-colors duration-200 hover:border-[var(--primary)]/24 hover:bg-[var(--color-primary-soft)] hover:text-[var(--primary)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--primary)]/20 sm:order-2"
+          className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--color-surface-strong)] px-5 py-2.5 text-xs font-bold text-[var(--color-foreground-soft)] transition-[background-color,border-color,color] duration-200 hover:border-[var(--primary)]/24 hover:bg-[var(--color-primary-soft)] hover:text-[var(--primary)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--primary)]/20 sm:order-2"
         >
           {preferencesOpen ? settings.saveLabel : settings.preferencesLabel}
         </button>

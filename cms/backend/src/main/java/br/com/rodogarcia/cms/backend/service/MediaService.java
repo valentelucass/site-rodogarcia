@@ -193,6 +193,53 @@ public final class MediaService {
         return output;
     }
 
+    /**
+     * Conta a biblioteca sem abrir os arquivos nem executar o ffprobe. O painel
+     * precisa somente destes totais; a leitura técnica fica reservada à tela de
+     * Biblioteca, que exibe cada registro.
+     */
+    public synchronized ObjectNode adminImageSummary() {
+        Map<String, Integer> references = references();
+        ArrayNode library = readLibrary();
+        Map<String, JsonNode> libraryByUrl = libraryByUrl(library);
+        int total = 0;
+        int uploads = 0;
+        int usedInContent = 0;
+
+        for (JsonNode item : library) {
+            if (!item.isObject()) continue;
+            total++;
+            uploads++;
+            String url = normalizedPath(firstPresent(item, "url", "optimizedUrl"));
+            if (references.getOrDefault(url, 0) > 0) usedInContent++;
+        }
+
+        for (Path file : walkFiles(uploadsRoot)) {
+            String relative = slash(uploadsRoot.relativize(file).toString());
+            if (!MediaValidationService.MEDIA_EXTENSIONS.contains(extension(relative))) continue;
+            String url = normalizedPath(StringNode.valueOf("/uploads/" + relative));
+            if (libraryByUrl.containsKey(url)) continue;
+            total++;
+            uploads++;
+            if (references.getOrDefault(url, 0) > 0) usedInContent++;
+        }
+
+        for (Path file : walkFiles(publicRoot)) {
+            String relative = slash(publicRoot.relativize(file).toString());
+            if (relative.startsWith("uploads/")
+                || !MediaValidationService.MEDIA_EXTENSIONS.contains(extension(relative))) continue;
+            total++;
+            String url = normalizedPath(StringNode.valueOf("/" + relative));
+            if (references.getOrDefault(url, 0) > 0) usedInContent++;
+        }
+
+        ObjectNode summary = store.mapper().createObjectNode();
+        summary.put("total", total);
+        summary.put("uploads", uploads);
+        summary.put("usedInContent", usedInContent);
+        return summary;
+    }
+
     public synchronized ObjectNode save(
         String fileName,
         String mimeType,

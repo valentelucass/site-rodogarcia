@@ -10,6 +10,11 @@ import {
 } from "react";
 import type { ResponsiveMediaPresentation } from "@shared/types/media";
 import { mediaObjectPosition, mediaPlacement } from "@/lib/mediaPresentation";
+import {
+  canonicalPublicMediaUrl,
+  nextOptimizedImageUrl,
+  resolvePublicVideoPoster,
+} from "@/lib/publicMedia";
 
 type PresentedVideoProps = Omit<
   ComponentPropsWithoutRef<"video">,
@@ -22,7 +27,7 @@ type PresentedVideoProps = Omit<
   active?: boolean;
   /** Largura máxima que usa a fonte e o enquadramento de celular. */
   mobileBreakpoint?: number;
-  /** Não anexa fontes ao elemento antes de ele entrar na viewport. */
+  /** Não anexa poster nem fontes ao elemento antes de ele entrar na viewport. */
   deferUntilNearViewport?: boolean;
   /** Autoplay visual: sempre silencioso, fora da árvore acessível e sem controles. */
   decorative?: boolean;
@@ -50,7 +55,7 @@ function safeTime(value: unknown, fallback = 0) {
 /**
  * Reproduz a mídia configurada para um quadro público. A seleção da fonte é
  * nativa (`source media`), evitando baixar primeiro o arquivo desktop. Loops
- * visuais adiados mantêm apenas o poster até ficarem próximos e permanecem
+ * visuais adiados não anexam poster nem fontes até ficarem próximos e permanecem
  * parados em redução de movimento ou economia de dados. Sem poster, carregam
  * somente metadados perto da viewport para não deixar um quadro vazio.
  */
@@ -91,9 +96,12 @@ export function PresentedVideo({
   const configuredDuration = safeTime(playback?.durationSeconds, 0);
   const hasPlaybackRange = start > 0 || configuredDuration > 0;
   const effectiveMuted = decorative ? true : muted;
-  const desktopSrc = internalMediaUrl(src);
-  const responsiveMobileSrc = internalMediaUrl(mobileSrc);
-  const effectivePoster = internalMediaUrl(poster);
+  const desktopSrc = canonicalPublicMediaUrl(src);
+  const responsiveMobileSrc = canonicalPublicMediaUrl(mobileSrc);
+  const resolvedPoster = resolvePublicVideoPoster(desktopSrc, poster);
+  const effectivePoster = resolvedPoster
+    ? nextOptimizedImageUrl(resolvedPoster, 1080, 65)
+    : "";
   const shouldAttachDeferredSource = playbackPolicy.ready
     && (
       !autoPlay
@@ -103,6 +111,9 @@ export function PresentedVideo({
     );
   const sourcesAttached = !deferUntilNearViewport
     || (wasInViewport && shouldAttachDeferredSource);
+  const attachedPoster = !deferUntilNearViewport || wasInViewport
+    ? effectivePoster
+    : "";
   const canAutoPlay = sourcesAttached
     && playbackPolicy.ready
     && autoPlay
@@ -171,7 +182,7 @@ export function PresentedVideo({
             setWasInViewport(true);
             proximityObserver?.disconnect();
           },
-          { rootMargin: "500px 0px", threshold: 0 }
+          { rootMargin: "0px", threshold: 0 }
         )
       : null;
 
@@ -239,7 +250,7 @@ export function PresentedVideo({
       muted={effectiveMuted}
       loop={!hasPlaybackRange && loop}
       playsInline={playsInline}
-      poster={effectivePoster || undefined}
+      poster={attachedPoster || undefined}
       preload={effectivePreload}
       controls={decorative ? false : controls}
       tabIndex={decorative ? -1 : tabIndex}
@@ -282,11 +293,6 @@ function setCurrentTime(video: HTMLVideoElement, requested: number) {
   } catch {
     // Alguns navegadores ainda não permitem seek no primeiro evento de metadata.
   }
-}
-
-function internalMediaUrl(value: string | undefined): string {
-  if (!value || !value.startsWith("/") || value.startsWith("//")) return "";
-  return value;
 }
 
 function mediaType(src: string): string | undefined {

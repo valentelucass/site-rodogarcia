@@ -12,6 +12,7 @@ import TestimonialsCarousel from "@/components/home/TestimonialsCarousel";
 import TrackingLookupSection from "@/components/home/TrackingLookupSection";
 import { external, seo, site } from "@/lib/routes";
 import { buildCmsMetadata, fetchMediaSlots, mediaSlot } from "@/lib/cmsPublic";
+import { canonicalHomeCertificationUrl } from "@/lib/publicMedia";
 
 export const dynamic = "force-dynamic";
 
@@ -86,43 +87,43 @@ const EMPTY_HOME_PAGE: HomePageContent = {
 
 const CERTS = [
   {
-    src: "/certificados/iso-9001.9371c4a6c19f.webp",
+    src: "/certificados/iso-9001-marquee.96db5a941c71.webp",
     alt: "ISO 9001",
     title: "ISO 9001",
     slot: "home.cert.iso",
   },
   {
-    src: "/certificados/certificado-sassmaq.webp",
+    src: "/certificados/sassmaq-marquee.2bd290b6d955.webp",
     alt: "SASSMAQ",
     title: "SASSMAQ",
     slot: "home.cert.sassmaq",
   },
   {
-    src: "/certificados/ecovadis.webp",
+    src: "/certificados/ecovadis-marquee.328117d0b616.webp",
     alt: "EcoVadis",
     title: "EcoVadis",
     slot: "home.cert.ecovadis",
   },
   {
-    src: "/certificados/pf.webp",
+    src: "/certificados/policia-federal-marquee.e06c0a6ec034.webp",
     alt: "Policia Federal",
     title: "Licenca PF",
     slot: "home.cert.pf",
   },
   {
-    src: "/certificados/policia-civil-sp.57269b3e1bdd.webp",
+    src: "/certificados/policia-civil-sp-marquee.cf85d95a8c02.webp",
     alt: "Policia Civil SP",
     title: "Policia Civil SP",
     slot: "home.cert.pcsp",
   },
   {
-    src: "/certificados/exercito-br.webp",
+    src: "/certificados/exercito-brasileiro-marquee.25640e0eb885.webp",
     alt: "Exercito Brasileiro",
     title: "Exercito Brasileiro",
     slot: "home.cert.exercito",
   },
   {
-    src: "/certificados/ibama.7198f261a1ee.webp",
+    src: "/certificados/ibama-marquee.4cdbe07db023.webp",
     alt: "IBAMA",
     title: "IBAMA",
     slot: "home.cert.ibama",
@@ -142,7 +143,7 @@ export default async function HomePage() {
 
   const certs = CERTS.map((cert) => ({
     ...cert,
-    src: mediaSlot(mediaSlots, cert.slot, cert.src),
+    src: canonicalHomeCertificationUrl(mediaSlot(mediaSlots, cert.slot, cert.src), cert.src),
   }));
 
   return (
@@ -183,9 +184,9 @@ export default async function HomePage() {
                   <img
                     src={cert.src}
                     alt={index < CERTS.length ? cert.alt : ""}
-                    width={170}
-                    height={88}
-                    className="h-[72px] w-[150px] grayscale object-contain opacity-55 transition-all duration-500 group-hover/card:scale-[1.08] group-hover/card:grayscale-0 group-hover/card:opacity-100 motion-reduce:transition-none motion-reduce:group-hover/card:scale-100 sm:h-[82px] sm:w-[170px] lg:h-[88px]"
+                    width={340}
+                    height={176}
+                    className="h-auto w-[150px] grayscale object-contain opacity-55 transition-all duration-500 group-hover/card:scale-[1.08] group-hover/card:grayscale-0 group-hover/card:opacity-100 motion-reduce:transition-none motion-reduce:group-hover/card:scale-100 sm:w-[170px]"
                     loading="lazy"
                     decoding="async"
                   />

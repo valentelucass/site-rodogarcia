@@ -265,9 +265,9 @@ function LoginForm() {
             rel="noopener noreferrer"
             className="font-semibold text-blue-500 transition-colors hover:text-blue-400"
           >
-            @valentelucass
+            Lucas Andrade
           </a>{" "}
-          • Suporte: lucasmac.dev@gmail.com
+          • © Rodogarcia. Todos os direitos reservados. • Suporte: lucasmac.dev@gmail.com
         </p>
       </footer>
     </main>

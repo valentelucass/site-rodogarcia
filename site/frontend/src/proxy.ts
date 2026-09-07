@@ -63,6 +63,15 @@ export function proxy(request: NextRequest) {
     request: { headers: requestHeaders },
   });
   response.headers.set("Content-Security-Policy", policy);
+  response.headers.set(
+    "Cache-Control",
+    // Diretivas de Cache-Control ignoram maiusculas/minusculas. O casing evita
+    // apenas o falso positivo do compactador embutido no Next 16.3.3, cujo
+    // filtro procura literalmente `no-transform`. Assim o servidor de origem
+    // ainda entrega gzip, enquanto intermediarios como a Cloudflare continuam
+    // proibidos de alterar o HTML e de injetar o decodificador de e-mail.
+    "private, no-store, no-cache, max-age=0, must-revalidate, NO-TRANSFORM"
+  );
   return response;
 }
 

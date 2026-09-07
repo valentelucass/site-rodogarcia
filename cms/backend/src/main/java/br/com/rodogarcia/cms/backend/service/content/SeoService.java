@@ -21,7 +21,7 @@ import tools.jackson.databind.node.ObjectNode;
 public final class SeoService {
     private static final String DESCRIPTION =
         "Rodogarcia Transportes: soluções logísticas nacionais com segurança, previsibilidade e rastreabilidade.";
-    private static final String OG_IMAGE = "/foto5.webp";
+    private static final String OG_IMAGE = "/capilaridade-rodogarcia.d6d0bb115823.webp";
     private static final List<Route> ROUTES = List.of(
         new Route("/", "Home", "Rodogarcia Transportes | Logística com previsibilidade nacional"),
         new Route("/servicos", "Serviços", "Serviços | Rodogarcia Transportes"),

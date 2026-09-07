@@ -112,7 +112,7 @@ export const external = {
 export const seo = {
   baseUrl: BASE_URL,
   siteName: SITE_NAME,
-  defaultOgImage: "/foto5.webp",
+  defaultOgImage: "/capilaridade-rodogarcia.d6d0bb115823.webp",
   sitemapPath: "/sitemap.xml",
   disallow: ["/admin", "/developer/", "/auth/", "/api/"] as const,
   absoluteUrl(path: string) {

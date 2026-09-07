@@ -9,17 +9,80 @@ import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.Base64;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 class MediaMetadataReaderTest {
+    private static final String VP8_WEBP = "UklGRpgAAABXRUJQVlA4IIwAAACwDACdASpBAXsAPm02mUmkIyKhIEgAgA2JaW7hdrEe3AfgAAAoNHrbaLhBkENVSa7bRcIMghqqTXbaLhBkENVSa7bRcIMghqqTXbaLhBkENVSa7bRcIMghqqTXbaLhBkENVSa7bRcIMghqqTXaYAD+/3lH///iGej1Ml3//8KtwxCy4ZYgwIAAAAAAAA==";
+    private static final String VP8L_WEBP = "UklGRigAAABXRUJQVlA4TBsAAAAvPgEeAAdQqFKUsf8BBWkbMPUvfzei/8n91zkA";
+    private static final String VP8X_WEBP = "UklGRsYAAABXRUJQVlA4WAoAAAAQAAAAPAEAdgAAQUxQSBUAAAABB1DAiAgoSNuAqX/5uxH9T+6/LgEAVlA4IIoAAABQDACdASo9AXcAPm02mUmkIyKhIEgAgA2JaW7hdrEe3AfgAAAoNHrbaLhBkENVSa7bRcIMghqqTXbaLhBkENVSa7bRcIMghqqTXbaLhBkENVSa7bRcIMghqqTXbaLhBkENVSa7bRcIMgheAAD+/3lH///iGej1Ml3//8KtwxCy4ZZhwIAAAAAAAAA=";
 
     @TempDir
     Path root;
+
+    @Test
+    void readsVp8Vp8lAndVp8xImagesWithoutLaunchingFfprobe() throws Exception {
+        List<ImageFixture> fixtures = List.of(
+            new ImageFixture("lossy.webp", VP8_WEBP, 321, 123),
+            new ImageFixture("lossless.webp", VP8L_WEBP, 319, 121),
+            new ImageFixture("extended-alpha.webp", VP8X_WEBP, 317, 119)
+        );
+        AtomicInteger launches = new AtomicInteger();
+        MediaMetadataReader reader = new MediaMetadataReader("ffprobe", ignored -> {
+            launches.incrementAndGet();
+            return new CompletedProcess("width=1\nheight=1\nduration=1\n");
+        });
+
+        for (ImageFixture fixture : fixtures) {
+            Path image = root.resolve(fixture.name());
+            Files.write(image, Base64.getDecoder().decode(fixture.base64()));
+
+            assertThat(reader.image(image)).contains(
+                new MediaMetadataReader.Dimensions(fixture.width(), fixture.height())
+            );
+        }
+        assertThat(launches).hasValue(0);
+    }
+
+    @Test
+    void rejectsTruncatedWebpWithoutFallingBackToFfprobe() throws Exception {
+        byte[] complete = Base64.getDecoder().decode(VP8X_WEBP);
+        Path image = root.resolve("truncated.webp");
+        Files.write(image, Arrays.copyOf(complete, complete.length - 7));
+        AtomicInteger launches = new AtomicInteger();
+        MediaMetadataReader reader = new MediaMetadataReader("ffprobe", ignored -> {
+            launches.incrementAndGet();
+            return new CompletedProcess("width=317\nheight=119\nduration=1\n");
+        });
+
+        assertThat(reader.image(image)).isEmpty();
+        assertThat(launches).hasValue(0);
+    }
+
+    @Test
+    void rejectsWebpCanvasDimensionsAboveTheApplicationLimit() throws Exception {
+        byte[] oversized = Base64.getDecoder().decode(VP8X_WEBP);
+        oversized[24] = (byte) 0xff;
+        oversized[25] = (byte) 0xff;
+        oversized[26] = (byte) 0xff;
+        Path image = root.resolve("oversized.webp");
+        Files.write(image, oversized);
+        AtomicInteger launches = new AtomicInteger();
+        MediaMetadataReader reader = new MediaMetadataReader("ffprobe", ignored -> {
+            launches.incrementAndGet();
+            return new CompletedProcess("width=317\nheight=119\nduration=1\n");
+        });
+
+        assertThat(reader.image(image)).isEmpty();
+        assertThat(launches).hasValue(0);
+    }
 
     @Test
     void readsOnlyTheExpectedVideoFieldsWithAFixedSafeCommand() throws Exception {
@@ -114,5 +177,8 @@ class MediaMetadataReaderTest {
             destroyed = true;
             return this;
         }
+    }
+
+    private record ImageFixture(String name, String base64, int width, int height) {
     }
 }

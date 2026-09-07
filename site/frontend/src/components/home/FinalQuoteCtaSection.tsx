@@ -1,8 +1,5 @@
-"use client";
-
 import Link from "next/link";
-import { motion } from "framer-motion";
-import { ArrowRight, ChatCircleDots, CheckCircle } from "@phosphor-icons/react";
+import { ArrowRight, ChatCircleDots, CheckCircle } from "@phosphor-icons/react/dist/ssr";
 import { site } from "@/lib/routes";
 
 const BENEFITS = [
@@ -27,7 +24,7 @@ export default function FinalQuoteCtaSection() {
             </div>
 
             <div className="grid grid-cols-1 gap-3 sm:flex sm:items-center lg:flex-col lg:items-stretch">
-              <motion.div whileHover={{ y: -2 }} whileTap={{ scale: 0.99 }} className="min-w-0 sm:w-auto">
+              <div className="min-w-0 transition-transform duration-200 hover:-translate-y-0.5 active:scale-[0.99] motion-reduce:transition-none motion-reduce:hover:translate-y-0 sm:w-auto">
                 <Link
                   href={site.quote}
                   className="inline-flex h-14 w-full min-w-0 items-center justify-center gap-2 rounded-2xl bg-[var(--primary)] px-4 text-sm font-semibold text-white shadow-[0_18px_40px_rgba(29,78,216,0.22)] transition-colors hover:bg-[var(--color-primary-strong)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--primary)]/24 sm:w-auto sm:px-7"
@@ -35,9 +32,9 @@ export default function FinalQuoteCtaSection() {
                   <span className="min-w-0 truncate">Solicitar cotação</span>
                   <ArrowRight size={18} weight="bold" className="shrink-0" />
                 </Link>
-              </motion.div>
+              </div>
 
-              <motion.div whileHover={{ y: -2 }} whileTap={{ scale: 0.99 }} className="min-w-0 sm:w-auto">
+              <div className="min-w-0 transition-transform duration-200 hover:-translate-y-0.5 active:scale-[0.99] motion-reduce:transition-none motion-reduce:hover:translate-y-0 sm:w-auto">
                 <Link
                   href={site.contact}
                   className="inline-flex h-14 w-full min-w-0 items-center justify-center gap-2 rounded-2xl bg-emerald-700 px-4 text-sm font-semibold text-white shadow-[0_18px_44px_rgba(4,120,87,0.3)] transition-[background-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:bg-emerald-800 hover:shadow-[0_22px_52px_rgba(6,95,70,0.34)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-emerald-400/40 motion-reduce:transition-none motion-reduce:hover:translate-y-0 sm:w-auto sm:px-7"
@@ -45,7 +42,7 @@ export default function FinalQuoteCtaSection() {
                   <span className="min-w-0 truncate">Falar com especialista</span>
                   <ChatCircleDots size={18} weight="bold" className="shrink-0" />
                 </Link>
-              </motion.div>
+              </div>
             </div>
           </div>
           <ul className="mt-5 grid gap-1.5 border-t border-white/10 pt-4 text-xs text-white/70 sm:mt-6 sm:flex sm:flex-wrap sm:gap-x-5 sm:gap-y-2 sm:pt-5 sm:text-sm sm:text-white/60">

@@ -134,7 +134,9 @@ export default function OperationsCarousel({ section }: OperationsCarouselProps)
   const spotlightSlides = buildSpotlightSlides(section.items);
   const [current, setCurrent] = useState(0);
   const [paused, setPaused] = useState(false);
-  const [isDesktop, setIsDesktop] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(
+    () => typeof window !== "undefined" && window.matchMedia(DESKTOP_QUERY).matches
+  );
   const prefersReducedMotion = usePrefersReducedMotion();
   const mobileCardRefs = useRef<(HTMLButtonElement | null)[]>([]);
 

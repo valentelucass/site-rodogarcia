@@ -44,10 +44,7 @@ export function siteUrl(pathname: AppPath | string = "/"): string {
   if (/^https?:\/\//i.test(value)) return value;
 
   const pathWithLeadingSlash = value.startsWith("/") ? value : `/${value}`;
-  const browserGatewayOrigin = typeof window !== "undefined" && window.location.pathname.startsWith(CMS_BASE_PATH)
-    ? window.location.origin
-    : "";
-  const baseUrl = browserGatewayOrigin || configuredSiteUrl || fallbackSiteUrl;
+  const baseUrl = configuredSiteUrl || fallbackSiteUrl;
   return baseUrl ? `${baseUrl}${pathWithLeadingSlash}` : pathWithLeadingSlash;
 }
 
@@ -122,6 +119,7 @@ export const api = {
     content: "/api/admin/content",
     siteTexts: "/api/admin/site-texts",
     images: "/api/admin/images",
+    imagesSummary: "/api/admin/images?summary=true",
     home: "/api/admin/home",
     homeHero: "/api/admin/home/hero",
     homeSection1: "/api/admin/home/section-1",
