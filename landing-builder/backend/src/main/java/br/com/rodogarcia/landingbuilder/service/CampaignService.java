@@ -17,7 +17,6 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -301,8 +300,8 @@ public final class CampaignService {
             if (containsString(landing, url)) return true;
         }
         for (JsonNode media : mediaRepository.readMedia()) {
-            if (url.equals(media.path("poster").asText())
-                && isMediaReferenced(media.path("url").asText())) return true;
+            if (url.equals(media.path("poster").asString())
+                && isMediaReferenced(media.path("url").asString())) return true;
         }
         return false;
     }
@@ -591,7 +590,7 @@ public final class CampaignService {
         copyPublicField(landing, result, "seo");
         copyPublicField(landing, result, "theme");
         ObjectNode analytics = result.putObject("analytics");
-        analytics.put("ga4MeasurementId", landing.path("analytics").path("ga4MeasurementId").asText(""));
+        analytics.put("ga4MeasurementId", landing.path("analytics").path("ga4MeasurementId").asString(""));
         for (String section : List.of("hero", "lowerSection", "benefits", "story", "metrics", "showcase", "testimonial", "faq", "finalCta", "footer")) {
             copyPublicField(landing, result, section);
         }
@@ -618,7 +617,7 @@ public final class CampaignService {
 
     private void sanitizePublicMedia(JsonNode section, String field) {
         if (!(section instanceof ObjectNode target)) return;
-        String url = target.path(field).asText("");
+        String url = target.path(field).asString("");
         if (!mediaExists(url)) target.put(field, "");
     }
 
@@ -650,7 +649,7 @@ public final class CampaignService {
     private ObjectNode mediaRecord(String url) {
         if (url == null || url.isBlank() || !MEDIA_URL.matcher(url).matches()) return null;
         for (JsonNode record : mediaRepository.readMedia()) {
-            if (url.equals(record.path("url").asText()) && record instanceof ObjectNode object) return object;
+            if (url.equals(record.path("url").asString()) && record instanceof ObjectNode object) return object;
         }
         return null;
     }
@@ -764,9 +763,9 @@ public final class CampaignService {
 
     private static Instant scheduledInstant(ObjectNode body, String field) {
         if (!body.has(field) || body.path(field).isNull()) return null;
-        if (!body.path(field).isTextual()) throw new ApiException("Programação inválida.", 422);
+        if (!body.path(field).isString()) throw new ApiException("Programação inválida.", 422);
         try {
-            return Instant.parse(body.path(field).asText());
+            return Instant.parse(body.path(field).asString());
         } catch (RuntimeException ignored) {
             throw new ApiException("Programação inválida.", 422);
         }
@@ -912,11 +911,11 @@ public final class CampaignService {
     private List<String> referencedMediaUrls(ObjectNode landing) {
         List<String> result = new ArrayList<>();
         for (String value : List.of(
-            landing.path("hero").path("logo").asText(""),
-            landing.path("hero").path("backgroundImage").asText(""),
-            landing.path("story").path("image").asText(""),
-            landing.path("showcase").path("backgroundImage").asText(""),
-            landing.path("finalCta").path("backgroundImage").asText("")
+            landing.path("hero").path("logo").asString(""),
+            landing.path("hero").path("backgroundImage").asString(""),
+            landing.path("story").path("image").asString(""),
+            landing.path("showcase").path("backgroundImage").asString(""),
+            landing.path("finalCta").path("backgroundImage").asString("")
         )) if (!value.isBlank() && !result.contains(value)) result.add(value);
         return result;
     }
@@ -966,8 +965,8 @@ public final class CampaignService {
 
     private static String requireText(ObjectNode source, String field, int maximum) {
         JsonNode value = source.get(field);
-        if (value == null || !value.isTextual()) throw invalidLanding();
-        String text = value.asText().trim();
+        if (value == null || !value.isString()) throw invalidLanding();
+        String text = value.asString().trim();
         if (text.length() > maximum) throw invalidLanding();
         return text;
     }
@@ -1008,7 +1007,7 @@ public final class CampaignService {
     }
 
     private static boolean containsString(JsonNode value, String expected) {
-        if (value.isTextual()) return expected.equals(value.asText());
+        if (value.isString()) return expected.equals(value.asString());
         if (value.isArray()) {
             for (JsonNode child : value) if (containsString(child, expected)) return true;
         }
@@ -1025,7 +1024,7 @@ public final class CampaignService {
     }
 
     private static String text(JsonNode value, String field) {
-        return value == null ? "" : value.path(field).asText("");
+        return value == null ? "" : value.path(field).asString("");
     }
 
     private static String updatedAt(ObjectNode value) {

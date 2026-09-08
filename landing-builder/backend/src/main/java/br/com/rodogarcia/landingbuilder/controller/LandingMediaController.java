@@ -8,14 +8,12 @@ import br.com.rodogarcia.landingbuilder.service.LandingMediaService;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Map;
 import org.springframework.core.io.FileSystemResource;
-import org.springframework.http.CacheControl;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -40,7 +38,7 @@ public final class LandingMediaController {
     public ResponseEntity<FileSystemResource> serve(@PathVariable String id) {
         LandingMediaService.ResolvedMedia resolved = media.resolve(id);
         if (resolved == null) throw new ApiException("Mídia não encontrada.", 404);
-        String mimeType = resolved.record().path("mimeType").asText(MediaType.APPLICATION_OCTET_STREAM_VALUE);
+        String mimeType = resolved.record().path("mimeType").asString(MediaType.APPLICATION_OCTET_STREAM_VALUE);
         return ResponseEntity.ok()
             .header(HttpHeaders.CACHE_CONTROL, "public, max-age=31536000, immutable")
             .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.inline().build().toString())

@@ -58,10 +58,10 @@ class LandingBuilderContractTest {
                 .andExpect(header().string("Cache-Control", "private, no-store"))
                 .andReturn();
             JsonNode created = fixture.body(createdResult).path("landing");
-            String id = created.path("id").asText();
+            String id = created.path("id").asString();
             assertThat(id).matches("landing_[A-Za-z0-9-]{36}");
             assertThat(created.has("previewToken")).isFalse();
-            assertThat(created.path("status").asText()).isEqualTo("draft");
+            assertThat(created.path("status").asString()).isEqualTo("draft");
 
             fixture.mvc().perform(get("/api/public/landings/campanha-teste"))
                 .andExpect(status().isNotFound());
@@ -70,7 +70,7 @@ class LandingBuilderContractTest {
                     .header("x-landing-builder-service-token", SERVICE_TOKEN))
                 .andExpect(status().isOk())
                 .andReturn();
-            String previewPath = fixture.body(previewResult).path("previewPath").asText();
+            String previewPath = fixture.body(previewResult).path("previewPath").asString();
             assertThat(previewPath).matches("/preview/[A-Za-z0-9_-]{43}");
             String previewToken = previewPath.substring(previewPath.lastIndexOf('/') + 1);
 
@@ -83,7 +83,7 @@ class LandingBuilderContractTest {
             assertThat(previewLanding.has("id")).isFalse();
             assertThat(previewLanding.has("status")).isFalse();
             assertThat(previewLanding.path("analytics").size()).isEqualTo(1);
-            assertThat(previewLanding.path("analytics").path("ga4MeasurementId").asText()).isEqualTo("G-TEST1234");
+            assertThat(previewLanding.path("analytics").path("ga4MeasurementId").asString()).isEqualTo("G-TEST1234");
             assertThat(previewLanding.path("testimonial").has("quote")).isFalse();
             assertThat(previewLanding.path("hero").path("backgroundPresentation").path("desktop").path("focalPoint").path("x").asInt()).isEqualTo(25);
             assertThat(previewLanding.path("story").path("imagePresentation").path("desktop").path("focalPoint").path("y").asInt()).isEqualTo(75);
@@ -98,18 +98,18 @@ class LandingBuilderContractTest {
                 .andExpect(status().isOk())
                 .andReturn();
             JsonNode indexItem = fixture.body(index).path("landings").get(0);
-            assertThat(indexItem.path("slug").asText()).isEqualTo("campanha-teste");
+            assertThat(indexItem.path("slug").asString()).isEqualTo("campanha-teste");
             assertThat(indexItem.has("status")).isFalse();
 
             MvcResult published = fixture.mvc().perform(get("/api/public/landings/campanha-teste"))
                 .andExpect(status().isOk())
                 .andReturn();
             JsonNode publicLanding = fixture.body(published).path("landing");
-            assertThat(publicLanding.path("template").asText()).isEqualTo("campaign-v1");
+            assertThat(publicLanding.path("template").asString()).isEqualTo("campaign-v1");
             assertThat(publicLanding.path("benefits").path("items").size()).isEqualTo(4);
             assertThat(publicLanding.path("showcase").path("items").size()).isEqualTo(3);
             assertThat(publicLanding.path("faq").path("items").size()).isEqualTo(3);
-            assertThat(publicLanding.path("lowerSection").path("mapBaseColor").asText()).isEqualTo("#A9D4EF");
+            assertThat(publicLanding.path("lowerSection").path("mapBaseColor").asString()).isEqualTo("#A9D4EF");
 
             fixture.mvc().perform(put("/api/internal/landings/{id}", id)
                     .header("x-landing-builder-service-token", SERVICE_TOKEN)
@@ -120,7 +120,7 @@ class LandingBuilderContractTest {
                     .header("x-landing-builder-service-token", SERVICE_TOKEN))
                 .andExpect(status().isOk())
                 .andReturn();
-            String revisionId = fixture.body(revisionsResult).path("revisions").get(0).path("id").asText();
+            String revisionId = fixture.body(revisionsResult).path("revisions").get(0).path("id").asString();
             fixture.mvc().perform(post("/api/internal/landings/{id}/revisions/{revisionId}/rollback", id, revisionId)
                     .header("x-landing-builder-service-token", SERVICE_TOKEN))
                 .andExpect(status().isOk());
@@ -150,7 +150,7 @@ class LandingBuilderContractTest {
             fixture.mvc().perform(multipart("/api/internal/media")
                     .file(invalid)
                     .header("x-landing-builder-service-token", SERVICE_TOKEN))
-                .andExpect(status().isUnprocessableEntity());
+                .andExpect(status().isUnprocessableContent());
 
             MockMultipartFile image = new MockMultipartFile("file", "campaign.png", "image/png", PNG);
             MvcResult upload = fixture.mvc().perform(multipart("/api/internal/media")
@@ -160,11 +160,11 @@ class LandingBuilderContractTest {
                 .andExpect(status().isCreated())
                 .andReturn();
             JsonNode media = fixture.body(upload).path("media");
-            String mediaId = media.path("id").asText();
-            String mediaUrl = media.path("url").asText();
+            String mediaId = media.path("id").asString();
+            String mediaUrl = media.path("url").asString();
             assertThat(mediaUrl).matches("/landing-media/media_[A-Za-z0-9-]{36}");
-            assertThat(media.path("mimeType").asText()).isEqualTo("image/webp");
-            assertThat(media.path("alt").asText()).isEqualTo("Patio da operacao");
+            assertThat(media.path("mimeType").asString()).isEqualTo("image/webp");
+            assertThat(media.path("alt").asString()).isEqualTo("Patio da operacao");
 
             MvcResult served = fixture.mvc().perform(get(mediaUrl))
                 .andExpect(status().isOk())
@@ -182,15 +182,15 @@ class LandingBuilderContractTest {
                     .header("x-landing-builder-service-token", SERVICE_TOKEN))
                 .andExpect(status().isCreated())
                 .andReturn();
-            String videoUrl = fixture.body(videoUpload).path("media").path("url").asText();
-            String videoId = fixture.body(videoUpload).path("media").path("id").asText();
+            String videoUrl = fixture.body(videoUpload).path("media").path("url").asString();
+            String videoId = fixture.body(videoUpload).path("media").path("id").asString();
             MvcResult updatedVideo = fixture.mvc().perform(put("/api/internal/media/{id}", videoId)
                     .header("x-landing-builder-service-token", SERVICE_TOKEN)
                     .contentType(MediaType.APPLICATION_JSON)
                     .content("{\"alt\":\"Vídeo da operação\",\"poster\":\"" + mediaUrl + "\"}"))
                 .andExpect(status().isOk())
                 .andReturn();
-            assertThat(fixture.body(updatedVideo).path("media").path("poster").asText()).isEqualTo(mediaUrl);
+            assertThat(fixture.body(updatedVideo).path("media").path("poster").asString()).isEqualTo(mediaUrl);
             MvcResult servedVideo = fixture.mvc().perform(get(videoUrl))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -208,7 +208,7 @@ class LandingBuilderContractTest {
                         "\"imagePresentation\":{\"desktop\":{\"focalPoint\":{\"x\":60,\"y\":75}}}",
                         "\"imagePresentation\":{\"desktop\":{\"focalPoint\":{\"x\":60,\"y\":75},\"playback\":{\"startSeconds\":1,\"durationSeconds\":5}}}"
                     )))
-                .andExpect(status().isUnprocessableEntity());
+                .andExpect(status().isUnprocessableContent());
             fixture.mvc().perform(delete("/api/internal/media/{id}", mediaId)
                     .header("x-landing-builder-service-token", SERVICE_TOKEN))
                 .andExpect(status().isConflict());
@@ -216,7 +216,7 @@ class LandingBuilderContractTest {
                     .header("x-landing-builder-service-token", SERVICE_TOKEN)
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(input("campanha-com-url-antiga", "/uploads/nao-permitido.webp", true)))
-                .andExpect(status().isUnprocessableEntity());
+                .andExpect(status().isUnprocessableContent());
         }
     }
 
@@ -229,15 +229,15 @@ class LandingBuilderContractTest {
                     .content(input("ciclo-campanha", "", true)))
                 .andExpect(status().isCreated())
                 .andReturn();
-            String id = fixture.body(createdResult).path("landing").path("id").asText();
+            String id = fixture.body(createdResult).path("landing").path("id").asString();
 
             MvcResult duplicatedResult = fixture.mvc().perform(post("/api/internal/landings/{id}/duplicate", id)
                     .header("x-landing-builder-service-token", SERVICE_TOKEN))
                 .andExpect(status().isCreated())
                 .andReturn();
             JsonNode duplicate = fixture.body(duplicatedResult).path("landing");
-            assertThat(duplicate.path("status").asText()).isEqualTo("draft");
-            assertThat(duplicate.path("slug").asText()).startsWith("ciclo-campanha-copia");
+            assertThat(duplicate.path("status").asString()).isEqualTo("draft");
+            assertThat(duplicate.path("slug").asString()).startsWith("ciclo-campanha-copia");
 
             fixture.mvc().perform(post("/api/internal/landings/{id}/schedule", id)
                     .header("x-landing-builder-service-token", SERVICE_TOKEN)
@@ -277,7 +277,7 @@ class LandingBuilderContractTest {
                     .header("x-landing-builder-service-token", SERVICE_TOKEN)
                     .contentType(MediaType.APPLICATION_JSON)
                     .content("x".repeat(1_024 * 1_024 + 1)))
-                .andExpect(status().isPayloadTooLarge());
+                .andExpect(status().isContentTooLarge());
             fixture.mvc().perform(get("/does-not-exist"))
                 .andExpect(status().isNotFound());
             fixture.mvc().perform(get("/api/public/landings"))

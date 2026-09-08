@@ -108,20 +108,20 @@ public final class LandingMediaService {
         if (index < 0) throw new ApiException("Mídia não encontrada.", 404);
         ObjectNode updated = ((ObjectNode) media.get(index)).deepCopy();
         if (body.has("alt")) {
-            if (!body.path("alt").isTextual()) throw new ApiException("Metadados de mídia inválidos.", 422);
-            updated.put("alt", normalizeAlt(body.path("alt").asText()));
+            if (!body.path("alt").isString()) throw new ApiException("Metadados de mídia inválidos.", 422);
+            updated.put("alt", normalizeAlt(body.path("alt").asString()));
         }
         if (body.has("poster")) {
-            if (!body.path("poster").isNull() && !body.path("poster").isTextual()) {
+            if (!body.path("poster").isNull() && !body.path("poster").isString()) {
                 throw new ApiException("Metadados de mídia inválidos.", 422);
             }
-            if (!"video".equals(updated.path("kind").asText())) {
+            if (!"video".equals(updated.path("kind").asString())) {
                 throw new ApiException("Poster é permitido apenas para vídeos.", 422);
             }
-            String poster = body.path("poster").isNull() ? "" : body.path("poster").asText();
+            String poster = body.path("poster").isNull() ? "" : body.path("poster").asString();
             if (!poster.isBlank()) {
                 ObjectNode posterRecord = recordForUrl(media, poster);
-                if (posterRecord == null || !"image".equals(posterRecord.path("kind").asText())) {
+                if (posterRecord == null || !"image".equals(posterRecord.path("kind").asString())) {
                     throw new ApiException("O poster precisa ser uma imagem da biblioteca da campanha.", 422);
                 }
             }
@@ -139,7 +139,7 @@ public final class LandingMediaService {
         int index = find(media, id);
         if (index < 0) throw new ApiException("Mídia não encontrada.", 404);
         ObjectNode record = (ObjectNode) media.get(index);
-        if (campaignService.isMediaReferenced(record.path("url").asText())) {
+        if (campaignService.isMediaReferenced(record.path("url").asString())) {
             throw new ApiException("Esta mídia ainda está em uso por uma landing page.", 409);
         }
         Path path = filePath(record);
@@ -157,7 +157,7 @@ public final class LandingMediaService {
         String id = safeId(rawId);
         if (id == null) return null;
         for (ObjectNode record : objectNodes(repository.readMedia())) {
-            if (!id.equals(record.path("id").asText())) continue;
+            if (!id.equals(record.path("id").asString())) continue;
             Path file = filePath(record);
             if (file != null && Files.isRegularFile(file)) return new ResolvedMedia(toDto(record), file);
         }
@@ -168,7 +168,7 @@ public final class LandingMediaService {
         if (rawUrl == null || !rawUrl.startsWith(URL_PREFIX)) return false;
         String id = safeId(rawUrl.substring(URL_PREFIX.length()));
         if (id == null || !rawUrl.equals(URL_PREFIX + id)) return false;
-        return objectNodes(repository.readMedia()).stream().anyMatch(item -> rawUrl.equals(item.path("url").asText()));
+        return objectNodes(repository.readMedia()).stream().anyMatch(item -> rawUrl.equals(item.path("url").asString()));
     }
 
     private ObjectNode saveImage(byte[] bytes, String mimeType, String alt) {
@@ -237,24 +237,24 @@ public final class LandingMediaService {
 
     private ObjectNode toDto(ObjectNode record) {
         ObjectNode dto = mapper.createObjectNode();
-        dto.put("id", record.path("id").asText());
-        dto.put("url", record.path("url").asText());
-        dto.put("kind", record.path("kind").asText());
-        dto.put("mimeType", record.path("mimeType").asText());
+        dto.put("id", record.path("id").asString());
+        dto.put("url", record.path("url").asString());
+        dto.put("kind", record.path("kind").asString());
+        dto.put("mimeType", record.path("mimeType").asString());
         dto.put("size", record.path("size").asLong());
-        dto.put("alt", record.path("alt").asText(""));
-        dto.put("poster", record.path("poster").asText(""));
+        dto.put("alt", record.path("alt").asString(""));
+        dto.put("poster", record.path("poster").asString(""));
         if (record.path("width").canConvertToInt() && record.path("width").asInt() > 0) dto.put("width", record.path("width").asInt());
         if (record.path("height").canConvertToInt() && record.path("height").asInt() > 0) dto.put("height", record.path("height").asInt());
         if (record.path("durationSeconds").isNumber() && record.path("durationSeconds").asDouble() > 0) dto.put("durationSeconds", record.path("durationSeconds").asDouble());
-        dto.put("createdAt", record.path("createdAt").asText());
+        dto.put("createdAt", record.path("createdAt").asString());
         return dto;
     }
 
     private Path filePath(ObjectNode record) {
-        String id = safeId(record.path("id").asText());
-        String kind = record.path("kind").asText();
-        String storageName = record.path("storageName").asText();
+        String id = safeId(record.path("id").asString());
+        String kind = record.path("kind").asString();
+        String storageName = record.path("storageName").asString();
         if (id == null || !("image".equals(kind) || "video".equals(kind))) return null;
         Set<String> extensions = "image".equals(kind) ? Set.of("webp") : Set.of("mp4", "webm", "ogg");
         boolean valid = extensions.stream().anyMatch(extension -> storageName.equals(id + "." + extension));
@@ -556,20 +556,20 @@ public final class LandingMediaService {
 
     private static ObjectNode recordForUrl(ArrayNode media, String url) {
         for (JsonNode value : media) {
-            if (value instanceof ObjectNode record && url.equals(record.path("url").asText())) return record;
+            if (value instanceof ObjectNode record && url.equals(record.path("url").asString())) return record;
         }
         return null;
     }
 
     private static int find(ArrayNode array, String id) {
         for (int index = 0; index < array.size(); index++) {
-            if (id.equals(array.get(index).path("id").asText())) return index;
+            if (id.equals(array.get(index).path("id").asString())) return index;
         }
         return -1;
     }
 
     private static String createdAt(ObjectNode record) {
-        return record.path("createdAt").asText("");
+        return record.path("createdAt").asString("");
     }
 
     private static List<ObjectNode> objectNodes(ArrayNode source) {

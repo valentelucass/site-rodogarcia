@@ -27,13 +27,13 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     ResponseEntity<Map<String, String>> handleUploadLimit(MaxUploadSizeExceededException exception) {
-        return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE)
+        return ResponseEntity.status(HttpStatus.CONTENT_TOO_LARGE)
             .body(Map.of("error", "Arquivo ou payload excede o limite permitido."));
     }
 
     @ExceptionHandler(MissingServletRequestPartException.class)
     ResponseEntity<Map<String, String>> handleMissingFile(MissingServletRequestPartException exception) {
-        return ResponseEntity.unprocessableEntity().body(Map.of("error", "Envie um arquivo no campo file."));
+        return ResponseEntity.unprocessableContent().body(Map.of("error", "Envie um arquivo no campo file."));
     }
 
     @ExceptionHandler(HttpMediaTypeNotSupportedException.class)

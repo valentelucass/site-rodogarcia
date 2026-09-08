@@ -92,6 +92,18 @@ if errorlevel 1 (
   exit /b 1
 )
 
+echo [Rodogarcia DEV] Encerrando os modos DEV e PROD anteriores deste projeto...
+where pm2 >nul 2>nul
+if not errorlevel 1 (
+  call pm2 delete site-api-prod site-prod cms-api-prod cms-prod landing-api-prod landing-prod >nul 2>&1
+  call pm2 delete rodogarcia-backend-prod rodogarcia-frontend-prod rodogarcia-cms-backend-prod rodogarcia-cms-prod rodogarcia-landing-builder-backend-prod rodogarcia-landing-builder-prod >nul 2>&1
+)
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\stop-rodogarcia-listeners.ps1" -Mode All
+if errorlevel 1 (
+  echo [Rodogarcia DEV] Nao foi possivel liberar todas as portas canonicas do projeto.
+  exit /b 1
+)
+
 echo [Rodogarcia DEV] Ambiente: %ENV_FILE%
 call "%~dp0scripts\compile-spring-dev-backend.bat" "site\backend" "backend publico"
 if errorlevel 1 (
@@ -147,13 +159,6 @@ if not exist "landing-builder\frontend\node_modules" (
     exit /b 1
   )
   popd
-)
-
-echo [Rodogarcia DEV] Encerrando somente processos deste repositorio nas portas DEV...
-powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\stop-owned-dev-processes.ps1" -RepositoryRoot "%CD%"
-if errorlevel 1 (
-  echo [Rodogarcia DEV] Nenhum processo externo foi encerrado. Libere a porta indicada e execute novamente.
-  exit /b 1
 )
 
 for %%D in ("site\frontend\.next" "cms\frontend\.next" "landing-builder\frontend\.next") do (

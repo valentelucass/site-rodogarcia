@@ -166,6 +166,10 @@ function testProductionLauncherUsesExternalBatchHelpers() {
   assert.doesNotMatch(launcher, /\bcall\s+:/i);
   assert.match(launcher, /set\s+"ERRORLEVEL="/i);
   assert.match(launcher, /validate-production-inputs\.ps1/i);
+  assert.match(
+    launcher,
+    /stop-rodogarcia-listeners\.ps1" -Mode Development/i
+  );
   assert.match(launcher, /assert-production-preflight-isolated\.bat/i);
   assert.match(launcher, /DEV_PREFLIGHT_EXIT_CODE=%ERRORLEVEL%/i);
   assert.match(launcher, /if not "%DEV_PREFLIGHT_EXIT_CODE%"=="0" goto :preflight_failed/i);
@@ -182,6 +186,15 @@ function testProductionLauncherUsesExternalBatchHelpers() {
   assert.match(launcher, /validate-production-rollout-mode\.bat/i);
   assert.match(launcher, /verify-production-spring-backend\.bat/i);
   assert.match(launcher, /RODOGARCIA_INITIAL_PROD_ROLLOUT/i);
+
+  const automaticCleanupIndex = launcher.indexOf(
+    'stop-rodogarcia-listeners.ps1" -Mode Development'
+  );
+  const dependencyInstallIndex = launcher.indexOf('install-production-frontend-dependencies.bat');
+  assert.ok(
+    automaticCleanupIndex >= 0 && automaticCleanupIndex < dependencyInstallIndex,
+    'O PROD deve liberar as portas DEV antes de executar npm ci.'
+  );
 
   const installer = fs.readFileSync(
     path.join(ROOT_DIR, "scripts", "install-production-frontend-dependencies.bat"),
@@ -206,6 +219,35 @@ function testProductionLauncherUsesExternalBatchHelpers() {
   assert.match(
     ciWorkflow,
     /node --experimental-websocket scripts\/tests\/test-security-hardening\.js/i
+  );
+}
+
+function testLaunchersClearOnlyRodogarciaCanonicalPorts() {
+  const cleanup = fs.readFileSync(
+    path.join(ROOT_DIR, "scripts", "stop-rodogarcia-listeners.ps1"),
+    "utf8"
+  );
+  assert.match(cleanup, /\$developmentPorts\s*=\s*@\(31012, 31013, 35180, 35013, 36110, 35112\)/);
+  assert.match(cleanup, /\$productionPorts\s*=\s*@\(6050, 6051, 6060, 6061, 41110, 41112\)/);
+  assert.match(cleanup, /taskkill\.exe\s+\/PID\s+\$processId\s+\/T\s+\/F/i);
+
+  const developmentLauncher = fs.readFileSync(
+    path.join(ROOT_DIR, "iniciar-dev.bat"),
+    "utf8"
+  );
+  assert.match(developmentLauncher, /stop-rodogarcia-listeners\.ps1" -Mode All/i);
+  assert.match(developmentLauncher, /pm2 delete site-api-prod site-prod cms-api-prod cms-prod landing-api-prod landing-prod/i);
+}
+
+function testProductionLauncherUsesWindowsLineEndingsForLabels() {
+  const attributes = fs.readFileSync(path.join(ROOT_DIR, ".gitattributes"), "utf8");
+  assert.match(attributes, /^\*\.bat text eol=crlf$/m);
+  assert.match(attributes, /^\*\.cmd text eol=crlf$/m);
+
+  const launcher = fs.readFileSync(path.join(ROOT_DIR, "iniciar-prod.bat"));
+  assert.ok(
+    launcher.includes(Buffer.from("\r\n:preflight_failed\r\n")),
+    "O rótulo preflight_failed precisa usar CRLF para ser localizado pelo cmd.exe."
   );
 }
 
@@ -397,6 +439,8 @@ testPromotionAndRollbackPreserveSpringArtifacts();
 testInitialRolloutAllowsMissingActiveArtifacts();
 testExternalBackupManifestTargetsItsOriginalSource();
 testProductionLauncherUsesExternalBatchHelpers();
+testLaunchersClearOnlyRodogarciaCanonicalPorts();
+testProductionLauncherUsesWindowsLineEndingsForLabels();
 testPublicHomeVideoPolicy();
 testNegativeNpmExitStopsTheInstallHelper();
 testIsolatedNextArtifactNeverTouchesTheActiveArtifact();

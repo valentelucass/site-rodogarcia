@@ -57,6 +57,9 @@ if not "%ERRORLEVEL%"=="0" (
   echo [Rodogarcia PROD] PM2 nao encontrado. Instale com: npm install -g pm2
   goto :preflight_failed
 )
+echo [Rodogarcia PROD] Encerrando o modo DEV anterior deste projeto...
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\stop-rodogarcia-listeners.ps1" -Mode Development
+if not "%ERRORLEVEL%"=="0" goto :preflight_failed
 call "%~dp0scripts\assert-production-preflight-isolated.bat"
 set "DEV_PREFLIGHT_EXIT_CODE=%ERRORLEVEL%"
 if not "%DEV_PREFLIGHT_EXIT_CODE%"=="0" goto :preflight_failed
@@ -192,6 +195,11 @@ set "SECURITY_TEST_CMS_ARTIFACT_DIR="
 echo [Rodogarcia PROD] Pre-flight aprovado. Iniciando a troca dos processos PM2...
 call pm2 delete site-api-prod site-prod cms-api-prod cms-prod landing-api-prod landing-prod >nul 2>&1
 call pm2 delete rodogarcia-backend-prod rodogarcia-frontend-prod rodogarcia-cms-backend-prod rodogarcia-cms-prod rodogarcia-landing-builder-backend-prod rodogarcia-landing-builder-prod >nul 2>&1
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\stop-rodogarcia-listeners.ps1" -Mode Production
+if not "%ERRORLEVEL%"=="0" (
+  if defined PROD_INITIAL_ROLLOUT goto :initial_rollout_failed
+  goto :restore_active_processes
+)
 powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\wait-production-state.ps1" -Mode ports-free
 if not "%ERRORLEVEL%"=="0" (
   if defined PROD_INITIAL_ROLLOUT goto :initial_rollout_failed
