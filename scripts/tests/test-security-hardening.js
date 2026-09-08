@@ -23,6 +23,23 @@ const LANDING_BUILDER_FIXTURE_URL = `http://${HOST}:${LANDING_BUILDER_FIXTURE_PO
 const ROOT_DIR = path.resolve(__dirname, "../..");
 const CAMPAIGN_FIXTURE_PATH = "/publicidade-hardening";
 
+function resolveJavaExecutable() {
+  const configuredExecutable = process.env.RODOGARCIA_JAVA_EXECUTABLE?.trim();
+  const javaHome = process.env.JAVA_HOME?.trim();
+  const candidates = [
+    configuredExecutable,
+    javaHome && path.join(javaHome, "bin", process.platform === "win32" ? "java.exe" : "java"),
+  ].filter(Boolean);
+
+  for (const candidate of candidates) {
+    if (fs.existsSync(candidate)) return candidate;
+  }
+
+  throw new Error("Java do hardening nao encontrado. Configure RODOGARCIA_JAVA_EXECUTABLE ou JAVA_HOME.");
+}
+
+const JAVA_EXECUTABLE = resolveJavaExecutable();
+
 function requiredTestArtifactDirectory(environmentName, relativePath) {
   const configuredPath = process.env[environmentName]?.trim();
   if (!configuredPath) {
@@ -75,6 +92,7 @@ const PROCESS_ENV_ALLOWLIST = new Set([
   "COMSPEC",
   "HOME",
   "JAVA_HOME",
+  "RODOGARCIA_JAVA_EXECUTABLE",
   "LANG",
   "LC_ALL",
   "LOCALAPPDATA",
@@ -152,7 +170,7 @@ function springServerCommand(artifactDir, label) {
   if (!fs.existsSync(serverPath)) {
     throw new Error(`Artefato Spring de ${label} ausente: ${serverPath}`);
   }
-  return { command: "java", args: ["-jar", serverPath] };
+  return { command: JAVA_EXECUTABLE, args: ["-jar", serverPath] };
 }
 
 function readRoutesManifest(artifactDir) {

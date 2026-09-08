@@ -166,6 +166,8 @@ function testProductionLauncherUsesExternalBatchHelpers() {
   assert.doesNotMatch(launcher, /\bcall\s+:/i);
   assert.match(launcher, /set\s+"ERRORLEVEL="/i);
   assert.match(launcher, /validate-production-inputs\.ps1/i);
+  assert.match(launcher, /validate-production-java-runtime\.ps1/i);
+  assert.match(launcher, /set "RODOGARCIA_JAVA_EXECUTABLE="/i);
   assert.match(
     launcher,
     /stop-rodogarcia-listeners\.ps1" -Mode Development/i
@@ -220,6 +222,17 @@ function testProductionLauncherUsesExternalBatchHelpers() {
     ciWorkflow,
     /node --experimental-websocket scripts\/tests\/test-security-hardening\.js/i
   );
+
+  const hardening = fs.readFileSync(
+    path.join(ROOT_DIR, "scripts", "tests", "test-security-hardening.js"),
+    "utf8"
+  );
+  assert.match(hardening, /RODOGARCIA_JAVA_EXECUTABLE/);
+  assert.match(hardening, /command:\s*JAVA_EXECUTABLE/);
+
+  const ecosystem = fs.readFileSync(path.join(ROOT_DIR, "ecosystem.config.js"), "utf8");
+  assert.match(ecosystem, /const JAVA_EXECUTABLE = resolveJavaExecutable\(\);/);
+  assert.equal((ecosystem.match(/script:\s*JAVA_EXECUTABLE/g) ?? []).length, 3);
 }
 
 function testLaunchersClearOnlyRodogarciaCanonicalPorts() {

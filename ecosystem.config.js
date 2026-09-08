@@ -8,6 +8,23 @@ const envFile = process.env.RODOGARCIA_ENV_FILE
   : path.join(rootDir, ".env.production.local");
 
 const productionEnv = readEnvironmentFile(envFile);
+
+function resolveJavaExecutable() {
+  const configuredExecutable = process.env.RODOGARCIA_JAVA_EXECUTABLE?.trim();
+  const javaHome = process.env.JAVA_HOME?.trim();
+  const candidates = [
+    configuredExecutable,
+    javaHome && path.join(javaHome, "bin", process.platform === "win32" ? "java.exe" : "java"),
+  ].filter(Boolean);
+
+  for (const candidate of candidates) {
+    if (fs.existsSync(candidate)) return candidate;
+  }
+
+  throw new Error("Java de producao nao encontrado. Configure RODOGARCIA_JAVA_EXECUTABLE ou JAVA_HOME.");
+}
+
+const JAVA_EXECUTABLE = resolveJavaExecutable();
 const sharedEnv = {
   ...productionEnv,
   NODE_ENV: "production",
@@ -103,7 +120,7 @@ module.exports = {
     {
       name: "site-api-prod",
       cwd: path.join(rootDir, "site", "backend"),
-      script: "java",
+      script: JAVA_EXECUTABLE,
       args: ["-jar", path.join("dist", "server.jar")],
       interpreter: "none",
       env: backendEnv,
@@ -136,7 +153,7 @@ module.exports = {
     {
       name: "cms-api-prod",
       cwd: path.join(rootDir, "cms", "backend"),
-      script: "java",
+      script: JAVA_EXECUTABLE,
       args: ["-jar", path.join("dist", "server.jar")],
       interpreter: "none",
       env: cmsBackendEnv,
@@ -169,7 +186,7 @@ module.exports = {
     {
       name: "landing-api-prod",
       cwd: path.join(rootDir, "landing-builder", "backend"),
-      script: "java",
+      script: JAVA_EXECUTABLE,
       args: ["-jar", path.relative(path.join(rootDir, "landing-builder", "backend"), landingBuilderBackendJar)],
       interpreter: "none",
       env: landingBuilderBackendEnv,

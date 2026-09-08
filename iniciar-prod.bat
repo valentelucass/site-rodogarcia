@@ -42,11 +42,15 @@ if not defined LANDING_BUILDER_ASSET_PREFIX set "LANDING_BUILDER_ASSET_PREFIX=/l
 
 powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\validate-production-inputs.ps1" -RepositoryRoot "%CD%"
 if errorlevel 1 goto :preflight_failed
-where java >nul 2>nul
-if not "%ERRORLEVEL%"=="0" (
-  echo [Rodogarcia PROD] Java compativel com os Maven Wrappers nao foi encontrado no PATH.
+set "RODOGARCIA_JAVA_EXECUTABLE="
+if defined JAVA_HOME if exist "%JAVA_HOME%\bin\java.exe" set "RODOGARCIA_JAVA_EXECUTABLE=%JAVA_HOME%\bin\java.exe"
+if not defined RODOGARCIA_JAVA_EXECUTABLE for /f "delims=" %%J in ('where java 2^>nul') do if not defined RODOGARCIA_JAVA_EXECUTABLE set "RODOGARCIA_JAVA_EXECUTABLE=%%J"
+if not defined RODOGARCIA_JAVA_EXECUTABLE (
+  echo [Rodogarcia PROD] Java compativel com os Maven Wrappers nao foi encontrado no PATH nem em JAVA_HOME.
   goto :preflight_failed
 )
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\validate-production-java-runtime.ps1" -JavaExecutable "%RODOGARCIA_JAVA_EXECUTABLE%"
+if not "%ERRORLEVEL%"=="0" goto :preflight_failed
 where npm >nul 2>nul
 if not "%ERRORLEVEL%"=="0" (
   echo [Rodogarcia PROD] npm nao foi encontrado no PATH.
@@ -286,6 +290,7 @@ set "SECURITY_TEST_BACKEND_ARTIFACT_DIR="
 set "SECURITY_TEST_CMS_BACKEND_ARTIFACT_DIR="
 set "SECURITY_TEST_FRONTEND_ARTIFACT_DIR="
 set "SECURITY_TEST_CMS_ARTIFACT_DIR="
+set "RODOGARCIA_JAVA_EXECUTABLE="
 echo [Rodogarcia PROD] Pre-flight interrompido; os processos PM2 ativos nao foram alterados.
 endlocal
 exit /b 1
