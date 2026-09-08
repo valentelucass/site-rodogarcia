@@ -23,7 +23,7 @@ function Get-ManagedListeners {
   )
 }
 
-$listeners = Get-ManagedListeners
+$listeners = @(Get-ManagedListeners)
 if ($listeners.Count -eq 0) {
   Write-Output "[Rodogarcia] Nenhuma porta $Mode estava em uso."
   exit 0
@@ -41,7 +41,7 @@ foreach ($group in ($listeners | Group-Object OwningProcess)) {
 }
 
 for ($attempt = 0; $attempt -lt 20; $attempt++) {
-  $remainingListeners = Get-ManagedListeners
+  $remainingListeners = @(Get-ManagedListeners)
   if ($remainingListeners.Count -eq 0) {
     exit 0
   }
@@ -49,6 +49,6 @@ for ($attempt = 0; $attempt -lt 20; $attempt++) {
   Start-Sleep -Milliseconds 250
 }
 
-$remainingPorts = (Get-ManagedListeners | ForEach-Object LocalPort | Sort-Object -Unique) -join ', '
+$remainingPorts = (@(Get-ManagedListeners) | ForEach-Object LocalPort | Sort-Object -Unique) -join ', '
 Write-Error "As portas Rodogarcia ainda estao em uso: $remainingPorts."
 exit 1

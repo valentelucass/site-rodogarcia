@@ -229,6 +229,8 @@ function testLaunchersClearOnlyRodogarciaCanonicalPorts() {
   );
   assert.match(cleanup, /\$developmentPorts\s*=\s*@\(31012, 31013, 35180, 35013, 36110, 35112\)/);
   assert.match(cleanup, /\$productionPorts\s*=\s*@\(6050, 6051, 6060, 6061, 41110, 41112\)/);
+  assert.match(cleanup, /\$listeners\s*=\s*@\(Get-ManagedListeners\)/);
+  assert.match(cleanup, /\$remainingListeners\s*=\s*@\(Get-ManagedListeners\)/);
   assert.match(cleanup, /taskkill\.exe\s+\/PID\s+\$processId\s+\/T\s+\/F/i);
 
   const developmentLauncher = fs.readFileSync(

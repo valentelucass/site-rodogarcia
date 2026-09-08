@@ -210,6 +210,7 @@
 - Após concentrar no CMS todo o conteúdo textual do Hero de `/sobre` e tornar sua mídia fixa, `cms/backend` passou novamente em `mvnw.cmd -B clean verify` com 201 testes; `site/frontend` e `cms/frontend` passaram em typecheck e build isolado com `NEXT_BUILD_DIST_DIR=.next.test`.
 - Após normalizar os scripts batch para CRLF e proteger o rótulo `:preflight_failed`, `node scripts/tests/test-production-operations.js` passou sem iniciar PM2 ou produção.
 - Após tornar a troca de modo automática, o parser do PowerShell confirmou `scripts/stop-rodogarcia-listeners.ps1`, os 15 launchers/helpers `.bat`/`.cmd` foram confirmados em CRLF e `node scripts/tests/test-production-operations.js` passou sem iniciar DEV, PM2 ou produção.
+- O helper de troca de modo sempre materializa a consulta de listeners como array, inclusive quando nenhuma das portas canônicas está ocupada. Isso permite o encerramento normal do pre-flight PROD em `Set-StrictMode`, sem acessar `.Count` em `null`; a simulação isolada dessa condição e `test-production-operations.js` passaram sem consultar ou encerrar processos reais.
 - Após migrar o Landing Builder para as APIs atuais do Spring 7 e Jackson 3, `landing-builder/backend` passou em `mvnw.cmd -B clean verify` com 9 testes. Os contratos HTTP preservam os status `413` e `422` com os nomes atuais das APIs; a verificação também não encontrou `asText`, `isTextual` ou matchers/status depreciados nesse módulo.
 
 ## Tarefas Pendentes
