@@ -70,8 +70,16 @@ public final class ContentValidators {
         ObjectNode source = requireObject(payload, "Seção");
         if (page.equals("about")) {
             if (section.equals("hero")) {
-                required(source, "Sobre / Hero", "title", "description");
+                required(source, "Sobre / Hero", "eyebrow", "title", "description");
                 media(source.get("media"), "Sobre / Hero");
+                ArrayNode stats = records(source.get("stats"), "Sobre / Hero: indicadores");
+                if (stats.size() != 3) {
+                    throw new ApiException(422, "Sobre / Hero: informe exatamente 3 indicadores.");
+                }
+                int index = 0;
+                for (JsonNode value : stats) {
+                    required(ContentJson.object(value), "Sobre / Hero: indicador " + (++index), "value", "label");
+                }
                 buttons(source.get("buttons"), 2, "Sobre / Hero");
             } else if (section.equals("compliance")) {
                 required(source, "Sobre / Governança", "title", "description", "certificateText");

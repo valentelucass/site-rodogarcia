@@ -6,6 +6,7 @@ import java.util.Base64;
 import java.util.zip.GZIPInputStream;
 
 import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
 
 public final class ContentDefaults {
@@ -199,10 +200,27 @@ public final class ContentDefaults {
         try (GZIPInputStream gzip = new GZIPInputStream(new ByteArrayInputStream(compressed))) {
             ObjectNode content = (ObjectNode) mapper.readTree(gzip);
             if (!content.has("improvementsPage")) content.set("improvementsPage", improvements(mapper));
+            ensureAboutHeroDefaults(content);
             ContentMediaPresentations.normalizeContent(content, mapper);
             return content;
         } catch (IOException exception) {
             throw new IllegalStateException("Defaults de conteúdo do CMS inválidos.", exception);
         }
+    }
+
+    private static void ensureAboutHeroDefaults(ObjectNode content) {
+        ObjectNode about = content.get("aboutPage") instanceof ObjectNode value
+            ? value : content.putObject("aboutPage");
+        ObjectNode hero = about.get("hero") instanceof ObjectNode value
+            ? value : about.putObject("hero");
+        if (!hero.path("eyebrow").isString() || hero.path("eyebrow").asString().isBlank()) {
+            hero.put("eyebrow", "Nossa história");
+        }
+        if (hero.path("stats").isArray()) return;
+
+        ArrayNode stats = hero.putArray("stats");
+        stats.addObject().put("value", "35+").put("label", "Anos de experiência");
+        stats.addObject().put("value", "1.500+").put("label", "Pontos de coleta");
+        stats.addObject().put("value", "1M+").put("label", "Pacotes processados");
     }
 }

@@ -964,8 +964,23 @@
   },
   "aboutPage": {
     "hero": {
+      "eyebrow": "Nossa história",
       "title": "Mais de 35 anos conectando o Brasil",
       "description": "Desde 1989, transformando a logística com excelência, tecnologia e compromisso com cada entrega.",
+      "stats": [
+        {
+          "value": "35+",
+          "label": "Anos de experiência"
+        },
+        {
+          "value": "1.500+",
+          "label": "Pontos de coleta"
+        },
+        {
+          "value": "1M+",
+          "label": "Pacotes processados"
+        }
+      ],
       "media": {
         "src": "/motorista-rodogarcia.abbf7875cfae.webp",
         "alt": "Operacao Rodogarcia em movimento",

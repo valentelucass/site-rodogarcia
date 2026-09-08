@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-export function useCarouselPagination<T>(items: T[], baseItemsPerPage = 5) {
+export function useCarouselPagination<T>(items: readonly T[], baseItemsPerPage = 5) {
   const [itemsPerPage, setItemsPerPage] = useState(baseItemsPerPage);
   const [currentPage, setCurrentPage] = useState(0);
 

@@ -14,6 +14,7 @@ import {
   VideoCamera,
 } from "@phosphor-icons/react";
 import { useApiRequest } from "@/hooks/useApiRequest";
+import { useCarouselPagination } from "@/hooks/useCarouselPagination";
 import {
   adminResourceKeys,
   invalidateAdminResource,
@@ -37,6 +38,7 @@ import { cn } from "@/lib/utils";
 import {
   DeveloperMediaField,
   DeveloperMediaPreview,
+  type AdminMediaRecord,
 } from "@/components/developer/DeveloperMediaField";
 import { MediaPlacementEditor } from "@/components/developer/MediaPlacementEditor";
 import { DeveloperResponsivePreview } from "@/components/developer/DeveloperResponsivePreview";
@@ -60,6 +62,7 @@ import {
 type SaveKey =
   | "hero"
   | "quickActions"
+  | "certifications"
   | "section1"
   | "section2"
   | "section3"
@@ -87,38 +90,65 @@ const HOME_STEPS = [
     description: "Título, 3 abas clicáveis e CTA da primeira seção.",
   },
   {
-    key: "section2",
+    key: "certifications",
     step: "Etapa 4",
+    title: "Certificações",
+    description: "Logos da faixa de compliance e qualidade da Home.",
+  },
+  {
+    key: "section2",
+    step: "Etapa 5",
     title: "Operação conectada",
     description: "Até 5 itens da área escura em desktop e mobile.",
   },
   {
     key: "section3",
-    step: "Etapa 5",
+    step: "Etapa 6",
     title: "Linhas de serviço",
     description: "Badge, texto principal e cards paginados de soluções.",
   },
   {
     key: "regionalPresence",
-    step: "Etapa 6",
+    step: "Etapa 7",
     title: "Presença Regional",
     description: "Unidades exibidas no mapa e no card de unidade ativa.",
   },
   {
     key: "trackingCta",
-    step: "Etapa 7",
+    step: "Etapa 8",
     title: "Rastreie sua carga",
     description: "Somente textos e links dos dois botões da área de rastreio.",
   },
   {
     key: "socialProof",
-    step: "Etapa 8",
+    step: "Etapa 9",
     title: "Prova social",
     description: "Depoimentos, logos, estrelas, ordem e visibilidade.",
   },
 ] as const;
 
 type HomeStepKey = (typeof HOME_STEPS)[number]["key"];
+
+const HOME_CERTIFICATION_SLOTS = [
+  { key: "home.cert.iso", label: "ISO 9001", alt: "Logo ISO 9001" },
+  { key: "home.cert.sassmaq", label: "SASSMAQ", alt: "Logo SASSMAQ" },
+  { key: "home.cert.ecovadis", label: "EcoVadis", alt: "Logo EcoVadis" },
+  { key: "home.cert.pf", label: "Licença PF", alt: "Logo da Polícia Federal" },
+  { key: "home.cert.pcsp", label: "Polícia Civil SP", alt: "Logo da Polícia Civil de São Paulo" },
+  { key: "home.cert.exercito", label: "Exército Brasileiro", alt: "Logo do Exército Brasileiro" },
+  { key: "home.cert.ibama", label: "IBAMA", alt: "Logo do IBAMA" },
+] as const;
+
+interface HomeCertificationConfiguration {
+  slots?: Record<string, string>;
+  images?: AdminMediaRecord[];
+}
+
+function normalizeHomeCertificationSlots(slots?: Record<string, string>): Record<string, string> {
+  return Object.fromEntries(
+    HOME_CERTIFICATION_SLOTS.map(({ key }) => [key, slots?.[key] ?? ""])
+  );
+}
 
 const EMPTY_MEDIA: HomeMedia = {
   type: "image",
@@ -808,6 +838,10 @@ function SaveButton({
 export default function DeveloperHomePage() {
   const { apiRequest } = useApiRequest();
   const [home, setHome] = useState<HomePageContent>(emptyHomePage);
+  const [certificationSlots, setCertificationSlots] = useState<Record<string, string>>(
+    normalizeHomeCertificationSlots
+  );
+  const [certificationImages, setCertificationImages] = useState<AdminMediaRecord[]>([]);
   const [availableUnits, setAvailableUnits] = useState<OperationalUnit[]>([]);
   const [unitsReferenceAvailable, setUnitsReferenceAvailable] = useState<boolean | null>(null);
   const [activeStep, setActiveStep] = useState<HomeStepKey>("hero");
@@ -827,28 +861,47 @@ export default function DeveloperHomePage() {
     let alive = true;
     async function load() {
       setLoading(true);
-      const [response, unitsResponse] = await Promise.all([
+      const [response, unitsResponse, certificationsResponse] = await Promise.all([
         apiRequest<{ homePage?: HomePageContent }>(api.admin.home),
         apiRequest<{ items?: OperationalUnit[] }>(api.admin.entity("units")),
+        apiRequest<HomeCertificationConfiguration>(api.admin.homeCertifications),
       ]);
       if (!alive) return;
       if (response.success) {
         setHome(normalizeHomePage(response.data?.homePage));
+        if (certificationsResponse.success) {
+          setCertificationSlots(normalizeHomeCertificationSlots(certificationsResponse.data?.slots));
+          setCertificationImages(certificationsResponse.data?.images ?? []);
+        } else {
+          setCertificationSlots(normalizeHomeCertificationSlots());
+          setCertificationImages([]);
+        }
         if (unitsResponse.success) {
           setAvailableUnits(unitsResponse.data?.items ?? []);
           setUnitsReferenceAvailable(true);
-          setStatus(null);
+          setStatus(
+            certificationsResponse.success
+              ? null
+              : {
+                  tone: "error",
+                  text: certificationsResponse.error ?? "Não foi possível carregar as certificações da Home.",
+                }
+          );
         } else if (unitsResponse.status === 403) {
           setAvailableUnits([]);
           setUnitsReferenceAvailable(false);
           setStatus({
-            tone: "info",
-            text: "Seu perfil não pode consultar a lista de Unidades. Os cards da Home continuam disponíveis; vínculos já existentes são preservados.",
+            tone: certificationsResponse.success ? "info" : "error",
+            text: certificationsResponse.success
+              ? "Seu perfil não pode consultar a lista de Unidades. Os cards da Home continuam disponíveis; vínculos já existentes são preservados."
+              : certificationsResponse.error ?? "Não foi possível carregar as certificações da Home.",
           });
         } else {
           setStatus({
             tone: "error",
-            text: "Não foi possível carregar as referências de Unidades. Tente novamente.",
+            text: certificationsResponse.success
+              ? "Não foi possível carregar as referências de Unidades. Tente novamente."
+              : `${certificationsResponse.error ?? "Não foi possível carregar as certificações da Home."} Também não foi possível carregar as referências de Unidades.`,
           });
         }
       } else {
@@ -877,15 +930,29 @@ export default function DeveloperHomePage() {
     HOME_STEPS.findIndex((step) => step.key === activeStep)
   );
   const activeStepInfo = HOME_STEPS[activeStepIndex] ?? HOME_STEPS[0];
+  const {
+    pages: homeStepPages,
+    currentPage: homeStepPage,
+    totalPages: homeStepTotalPages,
+    nextPage: nextHomeStepPage,
+    prevPage: prevHomeStepPage,
+    goToPage: goToHomeStepPage,
+  } = useCarouselPagination(HOME_STEPS, 4);
+
+  useEffect(() => {
+    const page = homeStepPages.findIndex((steps) =>
+      steps.some((step) => step.key === activeStep)
+    );
+    if (page >= 0) goToHomeStepPage(page);
+  }, [activeStep, homeStepPages]);
 
   function selectStep(step: HomeStepKey) {
     setActiveStep(step);
+    const page = homeStepPages.findIndex((steps) =>
+      steps.some((item) => item.key === step)
+    );
+    if (page >= 0) goToHomeStepPage(page);
     window.scrollTo({ top: 0, behavior: "smooth" });
-  }
-
-  function moveStep(direction: -1 | 1) {
-    const nextStep = HOME_STEPS[activeStepIndex + direction];
-    if (nextStep) selectStep(nextStep.key);
   }
 
   async function saveSection(section: SaveKey, endpoint: string, payload: unknown) {
@@ -906,6 +973,36 @@ export default function DeveloperHomePage() {
     setPreviewRevision((revision) => revision + 1);
     setStatus({ tone: "success", text: "Bloco salvo com sucesso." });
     invalidateAdminResource([adminResourceKeys.dashboard, adminResourceKeys.images]);
+  }
+
+  async function saveCertifications() {
+    setSaving("certifications");
+    setStatus(null);
+    const response = await apiRequest<{ slots?: Record<string, string> }>(
+      api.admin.homeCertifications,
+      {
+        method: "PUT",
+        body: JSON.stringify({ slots: certificationSlots }),
+      }
+    );
+    setSaving("");
+
+    if (!response.success) {
+      setStatus({
+        tone: "error",
+        text: response.error ?? "Falha ao salvar as certificações da Home.",
+      });
+      return;
+    }
+
+    setCertificationSlots(normalizeHomeCertificationSlots(response.data?.slots));
+    setPreviewRevision((revision) => revision + 1);
+    setStatus({ tone: "success", text: "Certificações salvas com sucesso." });
+    invalidateAdminResource([
+      adminResourceKeys.dashboard,
+      adminResourceKeys.images,
+      adminResourceKeys.mediaSlots,
+    ]);
   }
 
   function updateHeroSlide(index: number, patch: Partial<HomeHeroSlide>) {
@@ -1150,53 +1247,82 @@ export default function DeveloperHomePage() {
           <div className="inline-flex w-fit items-center rounded-full border border-[var(--primary)]/14 bg-white/72 p-1 shadow-[0_8px_20px_rgba(29,78,216,0.07)]">
             <button
               type="button"
-              onClick={() => moveStep(-1)}
-              disabled={activeStepIndex === 0}
+              onClick={prevHomeStepPage}
+              disabled={homeStepPage === 0}
               className={cn(
                 "inline-flex min-h-8 items-center justify-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-slate-600 transition-colors hover:bg-white hover:text-[var(--foreground)] disabled:cursor-not-allowed disabled:opacity-40"
               )}
             >
               <CaretLeft size={16} weight="bold" />
-              Anterior
+              Página anterior
             </button>
+            <span className="px-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--color-muted-raw)]">
+              {homeStepPage + 1}/{homeStepTotalPages}
+            </span>
             <button
               type="button"
-              onClick={() => moveStep(1)}
-              disabled={activeStepIndex === HOME_STEPS.length - 1}
+              onClick={nextHomeStepPage}
+              disabled={homeStepPage === homeStepTotalPages - 1}
               className={cn(
                 "inline-flex min-h-8 items-center justify-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-slate-600 transition-colors hover:bg-white hover:text-[var(--foreground)] disabled:cursor-not-allowed disabled:opacity-40"
               )}
             >
-              Proximo
+              Próxima página
               <CaretRight size={16} weight="bold" />
             </button>
           </div>
         </div>
 
-        <nav className="mt-3 grid grid-cols-2 gap-1.5 sm:grid-cols-4 xl:grid-cols-8" aria-label="Etapas do editor da Home">
-          {HOME_STEPS.map((step, index) => {
-            const active = step.key === activeStep;
-            return (
-              <button
-                key={step.key}
-                type="button"
-                onClick={() => selectStep(step.key)}
-                aria-current={active ? "step" : undefined}
-                title={`Etapa ${index + 1}: ${step.title}`}
-                className={cn(
-                  "group inline-flex min-h-10 min-w-0 items-center gap-2 rounded-xl border px-2.5 py-2 text-left transition-all duration-300",
-                  active
-                    ? "border-[var(--primary)]/38 bg-[linear-gradient(145deg,rgba(255,255,255,0.96)_0%,rgba(219,234,254,0.92)_100%)] text-[var(--foreground)] shadow-[0_6px_16px_rgba(29,78,216,0.12)]"
-                    : "border-slate-200/90 bg-white text-[var(--foreground)] shadow-[0_4px_10px_rgba(15,23,42,0.025)] hover:-translate-y-0.5 hover:border-[var(--primary)]/30 hover:shadow-[0_8px_16px_rgba(15,23,42,0.06)]"
-                )}
-              >
-                <span className={cn("flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-[10px] font-bold", active ? "border-[var(--primary)] bg-[var(--primary)] text-white shadow-[0_3px_8px_rgba(29,78,216,0.18)]" : "border-[var(--primary)]/14 bg-[var(--primary)]/7 text-[var(--primary)]")}>
-                  {index + 1}
-                </span>
-                <span className="truncate text-xs font-semibold leading-4">{step.title}</span>
-              </button>
-            );
-          })}
+        <nav className="mt-3 overflow-hidden" aria-label="Etapas do editor da Home">
+          <div
+            className="flex transition-transform duration-500 ease-[cubic-bezier(0.2,0,0,1)] motion-reduce:transition-none"
+            style={{ transform: `translateX(-${homeStepPage * 100}%)` }}
+          >
+            {homeStepPages.map((page, pageIndex) => {
+              const nextStep = homeStepPages[pageIndex + 1]?.[0];
+              return (
+                <div key={pageIndex} className="flex w-full shrink-0 gap-1.5">
+                  {page.map((step) => {
+                    const index = HOME_STEPS.findIndex((item) => item.key === step.key);
+                    const active = step.key === activeStep;
+                    return (
+                      <button
+                        key={step.key}
+                        type="button"
+                        onClick={() => selectStep(step.key)}
+                        aria-current={active ? "step" : undefined}
+                        title={`Etapa ${index + 1}: ${step.title}`}
+                        className={cn(
+                          "group inline-flex min-h-12 min-w-0 flex-1 items-center gap-2 rounded-xl border px-3 py-2.5 text-left transition-all duration-300",
+                          page.length === 1 && "max-w-xs",
+                          active
+                            ? "border-[var(--primary)]/38 bg-[linear-gradient(145deg,rgba(255,255,255,0.96)_0%,rgba(219,234,254,0.92)_100%)] text-[var(--foreground)] shadow-[0_6px_16px_rgba(29,78,216,0.12)]"
+                            : "border-slate-200/90 bg-white text-[var(--foreground)] shadow-[0_4px_10px_rgba(15,23,42,0.025)] hover:-translate-y-0.5 hover:border-[var(--primary)]/30 hover:shadow-[0_8px_16px_rgba(15,23,42,0.06)]"
+                        )}
+                      >
+                        <span className={cn("flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-[10px] font-bold", active ? "border-[var(--primary)] bg-[var(--primary)] text-white shadow-[0_3px_8px_rgba(29,78,216,0.18)]" : "border-[var(--primary)]/14 bg-[var(--primary)]/7 text-[var(--primary)]")}>
+                          {index + 1}
+                        </span>
+                        <span className="truncate text-xs font-semibold leading-4">{step.title}</span>
+                      </button>
+                    );
+                  })}
+                  {nextStep ? (
+                    <div
+                      aria-hidden="true"
+                      className="pointer-events-none relative flex min-h-12 w-28 shrink-0 items-center gap-2 overflow-hidden rounded-xl border border-slate-200/75 bg-white/72 px-3 py-2.5 text-slate-500 opacity-60 blur-[1.5px] sm:w-36"
+                    >
+                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-[var(--primary)]/14 bg-[var(--primary)]/7 text-[10px] font-bold text-[var(--primary)]">
+                        {HOME_STEPS.findIndex((item) => item.key === nextStep.key) + 1}
+                      </span>
+                      <span className="truncate text-xs font-semibold leading-4">{nextStep.title}</span>
+                      <span className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-[rgb(239,246,255)] to-transparent" />
+                    </div>
+                  ) : null}
+                </div>
+              );
+            })}
+          </div>
         </nav>
       </section>
 
@@ -1547,10 +1673,52 @@ export default function DeveloperHomePage() {
         </DeveloperCard>
         ) : null}
 
+        {activeStep === "certifications" ? (
+        <DeveloperCard id="certifications" className="p-5 sm:p-6">
+          <DeveloperSectionHeading
+            eyebrow="Etapa 4 - compliance e qualidade"
+            title="Certificações da Home"
+            description="Escolha os logos exibidos na faixa entre Previsibilidade e Operação conectada. Cada campo troca somente o logo correspondente."
+          />
+          <form
+            className="space-y-5"
+            onSubmit={(event) => {
+              event.preventDefault();
+              void saveCertifications();
+            }}
+          >
+            <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+              {HOME_CERTIFICATION_SLOTS.map((certification) => (
+                <div key={certification.key} className={homeEditableCardClassName()}>
+                  <DeveloperMediaField
+                    label={certification.label}
+                    value={certificationSlots[certification.key] ?? ""}
+                    onChange={(url) =>
+                      setCertificationSlots((current) => ({
+                        ...current,
+                        [certification.key]: url,
+                      }))
+                    }
+                    mediaType="image"
+                    previewAlt={certification.alt}
+                    hint="Onde aparece: faixa de certificações da Página Inicial. Deixe vazio para usar o logo padrão do site."
+                    helpKey="certification-logo"
+                    availableMedia={certificationImages}
+                    showLibraryLink={false}
+                    stackControls
+                  />
+                </div>
+              ))}
+            </div>
+            <SaveButton saving={saving === "certifications"}>Salvar certificações</SaveButton>
+          </form>
+        </DeveloperCard>
+        ) : null}
+
         {activeStep === "section2" ? (
         <DeveloperCard id="section-2" className="p-5 sm:p-6">
           <DeveloperSectionHeading
-            eyebrow="Etapa 4 - área de operação"
+            eyebrow="Etapa 5 - área de operação"
             title="Todas as frentes da operação se encontram aqui"
             description="Máximo de 5 itens. A ordem aqui define a ordem desktop e mobile."
             action={
@@ -1614,7 +1782,7 @@ export default function DeveloperHomePage() {
         {activeStep === "section3" ? (
         <DeveloperCard id="section-3" className="p-5 sm:p-6">
           <DeveloperSectionHeading
-            eyebrow="Etapa 5 — linhas de serviço"
+            eyebrow="Etapa 6 — linhas de serviço"
             title="Soluções para a complexidade da sua operação"
             description="O site mostra 3 cards por página, com paginação visual e rotação automática."
             action={
@@ -1696,7 +1864,7 @@ export default function DeveloperHomePage() {
         {activeStep === "regionalPresence" ? (
         <DeveloperCard id="regional-presence" className="p-5 sm:p-6">
           <DeveloperSectionHeading
-            eyebrow="Etapa 6 - Presença Regional"
+            eyebrow="Etapa 7 - Presença Regional"
             title="Unidades exibidas na Página Inicial"
             description="Cada card é salvo dentro da Home. A lista antiga de unidades serve apenas como referência para preencher campos."
             action={
@@ -1913,7 +2081,7 @@ export default function DeveloperHomePage() {
         {activeStep === "trackingCta" ? (
         <DeveloperCard id="tracking-cta" className="p-5 sm:p-6">
           <DeveloperSectionHeading
-            eyebrow="Etapa 7 - Rastreie sua carga"
+            eyebrow="Etapa 8 - Rastreie sua carga"
             title="Botões da seção de rastreio"
             description="Edite somente texto e link dos dois botões exibidos na Página Inicial."
           />
@@ -1970,7 +2138,7 @@ export default function DeveloperHomePage() {
         {activeStep === "socialProof" ? (
         <DeveloperCard id="social-proof" className="p-5 sm:p-6">
           <DeveloperSectionHeading
-            eyebrow="Etapa 8 - carrossel de depoimentos"
+            eyebrow="Etapa 9 - carrossel de depoimentos"
             title="Prova Social da Home"
             description="Lista livre de relatos autorizados. A ordem aqui é a ordem exibida no carrossel da Home; empresas não são publicadas."
             action={
@@ -2053,29 +2221,29 @@ export default function DeveloperHomePage() {
       <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-[22px] border border-[var(--border)] bg-white/82 p-4 shadow-[0_10px_24px_rgba(15,23,42,0.045)]">
         <button
           type="button"
-          onClick={() => moveStep(-1)}
-          disabled={activeStepIndex === 0}
+          onClick={prevHomeStepPage}
+          disabled={homeStepPage === 0}
           className={cn(
             developerSecondaryButtonClassName,
             "rounded-full px-5 disabled:cursor-not-allowed disabled:opacity-45"
           )}
         >
           <CaretLeft size={16} weight="bold" />
-          Anterior
+          Página anterior
         </button>
         <span className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-muted-raw)]">
-          Pagina {activeStepIndex + 1} de {HOME_STEPS.length}
+          Página {homeStepPage + 1} de {homeStepTotalPages}
         </span>
         <button
           type="button"
-          onClick={() => moveStep(1)}
-          disabled={activeStepIndex === HOME_STEPS.length - 1}
+          onClick={nextHomeStepPage}
+          disabled={homeStepPage === homeStepTotalPages - 1}
           className={cn(
             developerSecondaryButtonClassName,
             "rounded-full px-5 disabled:cursor-not-allowed disabled:opacity-45"
           )}
         >
-          Proximo
+          Próxima página
           <CaretRight size={16} weight="bold" />
         </button>
       </div>

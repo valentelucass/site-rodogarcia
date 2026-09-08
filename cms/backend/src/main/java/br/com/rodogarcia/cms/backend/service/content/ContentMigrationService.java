@@ -128,7 +128,12 @@ public final class ContentMigrationService {
                 if (!pageKey.equals("improvements")) persist = true;
                 content.set(property, legacyPage(pageKey, content, siteTexts, mediaSlots));
             } else {
-                content.set(property, sanitizer.page(pageKey, existing));
+                ObjectNode normalizedPage = sanitizer.page(pageKey, existing);
+                if (pageKey.equals("about")
+                    && !normalizedPage.path("hero").path("stats").equals(existing.path("hero").path("stats"))) {
+                    persist = true;
+                }
+                content.set(property, normalizedPage);
             }
         }
 

@@ -9,6 +9,7 @@ class AdminRouteContractTest {
     @Test
     void keepsNodePermissionLookupCaseSensitiveAndPrefixBased() {
         assertThat(AdminRouteContract.permissionForPath("/home")).isEqualTo("home");
+        assertThat(AdminRouteContract.permissionForPath("/home/certifications")).isEqualTo("home");
         assertThat(AdminRouteContract.permissionForPath("/home-extra")).isEqualTo("home");
         assertThat(AdminRouteContract.permissionForPath("/media-slots")).isEqualTo("images");
         assertThat(AdminRouteContract.permissionForPath("/HOME")).isNull();
@@ -21,6 +22,7 @@ class AdminRouteContractTest {
         assertPolicy("/content", "PATCH", false, false, 0);
         assertPolicy("/content/reorder", "POST", true, true, 0);
         assertPolicy("/home/unknown", "PUT", true, true, 0);
+        assertPolicy("/home/certifications", "PUT", true, true, 0);
         assertPolicy("/home/hero", "POST", false, false, 0);
         assertPolicy("/pages/about/hero", "PUT", true, true, 0);
         assertPolicy("/pages/about/hero/deeper", "PUT", false, false, 0);

@@ -55,6 +55,8 @@ interface DeveloperMediaFieldProps {
   stackControls?: boolean;
   equalControlWidths?: boolean;
   afterControls?: ReactNode;
+  availableMedia?: AdminMediaRecord[];
+  showLibraryLink?: boolean;
 }
 
 function mediaTypeFromUrl(value: string): "image" | "video" {
@@ -91,6 +93,8 @@ export function DeveloperMediaField({
   stackControls = false,
   equalControlWidths = false,
   afterControls,
+  availableMedia,
+  showLibraryLink = true,
 }: DeveloperMediaFieldProps) {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickerPage, setPickerPage] = useState(0);
@@ -116,18 +120,18 @@ export function DeveloperMediaField({
       };
     },
     staleTime: 30_000,
-    enabled: pickerOpen,
+    enabled: pickerOpen && !availableMedia,
   });
 
   const media = useMemo(
     () =>
-      [...(data ?? [])]
+      [...(availableMedia ?? data ?? [])]
         .filter((item) => {
           if (mediaType === "all") return true;
           return (item.mediaType ?? mediaTypeFromUrl(item.url)) === mediaType;
         })
         .sort((a, b) => Number(b.usedInContent) - Number(a.usedInContent)),
-    [data, mediaType]
+    [availableMedia, data, mediaType]
   );
   const trimmedValue = value.trim();
   const totalPickerPages = Math.max(1, Math.ceil(media.length / MEDIA_PAGE_SIZE));
@@ -290,13 +294,15 @@ export function DeveloperMediaField({
                 </p>
               </div>
               <div className="flex shrink-0 items-center gap-2">
-                <Link
-                  href={admin.images}
-                  className={cn(developerGhostButtonClassName, "min-h-9 rounded-xl px-3 py-2 text-xs")}
-                >
-                  <ArrowSquareOut size={14} weight="bold" />
-                  Upload
-                </Link>
+                {showLibraryLink ? (
+                  <Link
+                    href={admin.images}
+                    className={cn(developerGhostButtonClassName, "min-h-9 rounded-xl px-3 py-2 text-xs")}
+                  >
+                    <ArrowSquareOut size={14} weight="bold" />
+                    Upload
+                  </Link>
+                ) : null}
                 <button
                   type="button"
                   onClick={() => setPickerOpen(false)}

@@ -29,6 +29,7 @@ export function AboutHero({
   image,
   buttons,
 }: AboutHeroProps) {
+  const visibleStats = Array.isArray(stats) ? stats : [];
   const heroButtons = buttons?.length
     ? buttons
     : [
@@ -143,19 +144,19 @@ export function AboutHero({
           </motion.div>
         </div>
 
-        {stats.length > 0 ? (
+        {visibleStats.length > 0 ? (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.8, duration: 0.6 }}
             className="mt-16 grid grid-cols-2 items-center gap-x-4 gap-y-10 border-t border-white/10 pt-8 sm:mt-24 sm:flex sm:flex-wrap sm:justify-center sm:gap-16 lg:justify-start"
           >
-            {stats.map((item, idx) => (
+            {visibleStats.map((item, idx) => (
               <div
                 key={item.label}
                 className={cn(
                   "flex items-center gap-4 sm:justify-start sm:gap-10",
-                  idx === stats.length - 1
+                  idx === visibleStats.length - 1
                     ? "col-span-2 justify-center sm:col-span-1"
                     : "justify-center"
                 )}
@@ -168,7 +169,7 @@ export function AboutHero({
                     {item.label}
                   </span>
                 </div>
-                {idx < stats.length - 1 ? (
+                {idx < visibleStats.length - 1 ? (
                   <div className="hidden h-12 w-px bg-white/10 sm:block" />
                 ) : null}
               </div>

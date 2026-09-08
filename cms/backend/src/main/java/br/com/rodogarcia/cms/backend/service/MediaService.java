@@ -58,7 +58,7 @@ public final class MediaService {
         "video/ogg", ".ogg",
         "application/ogg", ".ogg"
     );
-    private static final Set<String> EDITABLE_MEDIA_SLOTS = Set.of(
+    private static final List<String> HOME_CERTIFICATION_SLOTS = List.of(
         "home.cert.iso",
         "home.cert.sassmaq",
         "home.cert.ecovadis",
@@ -67,6 +67,7 @@ public final class MediaService {
         "home.cert.exercito",
         "home.cert.ibama"
     );
+    private static final Set<String> EDITABLE_MEDIA_SLOTS = Set.copyOf(HOME_CERTIFICATION_SLOTS);
 
     private final JsonFileStore store;
     private final StoragePaths paths;
@@ -345,6 +346,70 @@ public final class MediaService {
         return store.readObject(paths.mediaSlots()).deepCopy();
     }
 
+    /**
+     * Retorna somente as escolhas que aparecem na faixa de certificações da
+     * Home, acompanhadas de imagens internas elegíveis para esse uso. A rota
+     * administrativa da Home não deve conceder acesso às demais operações da
+     * Biblioteca.
+     */
+    public synchronized ObjectNode homeCertificationConfiguration() {
+        ObjectNode result = store.mapper().createObjectNode();
+        result.set("slots", homeCertificationSlots(readMediaSlots()));
+
+        ArrayNode images = store.mapper().createArrayNode();
+        for (JsonNode item : listAdminImages()) {
+            String mediaType = jsString(item.get("mediaType"), mediaTypeFromUrl(
+                normalizedPath(item.get("url"))
+            ));
+            if (mediaType.equals("image")) images.add(item.deepCopy());
+        }
+        result.set("images", images);
+        return result;
+    }
+
+    /**
+     * Atualiza exclusivamente os sete slots da faixa de certificações da
+     * Home. O payload completo elimina alterações implícitas e impede que um
+     * editor da Home altere slots pertencentes a outras áreas do site.
+     */
+    public synchronized ObjectNode updateHomeCertificationSlots(
+        JsonNode body,
+        HttpServletRequest request
+    ) {
+        if (body == null || !body.isObject() || body.get("slots") == null || !body.get("slots").isObject()) {
+            throw new ApiException(422, "Informe os slots das certificações da Home.");
+        }
+
+        ObjectNode requested = (ObjectNode) body.get("slots");
+        requested.properties().forEach(entry -> {
+            if (!EDITABLE_MEDIA_SLOTS.contains(entry.getKey())) {
+                throw new ApiException(422, "Slot de certificação não editável: " + entry.getKey() + ".");
+            }
+        });
+        for (String key : HOME_CERTIFICATION_SLOTS) {
+            if (!requested.has(key)) {
+                throw new ApiException(422, "Informe o slot de certificação " + key + ".");
+            }
+        }
+
+        ObjectNode next = readMediaSlots();
+        for (String key : HOME_CERTIFICATION_SLOTS) {
+            String mediaUrl = validation.assertInternal(
+                requested.get(key), MediaValidationService.Kind.IMAGE, false, "Certificação " + key
+            );
+            if (mediaUrl.isEmpty()) next.remove(key);
+            else next.put(key, mediaUrl);
+        }
+        store.write(paths.mediaSlots(), next);
+        audit.record(
+            request,
+            "home.certifications_update",
+            "home:certifications",
+            Map.of("count", String.valueOf(HOME_CERTIFICATION_SLOTS.size()))
+        );
+        return homeCertificationSlots(next);
+    }
+
     public synchronized ObjectNode updateMediaSlots(JsonNode body, HttpServletRequest request) {
         ObjectNode next = readMediaSlots();
         if (body != null && body.isObject()) {
@@ -371,6 +436,14 @@ public final class MediaService {
             Map.of("count", String.valueOf(next.size()))
         );
         return next;
+    }
+
+    private ObjectNode homeCertificationSlots(ObjectNode source) {
+        ObjectNode result = store.mapper().createObjectNode();
+        for (String key : HOME_CERTIFICATION_SLOTS) {
+            result.put(key, normalizedPath(source.get(key)));
+        }
+        return result;
     }
 
     private ObjectNode saveImage(

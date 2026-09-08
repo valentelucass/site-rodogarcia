@@ -43,7 +43,7 @@ class EndpointManifestCoverageTest {
     void everyFrozenNodeEndpointHasAConcreteSpringControllerMapping() throws Exception {
         JsonNode manifest = mapper.readTree(Files.readString(
             Path.of("contracts", "endpoint-manifest.v1.json")));
-        assertThat(manifest.path("endpoints")).hasSize(95);
+        assertThat(manifest.path("endpoints")).hasSize(97);
 
         for (JsonNode endpoint : manifest.path("endpoints")) {
             String path = concretePath(endpoint.path("path").asString());

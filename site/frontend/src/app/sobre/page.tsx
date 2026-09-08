@@ -72,17 +72,17 @@ const HIGHLIGHTS = [
   },
 ];
 
-const ABOUT_STATS = [
-  { value: "35+", label: "Anos de experiência" },
-  { value: "1.500+", label: "Pontos de coleta" },
-  { value: "1M+", label: "Pacotes processados" },
-];
-
 const FALLBACK_ABOUT_PAGE: AboutPageContent = {
   hero: {
+    eyebrow: "Nossa história",
     title: "Mais de 35 anos conectando o Brasil",
     description:
       "Desde 1989, transformando a logística com excelência, tecnologia e compromisso com cada entrega.",
+    stats: [
+      { value: "35+", label: "Anos de experiência" },
+      { value: "1.500+", label: "Pontos de coleta" },
+      { value: "1M+", label: "Pacotes processados" },
+    ],
     media: { src: "/motorista-rodogarcia.abbf7875cfae.webp", alt: "Operação Rodogarcia em movimento" },
     buttons: [
       { label: "Solicitar cotação", url: site.quote },
@@ -119,14 +119,17 @@ const FALLBACK_ABOUT_PAGE: AboutPageContent = {
 export default async function SobrePage() {
   const content = await fetchPublicContent();
   const aboutPage = content.data?.aboutPage ?? FALLBACK_ABOUT_PAGE;
+  const heroStats = Array.isArray(aboutPage.hero.stats) && aboutPage.hero.stats.length === 3
+    ? aboutPage.hero.stats
+    : FALLBACK_ABOUT_PAGE.hero.stats;
   
   return (
     <PageShell>
       <AboutHero
-        eyebrow="Nossa história"
+        eyebrow={aboutPage.hero.eyebrow}
         title={aboutPage.hero.title}
         description={aboutPage.hero.description}
-        stats={ABOUT_STATS}
+        stats={heroStats}
         image={aboutPage.hero.media}
         buttons={aboutPage.hero.buttons.map((button, index) => ({
           label: button.label,

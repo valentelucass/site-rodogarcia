@@ -363,8 +363,13 @@ export interface FooterLinksContent {
 
 export interface AboutPageContent {
   hero: {
+    eyebrow: string;
     title: string;
     description: string;
+    stats: Array<{
+      value: string;
+      label: string;
+    }>;
     buttons: PageButton[];
     media: PageMedia;
   };

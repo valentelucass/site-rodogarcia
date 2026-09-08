@@ -23,6 +23,13 @@ class ContentDefaultsTest {
         assertThat(content.path("aboutPage").path("hero").path("media")
             .path("presentation").path("desktop").path("focalPoint").path("x").asInt())
             .isEqualTo(50);
+        assertThat(content.path("aboutPage").path("hero").path("stats")).hasSize(3);
+        assertThat(content.path("aboutPage").path("hero").path("eyebrow").asString())
+            .isEqualTo("Nossa história");
+        assertThat(content.path("aboutPage").path("hero").path("stats").get(0).path("value").asString())
+            .isEqualTo("35+");
+        assertThat(content.path("aboutPage").path("hero").path("stats").get(2).path("label").asString())
+            .isEqualTo("Pacotes processados");
     }
 
     @Test

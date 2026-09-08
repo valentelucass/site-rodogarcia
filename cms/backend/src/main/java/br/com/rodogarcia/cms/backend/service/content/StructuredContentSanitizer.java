@@ -38,6 +38,7 @@ public final class StructuredContentSanitizer {
     private static final Set<String> MULTILINE_FIELDS = Set.of("metaTags");
     private static final Set<String> FIXED_ARRAY_PATHS = Set.of(
         "businessPage.faq.items",
+        "aboutPage.hero.stats",
         "aboutPage.hero.buttons",
         "aboutPage.finalCta.buttons",
         "businessPage.scaleCta.buttons",

@@ -27,6 +27,13 @@ import { cn } from "@/lib/utils";
 
 type PageKey = "about" | "business" | "contact" | "careers" | "quote" | "collections";
 type AnyRecord = Record<string, any>;
+type AboutHeroStat = { value: string; label: string };
+
+const DEFAULT_ABOUT_HERO_STATS: AboutHeroStat[] = [
+  { value: "35+", label: "Anos de experiência" },
+  { value: "1.500+", label: "Pontos de coleta" },
+  { value: "1M+", label: "Pacotes processados" },
+];
 
 const PAGE_META: Record<
   PageKey,
@@ -259,7 +266,6 @@ export function RoutePageCmsEditor({ pageKey }: { pageKey: PageKey }) {
   const [quoteOtherChannelsOpenIndex, setQuoteOtherChannelsOpenIndex] = useState<number | null>(null);
   const [activeAboutSection, setActiveAboutSection] = useState<AboutSectionKey>("hero");
   const [previewRevision, setPreviewRevision] = useState(0);
-  const [aboutHeroFramingOpen, setAboutHeroFramingOpen] = useState(false);
   const [cultureFramingOpen, setCultureFramingOpen] = useState(false);
 
   useEffect(() => {
@@ -597,54 +603,50 @@ export function RoutePageCmsEditor({ pageKey }: { pageKey: PageKey }) {
   function renderAboutHero() {
     if (!page) return null;
     const current = page;
+    const heroStats: AboutHeroStat[] = Array.isArray(current.hero.stats) && current.hero.stats.length === 3
+      ? current.hero.stats as AboutHeroStat[]
+      : DEFAULT_ABOUT_HERO_STATS;
+
+    function updateHeroStat(index: number, field: keyof AboutHeroStat, value: string) {
+      update((draft) => {
+        const stats: AboutHeroStat[] = Array.isArray(draft.hero.stats) && draft.hero.stats.length === 3
+          ? draft.hero.stats as AboutHeroStat[]
+          : DEFAULT_ABOUT_HERO_STATS.map((stat) => ({ ...stat }));
+        stats[index] = { ...stats[index], [field]: value };
+        draft.hero.stats = stats;
+      });
+    }
+
     return (
       <article className={cn(editableSectionClassName, "mt-5")}>
         <div className="mb-5 rounded-[18px] border border-[var(--primary)]/16 bg-[linear-gradient(135deg,rgba(219,234,254,0.62)_0%,rgba(255,255,255,0.86)_70%)] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.82)]">
           <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--primary)]">Seção fixa 1</p>
           <h3 className="mt-1 text-base font-semibold text-[var(--foreground)]">Hero</h3>
-          <p className="mt-1 text-sm leading-6 text-[var(--color-muted-raw)]">Mídia, chamada principal e botões exibidos na abertura de /sobre.</p>
+          <p className="mt-1 text-sm leading-6 text-[var(--color-muted-raw)]">Textos, indicadores e botões exibidos na abertura de /sobre. A imagem de fundo permanece fixa.</p>
         </div>
         <form className="space-y-4" onSubmit={(event) => { event.preventDefault(); void saveSection("hero", current.hero); }}>
-          <div className={priorityPanelClassName}>
-            <p className="mb-3 text-sm font-semibold text-[var(--foreground)]">Mídia principal <span className="text-[var(--primary)]">*</span></p>
-            <div className="grid gap-4 md:grid-cols-[220px_minmax(0,1fr)] md:items-start">
-              <DeveloperMediaPreview
-                value={current.hero.media.src}
-                previewAlt={current.hero.media.alt}
-                mediaType="image"
-                compact
-                align="start"
-                onFrame={() => setAboutHeroFramingOpen(true)}
-              />
-              <div className="grid gap-4">
-                <DeveloperMediaField
-                  label="Arquivo selecionado"
-                  mediaType="image"
-                  required
-                  value={current.hero.media.src}
-                  onChange={(src) => update((draft) => { draft.hero.media.src = src; })}
-                  previewAlt={current.hero.media.alt}
-                  showPreview={false}
-                  equalControlWidths
-                />
-                <TextInput label="Texto alternativo" value={current.hero.media.alt} maxLength={160} onChange={(value) => update((draft) => { draft.hero.media.alt = value; })} />
-              </div>
-            </div>
-            <MediaPlacementEditor
-              label="o Hero de /sobre"
-              src={current.hero.media.src}
-              alt={current.hero.media.alt}
-              mediaType="image"
-              value={current.hero.media.presentation}
-              onChange={(presentation) => update((draft) => { draft.hero.media.presentation = presentation; })}
-              open={aboutHeroFramingOpen}
-              onOpenChange={setAboutHeroFramingOpen}
-              hideTrigger
-            />
-          </div>
           <div className={cn(priorityPanelClassName, "grid gap-5 md:grid-cols-2")}>
+            <TextInput label="Selo" value={current.hero.eyebrow ?? "Nossa história"} maxLength={80} helpKey="hero-eyebrow" className="md:col-span-2" onChange={(value) => update((draft) => { draft.hero.eyebrow = value; })} />
             <TextInput label="Título" value={current.hero.title} maxLength={320} onChange={(value) => update((draft) => { draft.hero.title = value; })} tooltip="Máximo visual esperado: 3 linhas." />
             <TextInput label="Descrição" value={current.hero.description} maxLength={220} textarea onChange={(value) => update((draft) => { draft.hero.description = value; })} tooltip="Máximo visual esperado: 2 linhas." />
+          </div>
+          <div className={priorityPanelClassName}>
+            <DeveloperSectionHeading
+              eyebrow="Indicadores do Hero"
+              title="Números em destaque"
+              description="Edite os três números e suas legendas exibidos abaixo do conteúdo principal em /sobre. A quantidade permanece fixa para preservar o layout da página."
+            />
+            <div className="mt-4 grid gap-4 lg:grid-cols-3">
+              {heroStats.map((stat, index) => (
+                <div key={index} className="rounded-[18px] border border-white/75 bg-white/72 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)]">
+                  <p className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--primary)]">Indicador {index + 1}</p>
+                  <div className="grid gap-4">
+                    <TextInput label="Número" value={stat.value} maxLength={40} helpKey="hero-stat-value" onChange={(value) => updateHeroStat(index, "value", value)} />
+                    <TextInput label="Legenda" value={stat.label} maxLength={40} helpKey="hero-stat-label" onChange={(value) => updateHeroStat(index, "label", value)} />
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
           <ButtonFields buttons={current.hero.buttons} onChange={(buttons) => update((draft) => { draft.hero.buttons = buttons; })} mutedSurface />
           <SaveButton saving={saving === "hero"}>Salvar hero</SaveButton>

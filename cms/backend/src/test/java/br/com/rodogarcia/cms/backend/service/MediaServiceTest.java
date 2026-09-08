@@ -202,6 +202,45 @@ class MediaServiceTest {
     }
 
     @Test
+    void scopesHomeCertificationUpdatesToTheSevenKnownImageSlots() throws Exception {
+        MediaTestContext context = new MediaTestContext(root, CLOCK);
+        Files.createDirectories(context.properties.frontendPublicDir());
+        Files.writeString(context.properties.frontendPublicDir().resolve("certificate.png"), "image");
+        Files.writeString(context.properties.frontendPublicDir().resolve("certificate.mp4"), "video");
+
+        ObjectNode slots = context.mapper.createObjectNode();
+        slots.put("home.cert.iso", "/certificate.png");
+        slots.put("home.cert.sassmaq", "");
+        slots.put("home.cert.ecovadis", "");
+        slots.put("home.cert.pf", "");
+        slots.put("home.cert.pcsp", "");
+        slots.put("home.cert.exercito", "");
+        slots.put("home.cert.ibama", "");
+        ObjectNode body = context.mapper.createObjectNode();
+        body.set("slots", slots);
+
+        ObjectNode updated = context.media.updateHomeCertificationSlots(body, null);
+        assertThat(updated).hasSize(7);
+        assertThat(updated.path("home.cert.iso").asString()).isEqualTo("/certificate.png");
+        JsonNode images = context.media.homeCertificationConfiguration().path("images");
+        assertThat(images.size()).isPositive();
+        for (JsonNode image : images) {
+            assertThat(image.path("mediaType").asString()).isEqualTo("image");
+        }
+
+        slots.put("home.cert.iso", "/certificate.mp4");
+        assertThatThrownBy(() -> context.media.updateHomeCertificationSlots(body, null))
+            .isInstanceOf(ApiException.class)
+            .hasMessageContaining("tipo de arquivo");
+
+        slots.put("home.cert.iso", "/certificate.png");
+        slots.put("popup.image", "/certificate.png");
+        assertThatThrownBy(() -> context.media.updateHomeCertificationSlots(body, null))
+            .isInstanceOf(ApiException.class)
+            .hasMessageContaining("não editável");
+    }
+
+    @Test
     void replacesReferencesWithJournalAndDeletesAllVariantsAfterConfirmation() throws Exception {
         MediaTestContext context = new MediaTestContext(root, CLOCK);
         Files.createDirectories(context.properties.frontendPublicDir());

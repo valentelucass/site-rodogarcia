@@ -303,6 +303,17 @@ const CMS_HELP_TEMPLATES: Record<string, CmsHelpTemplate> = {
       { label: "Após salvar", value: "O atalho fica oculto ou volta a aparecer imediatamente na página inicial; seu texto e link permanecem guardados no CMS." },
     ],
   },
+  "home.field.certification-logo": {
+    title: "Logo da certificação",
+    summary: "Escolha na Biblioteca o logo que aparecerá neste espaço da faixa de certificações da Página Inicial. Ao salvar, a troca afeta somente este logo e mantém os demais certificados como estão.",
+    example: "Selecione uma versão nítida e com fundo transparente do logo ISO 9001 para manter a leitura clara na faixa de compliance.",
+    details: [
+      { label: "Onde aparece", value: "Na faixa “Certificações que reforçam nossa operação”, entre as seções Previsibilidade e Operação conectada da Página Inicial (/)." },
+      { label: "Biblioteca", value: "Escolha somente imagens internas já disponíveis no CMS. Para enviar um novo arquivo, use a área Imagens se o seu perfil também tiver essa permissão." },
+      { label: "Logo padrão", value: "Deixe a seleção vazia para usar o logo padrão versionado pelo site." },
+      { label: "Proteção", value: "Este campo aceita apenas imagens internas validadas e grava somente o slot deste certificado; não permite links externos nem altera outros quadros de mídia.", technical: true },
+    ],
+  },
   "coletas.section.hero": {
     title: "Botões do hero de Coletas",
     summary: "Aqui você configura os dois botões no topo de /coletas. Um pode levar ao formulário desta página e o outro à cotação, para que o visitante escolha o próximo passo sem procurar no menu.",
@@ -755,6 +766,36 @@ const CMS_HELP_TEMPLATES: Record<string, CmsHelpTemplate> = {
       { label: "Formato aceito", value: "Rota interna, URL externa, mailto: ou tel:. Para WhatsApp, use uma URL válida do serviço.", technical: true },
       { label: "Validação", value: "O CMS rejeita valores sem endereço válido antes de gravar o conteúdo.", technical: true },
       { label: "Após salvar", value: "Altera apenas o destino deste CTA; não muda texto, canais ou botões do CTA final." },
+    ],
+  },
+  "sobre.field.hero-stat-value": {
+    title: "Número em destaque do Hero",
+    summary: "Informe o número ou marco que o visitante verá no Hero da página Sobre, como “35+” ou “1M+”. Depois de salvar, apenas este destaque é atualizado.",
+    example: "Use “1.500+” para mostrar a quantidade de pontos de coleta confirmada pela operação.",
+    details: [
+      { label: "Onde aparece", value: "Na faixa de três indicadores abaixo da chamada principal da rota /sobre." },
+      { label: "Limite", value: "Aceita até 40 caracteres para manter os três números legíveis em celular e desktop.", technical: true },
+      { label: "Após salvar", value: "Muda somente este número; a legenda ao lado é configurada separadamente." },
+    ],
+  },
+  "sobre.field.hero-eyebrow": {
+    title: "Selo do Hero",
+    summary: "Escreva o pequeno selo que aparece antes do título no Hero da página Sobre. Depois de salvar, o visitante verá esse destaque no topo da rota /sobre.",
+    example: "Use “Nossa história” para apresentar os números e a mensagem institucional do Hero.",
+    details: [
+      { label: "Onde aparece", value: "Acima do título principal no Hero da rota /sobre." },
+      { label: "Limite", value: "Aceita até 80 caracteres para manter o selo legível em celular e desktop.", technical: true },
+      { label: "Após salvar", value: "Muda somente esse pequeno destaque; título, descrição e indicadores são configurados separadamente." },
+    ],
+  },
+  "sobre.field.hero-stat-label": {
+    title: "Legenda do número do Hero",
+    summary: "Descreva o que representa o número em destaque. O visitante lê esta legenda logo abaixo do respectivo número no Hero da página Sobre.",
+    example: "Use “Pontos de coleta” para explicar o número “1.500+”.",
+    details: [
+      { label: "Onde aparece", value: "Logo abaixo do respectivo número na faixa de indicadores da rota /sobre." },
+      { label: "Limite", value: "Aceita até 40 caracteres para a legenda não quebrar o alinhamento dos indicadores.", technical: true },
+      { label: "Após salvar", value: "Muda somente a explicação deste indicador; os outros dois permanecem iguais." },
     ],
   },
   "cotacao.field.aprovacao-whatsapp": {
