@@ -137,6 +137,14 @@ export interface HomeTrackingCta {
   buttons: HomeHeroButton[];
 }
 
+export interface HomeCertification {
+  id: string;
+  order?: number;
+  title: string;
+  alt: string;
+  image: string;
+}
+
 export interface HomePageContent {
   hero: {
     slides: HomeHeroSlide[];
@@ -147,6 +155,7 @@ export interface HomePageContent {
   regionalPresence: HomeRegionalPresence;
   trackingCta: HomeTrackingCta;
   socialProof: HomeSocialProof;
+  certifications: HomeCertification[];
   quickActions?: QuickAction[];
 }
 

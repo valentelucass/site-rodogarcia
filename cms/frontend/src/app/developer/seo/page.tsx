@@ -1,5 +1,7 @@
 "use client";
 
+import { useDeveloperNotifier } from "@/components/developer/DeveloperNotifications";
+
 import { useEffect, useMemo, useState } from "react";
 import { CheckCircle, MagnifyingGlass, Pulse } from "@phosphor-icons/react";
 import { DeveloperImageField } from "@/components/developer/DeveloperImageField";
@@ -70,8 +72,7 @@ export default function SeoPage() {
   const [selectedPath, setSelectedPath] = useState("/");
   const [form, setForm] = useState<SeoPageSettings>(EMPTY_PAGE);
   const [saving, setSaving] = useState(false);
-  const [status, setStatus] = useState<"" | "success" | "error">("");
-  const [message, setMessage] = useState("");
+  const notify = useDeveloperNotifier();
 
   const { data, loading, error, refresh } = useAdminResource<{
     pages: SeoPageSettings[];
@@ -107,21 +108,18 @@ export default function SeoPage() {
 
   async function handleSave() {
     setSaving(true);
-    setStatus("");
-    setMessage("");
+    notify(null);
     const response = await apiRequest(api.admin.seoSettings, {
       method: "POST",
       body: JSON.stringify(form),
     });
     setSaving(false);
     if (!response.success) {
-      setStatus("error");
-      setMessage(response.error ?? "Falha ao salvar SEO.");
+      notify({ tone: "error", text: response.error ?? "Falha ao salvar SEO." });
       return;
     }
     invalidateAdminResource([adminResourceKeys.seo, adminResourceKeys.dashboard]);
-    setStatus("success");
-    setMessage("Configuração de SEO salva com sucesso.");
+    notify({ tone: "success", text: "Configuração de SEO salva com sucesso." });
     await refresh();
   }
 
@@ -144,11 +142,6 @@ export default function SeoPage() {
 
       {loading ? <DeveloperMessage tone="info">Carregando SEO...</DeveloperMessage> : null}
       {error ? <DeveloperMessage tone="error">{error}</DeveloperMessage> : null}
-      {status ? (
-        <div className="mt-4">
-          <DeveloperMessage tone={status === "success" ? "success" : "error"}>{message}</DeveloperMessage>
-        </div>
-      ) : null}
 
       <section className="mt-5 grid items-start gap-5 xl:grid-cols-[320px_minmax(0,1fr)]">
         <DeveloperCard className="self-start p-4 xl:sticky xl:top-5">

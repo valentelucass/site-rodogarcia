@@ -140,7 +140,11 @@ public final class ContentDefaults {
     }
 
     public static ObjectNode home(ObjectMapper mapper) {
-        return (ObjectNode) content(mapper).get("homePage").deepCopy();
+        ObjectNode result = (ObjectNode) content(mapper).get("homePage").deepCopy();
+        if (!result.has("certifications") || !result.get("certifications").isArray()) {
+            result.set("certifications", HomeCertificationDefaults.items(mapper));
+        }
+        return result;
     }
 
     public static ObjectNode repositoryContent(ObjectMapper mapper) {

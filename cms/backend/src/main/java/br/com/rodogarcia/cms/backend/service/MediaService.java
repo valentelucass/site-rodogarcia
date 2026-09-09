@@ -253,6 +253,16 @@ public final class MediaService {
         return saveVideo(fileName, mimeType, bytes, request);
     }
 
+    /** Reutiliza o pipeline da Biblioteca quando o ponto de uso aceita somente imagem. */
+    public synchronized ObjectNode saveImageOnly(
+        String fileName,
+        String mimeType,
+        byte[] bytes,
+        HttpServletRequest request
+    ) {
+        return saveImage(fileName, mimeType, bytes, request);
+    }
+
     public synchronized ObjectNode replaceReferences(
         String fromRaw,
         String toRaw,
@@ -355,7 +365,12 @@ public final class MediaService {
     public synchronized ObjectNode homeCertificationConfiguration() {
         ObjectNode result = store.mapper().createObjectNode();
         result.set("slots", homeCertificationSlots(readMediaSlots()));
+        result.set("images", homeCertificationImages());
+        return result;
+    }
 
+    /** Imagens elegíveis para a coleção de certificações da Home. */
+    public synchronized ArrayNode homeCertificationImages() {
         ArrayNode images = store.mapper().createArrayNode();
         for (JsonNode item : listAdminImages()) {
             String mediaType = jsString(item.get("mediaType"), mediaTypeFromUrl(
@@ -363,8 +378,7 @@ public final class MediaService {
             ));
             if (mediaType.equals("image")) images.add(item.deepCopy());
         }
-        result.set("images", images);
-        return result;
+        return images;
     }
 
     /**

@@ -9,6 +9,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponseWrapper;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 public class SecurityHeadersFilter extends OncePerRequestFilter {
@@ -50,9 +51,52 @@ public class SecurityHeadersFilter extends OncePerRequestFilter {
         if ("HTTP/1.1".equals(request.getProtocol())
             && (connection == null
                 || !connection.toLowerCase(Locale.ROOT).contains("close"))) {
-            response.setHeader("Connection", "keep-alive");
-            response.setHeader("Keep-Alive", "timeout=5");
+            response = new KeepAliveResponse(response);
         }
         filterChain.doFilter(request, response);
+    }
+
+    private static final class KeepAliveResponse extends HttpServletResponseWrapper {
+
+        private KeepAliveResponse(HttpServletResponse response) {
+            super(response);
+            updateConnectionHeaders(response.getStatus());
+        }
+
+        @Override
+        public void setStatus(int status) {
+            super.setStatus(status);
+            updateConnectionHeaders(status);
+        }
+
+        @Override
+        public void sendError(int status) throws IOException {
+            updateConnectionHeaders(status);
+            super.sendError(status);
+        }
+
+        @Override
+        public void sendError(int status, String message) throws IOException {
+            updateConnectionHeaders(status);
+            super.sendError(status, message);
+        }
+
+        @Override
+        public void reset() {
+            super.reset();
+            updateConnectionHeaders(getStatus());
+        }
+
+        private void updateConnectionHeaders(int status) {
+            // Mesmos status de Http11Processor.statusDropsConnection no Tomcat 11.
+            // Anunciar keep-alive aqui faria o Tomcat acrescentar um segundo
+            // Connection: close e clientes poderiam reutilizar um socket encerrado.
+            boolean closesConnection = switch (status) {
+                case 400, 408, 411, 413, 414, 500, 501, 503 -> true;
+                default -> false;
+            };
+            setHeader("Connection", closesConnection ? "close" : "keep-alive");
+            setHeader("Keep-Alive", closesConnection ? null : "timeout=5");
+        }
     }
 }

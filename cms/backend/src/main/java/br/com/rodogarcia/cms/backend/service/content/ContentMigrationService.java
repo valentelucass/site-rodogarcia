@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import br.com.rodogarcia.cms.backend.model.content.ContentDefaults;
+import br.com.rodogarcia.cms.backend.model.content.HomeCertificationDefaults;
 import br.com.rodogarcia.cms.backend.model.content.ContentJson;
 import br.com.rodogarcia.cms.backend.model.content.ContentKeys;
 import br.com.rodogarcia.cms.backend.model.content.ContentMediaPresentations;
@@ -57,6 +58,7 @@ public final class ContentMigrationService {
         ObjectNode raw = ContentJson.object(rawValue);
         ObjectNode content = raw.deepCopy();
         ObjectNode defaults = ContentDefaults.content(mapper);
+        ObjectNode mediaSlots = ContentJson.object(mediaSlotsValue);
         boolean persist = false;
 
         for (String key : new String[] {"heroSlides", "dnaSlides", "vagas", "feedbacks", "units"}) {
@@ -106,6 +108,10 @@ public final class ContentMigrationService {
             home.set("quickActions", defaults.path("homePage").path("quickActions").deepCopy());
             persist = true;
         }
+        if (!sourceHome.has("certifications") || !sourceHome.get("certifications").isArray()) {
+            home.set("certifications", HomeCertificationDefaults.items(mapper, mediaSlots));
+            persist = true;
+        }
         if (needsSocialProof(home.get("socialProof"), content.get("feedbacks"))) {
             home.set("socialProof", migrateSocialProof(home.get("socialProof"), content.get("feedbacks")));
             persist = true;
@@ -120,7 +126,6 @@ public final class ContentMigrationService {
         persist |= unitsResult.path("changed").asBoolean(false);
 
         ObjectNode siteTexts = ContentJson.object(siteTextsValue);
-        ObjectNode mediaSlots = ContentJson.object(mediaSlotsValue);
         for (String pageKey : ContentKeys.PAGE_KEYS) {
             String property = ContentKeys.PAGE_PROPERTIES.get(pageKey);
             JsonNode existing = content.get(property);

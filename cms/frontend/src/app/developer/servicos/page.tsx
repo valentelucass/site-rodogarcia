@@ -1,5 +1,7 @@
 "use client";
 
+import { useDeveloperNotifier } from "@/components/developer/DeveloperNotifications";
+
 import { useEffect, useMemo, useState } from "react";
 import { CaretDown, CheckCircle, ImageSquare } from "@phosphor-icons/react";
 import { useApiRequest } from "@/hooks/useApiRequest";
@@ -144,7 +146,7 @@ export default function DeveloperServicesPage() {
   const [services, setServices] = useState<ServicesPageContent>(emptyServicesPage);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<SaveKey | "">("");
-  const [status, setStatus] = useState<{ tone: "success" | "error" | "info"; text: string } | null>(null);
+  const notify = useDeveloperNotifier();
   const [activeModuleIndex, setActiveModuleIndex] = useState(0);
   const [moduleFramingOpen, setModuleFramingOpen] = useState(false);
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
@@ -160,9 +162,9 @@ export default function DeveloperServicesPage() {
       if (!alive) return;
       if (response.success) {
         setServices(normalizeServicesPage(response.data?.servicesPage));
-        setStatus(null);
+        notify(null);
       } else {
-        setStatus({
+        notify({
           tone: "error",
           text: response.error ?? "Falha ao carregar a Página Serviços.",
         });
@@ -173,7 +175,7 @@ export default function DeveloperServicesPage() {
     return () => {
       alive = false;
     };
-  }, [apiRequest]);
+  }, [apiRequest, notify]);
 
   const summary = useMemo(
     () => ({
@@ -188,7 +190,7 @@ export default function DeveloperServicesPage() {
 
   async function saveSection(section: SaveKey, endpoint: string, payload: unknown) {
     setSaving(section);
-    setStatus(null);
+    notify(null);
     const response = await apiRequest<{ servicesPage?: ServicesPageContent }>(endpoint, {
       method: "PUT",
       body: JSON.stringify(payload),
@@ -196,7 +198,7 @@ export default function DeveloperServicesPage() {
     setSaving("");
 
     if (!response.success) {
-      setStatus({
+      notify({
         tone: "error",
         text: response.error ?? "Falha ao salvar a Página Serviços.",
       });
@@ -205,7 +207,7 @@ export default function DeveloperServicesPage() {
 
     setServices(normalizeServicesPage(response.data?.servicesPage));
     setPreviewRevision((revision) => revision + 1);
-    setStatus({ tone: "success", text: "Bloco salvo com sucesso." });
+    notify({ tone: "success", text: "Bloco salvo com sucesso." });
     invalidateAdminResource([adminResourceKeys.dashboard, adminResourceKeys.images]);
   }
 
@@ -258,11 +260,6 @@ export default function DeveloperServicesPage() {
       {loading ? (
         <div className="mt-5">
           <DeveloperMessage tone="info">Carregando configuração da Página Serviços...</DeveloperMessage>
-        </div>
-      ) : null}
-      {status ? (
-        <div className="mt-5">
-          <DeveloperMessage tone={status.tone}>{status.text}</DeveloperMessage>
         </div>
       ) : null}
 
@@ -359,7 +356,6 @@ export default function DeveloperServicesPage() {
                       }
                       hint="Upload ou seleção da biblioteca. A imagem aparece no card visual deste módulo."
                       showPreview={false}
-                      equalControlWidths
                       />
                       <DeveloperField label="Texto alternativo da imagem" required>
                       <input

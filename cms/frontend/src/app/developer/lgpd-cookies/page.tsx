@@ -1,5 +1,7 @@
 "use client";
 
+import { useDeveloperNotifier } from "@/components/developer/DeveloperNotifications";
+
 import { useEffect, useMemo, useState } from "react";
 import { CaretLeft, CaretRight, CheckCircle, Pulse } from "@phosphor-icons/react";
 import { DeveloperResponsivePreview } from "@/components/developer/DeveloperResponsivePreview";
@@ -94,8 +96,7 @@ export default function CookiesPage() {
   const { apiRequest } = useApiRequest();
   const [form, setForm] = useState<ConsentSettings>(DEFAULT_SETTINGS);
   const [saving, setSaving] = useState(false);
-  const [status, setStatus] = useState<"" | "success" | "error">("");
-  const [message, setMessage] = useState("");
+  const notify = useDeveloperNotifier();
   const [categoryPage, setCategoryPage] = useState(0);
   const [previewRevision, setPreviewRevision] = useState(0);
 
@@ -142,22 +143,19 @@ export default function CookiesPage() {
       form.version > 999 ||
       hasInvalidCategory
     ) {
-      setStatus("error");
-      setMessage("Preencha os textos obrigatórios, as categorias e uma versão entre 1 e 999.");
+      notify({ tone: "error", text: "Preencha os textos obrigatórios, as categorias e uma versão entre 1 e 999." });
       return;
     }
     setSaving(true);
-    setStatus("");
+    notify(null);
     const response = await apiRequest(api.admin.consentSettings, { method: "POST", body: JSON.stringify(form) });
     setSaving(false);
     if (!response.success) {
-      setStatus("error");
-      setMessage(response.error ?? "Falha ao salvar LGPD/cookies.");
+      notify({ tone: "error", text: response.error ?? "Falha ao salvar LGPD/cookies." });
       return;
     }
     invalidateAdminResource([adminResourceKeys.consent, adminResourceKeys.dashboard]);
-    setStatus("success");
-    setMessage("Configuração de LGPD/cookies salva com sucesso.");
+    notify({ tone: "success", text: "Configuração de LGPD/cookies salva com sucesso." });
     setPreviewRevision((revision) => revision + 1);
     await refresh();
   }
@@ -184,7 +182,6 @@ export default function CookiesPage() {
 
       {loading ? <div className="mt-5"><DeveloperMessage tone="info">Carregando configuração...</DeveloperMessage></div> : null}
       {error ? <div className="mt-5"><DeveloperMessage tone="error">{error}</DeveloperMessage></div> : null}
-      {status ? <div className="mt-5"><DeveloperMessage tone={status === "success" ? "success" : "error"}>{message}</DeveloperMessage></div> : null}
 
       <div className="mt-5">
         <DeveloperResponsivePreview href={site.home} title="Preview do consentimento" showConsent revision={previewRevision} />

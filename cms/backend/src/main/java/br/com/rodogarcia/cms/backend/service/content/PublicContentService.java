@@ -8,6 +8,7 @@ import java.util.Set;
 
 import br.com.rodogarcia.cms.backend.model.content.ContentJson;
 import br.com.rodogarcia.cms.backend.model.content.ContentKeys;
+import br.com.rodogarcia.cms.backend.model.content.HomeCertificationDefaults;
 import br.com.rodogarcia.cms.backend.model.content.MediaPresentation;
 import br.com.rodogarcia.cms.backend.repository.content.ContentRepository;
 import br.com.rodogarcia.cms.backend.repository.content.MediaSlotsRepository;
@@ -203,6 +204,7 @@ public final class PublicContentService {
         result.set("regionalPresence", publicRegionalPresence(source.get("regionalPresence")));
         result.set("trackingCta", publicTracking(source.get("trackingCta")));
         result.set("socialProof", publicSocialProof(source.get("socialProof")));
+        result.set("certifications", publicCertifications(source.get("certifications")));
         result.set("quickActions", publicQuickActions(source.get("quickActions")));
         return result;
     }
@@ -432,6 +434,25 @@ public final class PublicContentService {
         return result;
     }
 
+    private ArrayNode publicCertifications(JsonNode value) {
+        JsonNode source = value != null && value.isArray()
+            ? value : HomeCertificationDefaults.items(mapper);
+        ArrayNode result = mapper.createArrayNode();
+        int index = 0;
+        for (JsonNode itemValue : ordered(source)) {
+            if (result.size() == 24) break;
+            ObjectNode item = ContentJson.object(itemValue);
+            ObjectNode output = mapper.createObjectNode();
+            output.put("id", id(item, "home-certification-" + (++index)));
+            output.put("order", ContentJson.integer(item.get("order"), index));
+            output.put("title", ContentJson.text(item.get("title"), 80));
+            output.put("alt", ContentJson.text(item.get("alt"), 160));
+            output.put("image", publicMedia(item.get("image"), "Logo da certificação"));
+            if (required(output, "title", "alt", "image")) result.add(output);
+        }
+        return result;
+    }
+
     private ArrayNode publicButtons(JsonNode value, int limit, boolean onlyEnabled) {
         ArrayNode result = mapper.createArrayNode();
         int count = 0;
@@ -476,6 +497,7 @@ public final class PublicContentService {
         ObjectNode social = mapper.createObjectNode();
         social.put("title", "").set("feedbacks", mapper.createArrayNode());
         result.set("socialProof", social);
+        result.set("certifications", mapper.createArrayNode());
         return result;
     }
 

@@ -84,7 +84,8 @@ public final class AdminRouteContract {
             if (folded.equals("/landing-media")) {
                 return new MutationPolicy(true, false, LANDING_MEDIA_MAX_REQUEST_BYTES);
             }
-            if (folded.equals("/images") || folded.equals("/improvements")
+            if (folded.equals("/images") || folded.equals("/home/certifications/media")
+                || folded.equals("/improvements")
                 || LANDING_PUBLICATION.matcher(folded).matches()) {
                 return MutationPolicy.WITHOUT_JSON;
             }

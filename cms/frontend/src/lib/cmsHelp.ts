@@ -98,7 +98,7 @@ const CMS_HELP_CONTEXTS: Record<string, CmsHelpContext> = {
   "/developer/fale-conosco": { destination: "/fale-conosco", action: "edita os canais e chamadas de contato", example: "Atualize o telefone ou o botão de WhatsApp que o visitante verá." },
   "/developer/footer-links": { destination: "o rodapé e as páginas institucionais", action: "edita links, textos institucionais e redes sociais", example: "Altere o link de Privacidade para levar o visitante à política correta." },
   "/developer/navegacao": { destination: "o menu lateral aberto pelo cabeçalho do site", action: "organiza os links, ícones e destaques que o visitante encontra na navegação", example: "Use o destaque “Novo” em verde para dar visibilidade a uma página recém-publicada." },
-  "/developer/home": { destination: "a página inicial /", action: "edita os blocos principais da Home", example: "Troque uma imagem do hero para atualizar a primeira área vista pelo visitante." },
+  "/developer/home": { destination: "a página inicial /", action: "edita os blocos principais da Home; o seletor superior distribui as etapas completas pela largura disponível e só oferece navegação quando houver outras etapas", example: "Troque uma imagem do hero para atualizar a primeira área vista pelo visitante." },
   "/developer/home-dna": { destination: "a seção de DNA da página inicial /", action: "edita o conteúdo institucional da Home", example: "Atualize um valor da empresa para ele aparecer na seção institucional da Home." },
   "/developer/home-hero": { destination: "o hero da página inicial /", action: "edita os slides e botões de abertura da Home", example: "Escolha uma nova imagem para o primeiro slide do site." },
   "/developer/imagens": { destination: "a Biblioteca de mídia e os slots de imagem do site", action: "faz upload, organiza mídia e vincula arquivos a áreas do site; a lista mostra tamanho, resolução, proporção e, em vídeos, a duração lida do arquivo", example: "Compare a proporção 4:5 de uma foto com o espaço visual do bloco antes de usá-la, sem alterar as outras mídias da Biblioteca." },
@@ -123,6 +123,16 @@ const CMS_HELP_CONTEXTS: Record<string, CmsHelpContext> = {
 };
 
 const CMS_HELP_TEMPLATES: Record<string, CmsHelpTemplate> = {
+  "cms-notification-dismiss": {
+    title: "Fechar notificação",
+    summary: "Feche apenas este aviso no topo do CMS. Isso não desfaz a ação realizada nem salva alterações que ainda estejam pendentes.",
+    details: [
+      { label: "Onde aparece", value: "No topo visível do painel, inclusive com a página rolada ou um editor aberto." },
+      { label: "Leitura", value: "Avisos de sucesso e informação fecham automaticamente após o tempo de leitura. O prazo pausa com o mouse sobre o aviso, com foco de teclado nele ou com a aba do navegador oculta." },
+      { label: "Erros", value: "Permanecem visíveis até você fechar ou tentar a ação novamente. Fechar o aviso não corrige o problema informado." },
+      { label: "Salvamento", value: "O texto informa o resultado da ação. Enviar uma imagem pode apenas selecioná-la no formulário; quando o aviso pedir para salvar, use o botão da seção para publicar a alteração." },
+    ],
+  },
   "popup-exit.field.image": {
     title: "Imagem do popup de saída",
     summary: "Escolha uma imagem da Biblioteca para aparecer no popup de saída. Depois da seleção, a prévia mostra o botão Enquadrar sobre a própria foto para você definir qual parte o visitante verá, sem alterar o arquivo original.",
@@ -317,14 +327,27 @@ const CMS_HELP_TEMPLATES: Record<string, CmsHelpTemplate> = {
   },
   "home.field.certification-logo": {
     title: "Logo da certificação",
-    summary: "Escolha na Biblioteca o logo que aparecerá neste espaço da faixa de certificações da Página Inicial. Ao salvar, a troca afeta somente este logo e mantém os demais certificados como estão.",
+    summary: "Escolha um logo já tratado na Biblioteca ou envie a imagem aqui mesmo. Ao salvar, este logo passa a aparecer na faixa de certificações da Página Inicial.",
     example: "Selecione uma versão nítida e com fundo transparente do logo ISO 9001 para manter a leitura clara na faixa de compliance.",
     details: [
       { label: "Onde aparece", value: "Na faixa “Certificações que reforçam nossa operação”, entre as seções Previsibilidade e Operação conectada da Página Inicial (/)." },
-      { label: "Biblioteca", value: "Escolha somente imagens internas já disponíveis no CMS. Para enviar um novo arquivo, use a área Imagens se o seu perfil também tiver essa permissão." },
-      { label: "Logo padrão", value: "Deixe a seleção vazia para usar o logo padrão versionado pelo site." },
-      { label: "Proteção", value: "Este campo aceita apenas imagens internas validadas e grava somente o slot deste certificado; não permite links externos nem altera outros quadros de mídia.", technical: true },
+      { label: "Envio direto", value: "Use Enviar logo para mandar PNG, JPG, WebP ou AVIF de até 8 MB. A prévia e o nome do arquivo trocam imediatamente; enquanto aparece “enviando e otimizando”, o CMS valida o arquivo real e gera as versões WebP. Ao terminar, o logo otimizado fica selecionado neste mesmo card." },
+      { label: "Biblioteca", value: "Clique no campo que mostra “Nenhuma mídia selecionada” ou o nome atual do arquivo para abrir as imagens internas já enviadas. Links externos, data URLs e caminhos manuais não são aceitos." },
+      { label: "Coleção", value: "Cada card é independente: você pode adicionar, ordenar ou excluir certificações. Ao remover um card, ele deixa de aparecer na Home depois de salvar." },
+      { label: "Proteção", value: "A referência gravada é sempre uma imagem interna validada; o arquivo enviado continua administrado pela Biblioteca de imagens.", technical: true },
     ],
+  },
+  "home.field.certification-title": {
+    title: "Nome da certificação",
+    summary: "Informe o nome que aparecerá abaixo do logo na faixa de certificações da Página Inicial.",
+    example: "Use “ISO 9001” para identificar o selo e facilitar sua leitura no site.",
+    details: [{ label: "Onde aparece", value: "Abaixo do logo correspondente na faixa de certificações da Página Inicial (/)." }],
+  },
+  "home.field.certification-alt": {
+    title: "Descrição alternativa",
+    summary: "Descreva o logo para que leitores de tela consigam identificar a certificação na Página Inicial.",
+    example: "Use “Logo da certificação ISO 9001”.",
+    details: [{ label: "Acessibilidade", value: "Este texto é usado como alternativa da imagem na faixa de certificações da Página Inicial (/)." }],
   },
   "coletas.section.hero": {
     title: "Botões do hero de Coletas",

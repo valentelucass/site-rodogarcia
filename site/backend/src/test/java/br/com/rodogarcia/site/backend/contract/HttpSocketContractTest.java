@@ -608,7 +608,7 @@ class HttpSocketContractTest {
         assertNoRuntimeLeakage(response);
     }
 
-    @Test
+    @org.junit.jupiter.api.RepeatedTest(10)
     void rejectsMalformedPrimitiveAndNonUtfJsonBeforeKnownOrUnknownRouting() throws Exception {
         for (String path : new String[] { "/api/quote/fractional", "/unknown-json-target" }) {
             assertInternalJsonParserError(send(jsonRequest(path, "application/json", "{")));
@@ -832,6 +832,8 @@ class HttpSocketContractTest {
 
     private static void assertInternalJsonParserError(HttpResponse<byte[]> response) {
         assertThat(response.statusCode()).isEqualTo(500);
+        assertThat(response.headers().allValues("Connection")).containsExactly("close");
+        assertThat(response.headers().allValues("Keep-Alive")).isEmpty();
         assertThat(response.body()).isEqualTo(INTERNAL_ERROR_BODY.getBytes(StandardCharsets.UTF_8));
         assertThat(header(response, "Content-Type")).isEqualTo("application/json; charset=utf-8");
         assertThat(header(response, "Content-Length"))

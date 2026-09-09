@@ -1,5 +1,7 @@
 "use client";
 
+import { useDeveloperNotifier } from "@/components/developer/DeveloperNotifications";
+
 import { useEffect, useMemo, useState } from "react";
 import {
   ChartBar,
@@ -167,8 +169,7 @@ export default function AnalyticsPage() {
   const [pageFilter, setPageFilter] = useState("");
   const [form, setForm] = useState<ConfigForm>(DEFAULT_FORM);
   const [saving, setSaving] = useState(false);
-  const [status, setStatus] = useState<"" | "success" | "error">("");
-  const [statusMessage, setStatusMessage] = useState("");
+  const notify = useDeveloperNotifier();
   const {
     data: resourceData,
     loading,
@@ -287,18 +288,15 @@ export default function AnalyticsPage() {
     const ga4MeasurementId = form.ga4MeasurementId.trim().toUpperCase();
     const clarityProjectId = form.clarityProjectId.trim();
     if (form.ga4Enabled && !/^(?:G|GT|AW)-[A-Z0-9]{4,}$/.test(ga4MeasurementId)) {
-      setStatus("error");
-      setStatusMessage("Informe um Measurement ID GA4 válido antes de habilitar o provedor.");
+      notify({ tone: "error", text: "Informe um Measurement ID GA4 válido antes de habilitar o provedor." });
       return;
     }
     if (form.clarityEnabled && !/^[A-Za-z0-9]{6,80}$/.test(clarityProjectId)) {
-      setStatus("error");
-      setStatusMessage("Informe um Project ID Microsoft Clarity válido antes de habilitar o provedor.");
+      notify({ tone: "error", text: "Informe um Project ID Microsoft Clarity válido antes de habilitar o provedor." });
       return;
     }
     setSaving(true);
-    setStatus("");
-    setStatusMessage("");
+    notify(null);
 
     const response = await apiRequest(api.analytics.config, {
       method: "POST",
@@ -308,20 +306,17 @@ export default function AnalyticsPage() {
     setSaving(false);
 
     if (!response.success) {
-      setStatus("error");
-      setStatusMessage(response.error ?? "Falha ao salvar analytics.");
+      notify({ tone: "error", text: response.error ?? "Falha ao salvar analytics." });
       return;
     }
 
     invalidateAdminResource(adminResourceKeys.analytics(appliedDays));
-    setStatus("success");
-    setStatusMessage("Configuração de analytics salva com sucesso.");
+    notify({ tone: "success", text: "Configuração de analytics salva com sucesso." });
     await refresh();
   }
 
   function handleRefresh() {
-    setStatus("");
-    setStatusMessage("");
+    notify(null);
     if (daysInput !== appliedDays) {
       setAppliedDays(daysInput);
       return;
@@ -375,12 +370,6 @@ export default function AnalyticsPage() {
       {loading ? (
         <div className="mt-6">
           <DeveloperMessage tone="info">Carregando dados de analytics...</DeveloperMessage>
-        </div>
-      ) : null}
-
-      {status === "error" ? (
-        <div className="mt-6">
-          <DeveloperMessage tone="error">{statusMessage}</DeveloperMessage>
         </div>
       ) : null}
 
@@ -722,11 +711,6 @@ export default function AnalyticsPage() {
               </button>
             </div>
 
-            {status === "success" ? (
-              <DeveloperMessage tone="success">
-                {statusMessage}
-              </DeveloperMessage>
-            ) : null}
           </div>
         </DeveloperCard>
       </section>

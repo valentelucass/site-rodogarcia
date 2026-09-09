@@ -1,8 +1,10 @@
 "use client";
 
+import { useDeveloperNotifier } from "@/components/developer/DeveloperNotifications";
+
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { CheckCircle, FileArrowUp, PaperPlaneTilt, X } from "@phosphor-icons/react";
-import { DeveloperField, DeveloperMessage, developerInputClassName } from "@/components/developer/ui";
+import { FileArrowUp, PaperPlaneTilt, X } from "@phosphor-icons/react";
+import { DeveloperField, developerInputClassName } from "@/components/developer/ui";
 import { useApiRequest } from "@/hooks/useApiRequest";
 import { useSession } from "@/hooks/useSession";
 import { api } from "@/lib/routes";
@@ -48,8 +50,7 @@ export default function InternalImprovementForm({
   const [users, setUsers] = useState<UserSuggestion[]>([]);
   const [attachments, setAttachments] = useState<File[]>([]);
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
+  const notify = useDeveloperNotifier();
 
   useEffect(() => {
     setName((current) => current || session?.user?.name || "");
@@ -82,13 +83,13 @@ export default function InternalImprovementForm({
     const files = Array.from(fileList);
     const oversizedFile = files.find((file) => file.size > maxAttachmentSize);
     if (oversizedFile) {
-      setError(`O arquivo ${oversizedFile.name} ultrapassa o limite de 8 MB.`);
+      notify({ tone: "error", text: `O arquivo ${oversizedFile.name} ultrapassa o limite de 8 MB.` });
       if (inputRef.current) inputRef.current.value = "";
       return;
     }
 
     setAttachments((current) => [...current, ...files].slice(0, maxAttachments));
-    setError("");
+    notify(null);
     if (inputRef.current) inputRef.current.value = "";
   }
 
@@ -100,8 +101,7 @@ export default function InternalImprovementForm({
     attachments.forEach((attachment) => payload.append("attachments", attachment));
 
     setSaving(true);
-    setError("");
-    setMessage("");
+    notify(null);
 
     const response = await apiRequest<{ message?: string }>(endpoint, {
       method: "POST",
@@ -110,7 +110,7 @@ export default function InternalImprovementForm({
 
     setSaving(false);
     if (!response.success) {
-      setError(response.error ?? "Não foi possível registrar a sugestão interna.");
+      notify({ tone: "error", text: response.error ?? "Não foi possível registrar a sugestão interna." });
       return;
     }
 
@@ -118,7 +118,7 @@ export default function InternalImprovementForm({
     setAttachments([]);
     setName(session?.user?.name ?? "");
     setEmail(session?.user?.email ?? "");
-    setMessage(response.data?.message ?? "Sugestão interna registrada para triagem.");
+    notify({ tone: "success", text: response.data?.message ?? "Sugestão interna registrada para triagem." });
     onSubmitted?.();
   }
 
@@ -224,9 +224,6 @@ export default function InternalImprovementForm({
           </ul>
         ) : null}
       </div>
-
-      {error ? <DeveloperMessage tone="error">{error}</DeveloperMessage> : null}
-      {message ? <DeveloperMessage tone="success"><CheckCircle size={16} weight="fill" />{message}</DeveloperMessage> : null}
 
       <div className="flex justify-end border-t border-[var(--border)] pt-4">
         <button

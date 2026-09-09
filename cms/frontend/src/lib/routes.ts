@@ -45,7 +45,16 @@ export function siteUrl(pathname: AppPath | string = "/"): string {
 
   const pathWithLeadingSlash = value.startsWith("/") ? value : `/${value}`;
   const baseUrl = configuredSiteUrl || fallbackSiteUrl;
-  return baseUrl ? `${baseUrl}${pathWithLeadingSlash}` : pathWithLeadingSlash;
+  if (!baseUrl) return pathWithLeadingSlash;
+
+  try {
+    // A URL pública é a origem do site. Resolver pelo URL nativo evita que um
+    // valor acidentalmente configurado com `/admin` faça a mídia apontar para
+    // uma rota inexistente do CMS.
+    return new URL(pathWithLeadingSlash, `${baseUrl}/`).toString();
+  } catch {
+    return `${baseUrl}${pathWithLeadingSlash}`;
+  }
 }
 
 /** Uploads continuam same-origin no CMS; assets do site usam a URL pública canônica. */
@@ -121,6 +130,7 @@ export const api = {
     images: "/api/admin/images",
     imagesSummary: "/api/admin/images?summary=true",
     home: "/api/admin/home",
+    homeCertificationMedia: "/api/admin/home/certifications/media",
     homeHero: "/api/admin/home/hero",
     homeSection1: "/api/admin/home/section-1",
     homeSection2: "/api/admin/home/section-2",

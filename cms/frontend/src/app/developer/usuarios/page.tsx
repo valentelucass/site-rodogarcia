@@ -1,5 +1,7 @@
 "use client";
 
+import { useDeveloperNotifier } from "@/components/developer/DeveloperNotifications";
+
 import { useEffect, useMemo, useState } from "react";
 import {
   CheckCircle,
@@ -124,8 +126,7 @@ export default function UsuariosPage() {
   const [confirmTemporaryPassword, setConfirmTemporaryPassword] = useState("");
   const [saving, setSaving] = useState(false);
   const [mutatingId, setMutatingId] = useState("");
-  const [status, setStatus] = useState<"" | "success" | "error">("");
-  const [statusMessage, setStatusMessage] = useState("");
+  const notify = useDeveloperNotifier();
   const { data, loading, error, refresh } = useAdminResource<AdminUser[]>({
     key: adminResourceKeys.users,
     fetcher: async (request) => {
@@ -188,16 +189,14 @@ export default function UsuariosPage() {
 
   function resetForm() {
     setForm(EMPTY_FORM);
-    setStatus("");
-    setStatusMessage("");
+    notify(null);
   }
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
 
     if (!isSupreme) {
-      setStatus("error");
-      setStatusMessage("Somente o usuário supremo pode criar usuários.");
+      notify({ tone: "error", text: "Somente o usuário supremo pode criar usuários." });
       return;
     }
 
@@ -207,26 +206,22 @@ export default function UsuariosPage() {
       !form.password ||
       !form.confirmPassword
     ) {
-      setStatus("error");
-      setStatusMessage("Preencha nome, e-mail e senha antes de criar o usuário.");
+      notify({ tone: "error", text: "Preencha nome, e-mail e senha antes de criar o usuário." });
       return;
     }
 
     if (form.password !== form.confirmPassword) {
-      setStatus("error");
-      setStatusMessage("As senhas não conferem.");
+      notify({ tone: "error", text: "As senhas não conferem." });
       return;
     }
 
     if (passwordChecks.some((check) => !check.valid)) {
-      setStatus("error");
-      setStatusMessage("A senha ainda não atende aos requisitos mínimos.");
+      notify({ tone: "error", text: "A senha ainda não atende aos requisitos mínimos." });
       return;
     }
 
     setSaving(true);
-    setStatus("");
-    setStatusMessage("");
+    notify(null);
 
     const response = await apiRequest<UsersResponse>(api.admin.users, {
       method: "POST",
@@ -243,15 +238,13 @@ export default function UsuariosPage() {
     setSaving(false);
 
     if (!response.success) {
-      setStatus("error");
-      setStatusMessage(response.error ?? "Falha ao criar usuário.");
+      notify({ tone: "error", text: response.error ?? "Falha ao criar usuário." });
       return;
     }
 
     setUsers(response.data?.users ?? users);
     invalidateAdminResource([adminResourceKeys.users, adminResourceKeys.dashboard]);
-    setStatus("success");
-    setStatusMessage("Usuário criado. No primeiro acesso, a pessoa precisará criar a própria senha.");
+    notify({ tone: "success", text: "Usuário criado. No primeiro acesso, a pessoa precisará criar a própria senha." });
     setForm(EMPTY_FORM);
     await refresh();
     await loadUsers();
@@ -269,28 +262,24 @@ export default function UsuariosPage() {
 
   async function saveUser(user: AdminUser) {
     if (!isSupreme) {
-      setStatus("error");
-      setStatusMessage("Somente o usuário supremo pode editar usuários.");
+      notify({ tone: "error", text: "Somente o usuário supremo pode editar usuários." });
       return;
     }
     setMutatingId(user.id);
-    setStatus("");
-    setStatusMessage("");
+    notify(null);
     const response = await apiRequest<UsersResponse>(`${api.admin.users}/${user.id}`, {
       method: "PUT",
       body: JSON.stringify(editing),
     });
     setMutatingId("");
     if (!response.success) {
-      setStatus("error");
-      setStatusMessage(response.error ?? "Falha ao atualizar usuário.");
+      notify({ tone: "error", text: response.error ?? "Falha ao atualizar usuário." });
       return;
     }
     setUsers(response.data?.users ?? users);
     setEditingId("");
     setEditing({});
-    setStatus("success");
-    setStatusMessage("Usuário atualizado com sucesso.");
+    notify({ tone: "success", text: "Usuário atualizado com sucesso." });
     invalidateAdminResource([adminResourceKeys.users, adminResourceKeys.dashboard]);
     await refresh();
     await loadUsers();
@@ -298,26 +287,22 @@ export default function UsuariosPage() {
 
   async function removeUser(user: AdminUser) {
     if (!isSupreme) {
-      setStatus("error");
-      setStatusMessage("Somente o usuário supremo pode excluir usuários.");
+      notify({ tone: "error", text: "Somente o usuário supremo pode excluir usuários." });
       return;
     }
     if (!window.confirm(`Excluir o acesso de ${user.email}?`)) return;
     setMutatingId(user.id);
-    setStatus("");
-    setStatusMessage("");
+    notify(null);
     const response = await apiRequest<UsersResponse>(`${api.admin.users}/${user.id}`, {
       method: "DELETE",
     });
     setMutatingId("");
     if (!response.success) {
-      setStatus("error");
-      setStatusMessage(response.error ?? "Falha ao excluir usuário.");
+      notify({ tone: "error", text: response.error ?? "Falha ao excluir usuário." });
       return;
     }
     setUsers(response.data?.users ?? users);
-    setStatus("success");
-    setStatusMessage("Usuário removido com sucesso.");
+    notify({ tone: "success", text: "Usuário removido com sucesso." });
     invalidateAdminResource([adminResourceKeys.users, adminResourceKeys.dashboard]);
     await refresh();
     await loadUsers();
@@ -325,8 +310,7 @@ export default function UsuariosPage() {
 
   async function updatePermissions(user: AdminUser, permission: "createUsers" | "deleteUsers", enabled: boolean) {
     if (!isSupreme) {
-      setStatus("error");
-      setStatusMessage("Somente o usuário supremo pode alterar permissões.");
+      notify({ tone: "error", text: "Somente o usuário supremo pode alterar permissões." });
       return;
     }
     const permissions = new Set(user.permissions ?? []);
@@ -339,13 +323,11 @@ export default function UsuariosPage() {
     });
     setMutatingId("");
     if (!response.success) {
-      setStatus("error");
-      setStatusMessage(response.error ?? "Falha ao atualizar permissões.");
+      notify({ tone: "error", text: response.error ?? "Falha ao atualizar permissões." });
       return;
     }
     setUsers(response.data?.users ?? users);
-    setStatus("success");
-    setStatusMessage("Permissões atualizadas com sucesso.");
+    notify({ tone: "success", text: "Permissões atualizadas com sucesso." });
     invalidateAdminResource([adminResourceKeys.users]);
     await refresh();
     await loadUsers();
@@ -353,18 +335,15 @@ export default function UsuariosPage() {
 
   async function resetUserPassword(user: AdminUser) {
     if (!isSupreme) {
-      setStatus("error");
-      setStatusMessage("Somente o usuário supremo pode redefinir senhas.");
+      notify({ tone: "error", text: "Somente o usuário supremo pode redefinir senhas." });
       return;
     }
     if (temporaryPassword !== confirmTemporaryPassword) {
-      setStatus("error");
-      setStatusMessage("As senhas temporárias não conferem.");
+      notify({ tone: "error", text: "As senhas temporárias não conferem." });
       return;
     }
     if (getPasswordChecks(temporaryPassword).some((check) => !check.valid)) {
-      setStatus("error");
-      setStatusMessage("A senha temporária ainda não atende aos requisitos mínimos.");
+      notify({ tone: "error", text: "A senha temporária ainda não atende aos requisitos mínimos." });
       return;
     }
 
@@ -375,16 +354,14 @@ export default function UsuariosPage() {
     });
     setMutatingId("");
     if (!response.success) {
-      setStatus("error");
-      setStatusMessage(response.error ?? "Falha ao redefinir a senha.");
+      notify({ tone: "error", text: response.error ?? "Falha ao redefinir a senha." });
       return;
     }
     setUsers(response.data?.users ?? users);
     setResettingId("");
     setTemporaryPassword("");
     setConfirmTemporaryPassword("");
-    setStatus("success");
-    setStatusMessage(`Senha temporária definida para ${user.email}. No próximo acesso, a pessoa precisará criar uma nova senha.`);
+    notify({ tone: "success", text: `Senha temporária definida para ${user.email}. No próximo acesso, a pessoa precisará criar uma nova senha.` });
     invalidateAdminResource([adminResourceKeys.users, adminResourceKeys.dashboard]);
     await refresh();
     await loadUsers();
@@ -595,12 +572,6 @@ export default function UsuariosPage() {
                   {activeProfiles.map((profile) => <option key={profile.id} value={profile.id}>{profile.name}</option>)}
                 </select>
               </DeveloperField>
-            ) : null}
-
-            {status ? (
-              <DeveloperMessage tone={status === "success" ? "success" : "error"}>
-                {statusMessage}
-              </DeveloperMessage>
             ) : null}
 
             <div className="flex flex-col gap-3 sm:flex-row">

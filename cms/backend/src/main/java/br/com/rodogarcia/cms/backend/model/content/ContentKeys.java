@@ -19,7 +19,7 @@ public final class ContentKeys {
     );
     public static final Set<String> HOME_SECTIONS = Set.of(
         "hero", "section1", "section2", "section3", "regionalPresence",
-        "trackingCta", "socialProof", "quickActions"
+        "trackingCta", "socialProof", "quickActions", "certifications"
     );
     public static final Set<String> SERVICES_SECTIONS = Set.of("modules", "finalCta", "faq");
     public static final Set<String> FOOTER_SECTIONS = Set.of("footer", "terms", "help", "privacy");

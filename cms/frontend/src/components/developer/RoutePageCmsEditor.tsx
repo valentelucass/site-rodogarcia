@@ -1,5 +1,7 @@
 "use client";
 
+import { useDeveloperNotifier } from "@/components/developer/DeveloperNotifications";
+
 import { useEffect, useMemo, useState } from "react";
 import { ArrowSquareOut, CheckCircle, Plus, SortAscending, Trash } from "@phosphor-icons/react";
 import { useApiRequest } from "@/hooks/useApiRequest";
@@ -259,7 +261,7 @@ export function RoutePageCmsEditor({ pageKey }: { pageKey: PageKey }) {
   const [page, setPage] = useState<AnyRecord | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState("");
-  const [status, setStatus] = useState<{ tone: "success" | "error" | "info"; text: string } | null>(null);
+  const notify = useDeveloperNotifier();
   const [openIndex, setOpenIndex] = useState<number | null>(0);
   const [contactInfoOpenIndex, setContactInfoOpenIndex] = useState<number | null>(0);
   const [quoteDirectChannelsOpenIndex, setQuoteDirectChannelsOpenIndex] = useState<number | null>(null);
@@ -276,9 +278,9 @@ export function RoutePageCmsEditor({ pageKey }: { pageKey: PageKey }) {
       if (!alive) return;
       if (response.success) {
         setPage(response.data?.page ?? null);
-        setStatus(null);
+        notify(null);
       } else {
-        setStatus({ tone: "error", text: response.error ?? "Falha ao carregar página." });
+        notify({ tone: "error", text: response.error ?? "Falha ao carregar página." });
       }
       setLoading(false);
     }
@@ -286,7 +288,7 @@ export function RoutePageCmsEditor({ pageKey }: { pageKey: PageKey }) {
     return () => {
       alive = false;
     };
-  }, [apiRequest, pageKey]);
+  }, [apiRequest, pageKey, notify]);
 
   const summary = useMemo(() => {
     if (!page) return { sections: 0, items: 0 };
@@ -312,7 +314,7 @@ export function RoutePageCmsEditor({ pageKey }: { pageKey: PageKey }) {
 
   async function saveSection(sectionKey: string, payload: unknown) {
     setSaving(sectionKey);
-    setStatus(null);
+    notify(null);
     const response = await apiRequest<{ page?: AnyRecord }>(
       api.admin.pageSection(pageKey, sectionKey),
       {
@@ -322,12 +324,12 @@ export function RoutePageCmsEditor({ pageKey }: { pageKey: PageKey }) {
     );
     setSaving("");
     if (!response.success) {
-      setStatus({ tone: "error", text: response.error ?? "Falha ao salvar bloco." });
+      notify({ tone: "error", text: response.error ?? "Falha ao salvar bloco." });
       return;
     }
     setPage(response.data?.page ?? page);
     setPreviewRevision((revision) => revision + 1);
-    setStatus({ tone: "success", text: "Bloco salvo com sucesso." });
+    notify({ tone: "success", text: "Bloco salvo com sucesso." });
   }
 
   function moveArrayItem(path: string, index: number, direction: -1 | 1) {
@@ -348,7 +350,7 @@ export function RoutePageCmsEditor({ pageKey }: { pageKey: PageKey }) {
       <DeveloperPage>
         <DeveloperHero eyebrow={meta.eyebrow} title={meta.title} description={meta.description} />
         {loading ? <div className="mt-5"><DeveloperMessage tone="info">Carregando...</DeveloperMessage></div> : null}
-        {status ? <div className="mt-5"><DeveloperMessage tone={status.tone}>{status.text}</DeveloperMessage></div> : null}
+
       </DeveloperPage>
     );
   }
@@ -372,7 +374,7 @@ export function RoutePageCmsEditor({ pageKey }: { pageKey: PageKey }) {
       />
 
       {loading ? <div className="mt-5"><DeveloperMessage tone="info">Carregando...</DeveloperMessage></div> : null}
-      {status ? <div className="mt-5"><DeveloperMessage tone={status.tone}>{status.text}</DeveloperMessage></div> : null}
+
       <div className="mt-5">
         <DeveloperResponsivePreview
           href={meta.publicHref}
@@ -699,7 +701,7 @@ export function RoutePageCmsEditor({ pageKey }: { pageKey: PageKey }) {
                     align="start"
                   />
                   <div className="grid gap-4">
-                    <DeveloperMediaField label="Arquivo do certificado" mediaType="image" required value={item.image?.src ?? ""} onChange={(src) => update((draft) => { draft.compliance.certifications[index].image.src = src; })} previewAlt={item.image?.alt ?? ""} showPreview={false} equalControlWidths />
+                    <DeveloperMediaField label="Arquivo do certificado" mediaType="image" required value={item.image?.src ?? ""} onChange={(src) => update((draft) => { draft.compliance.certifications[index].image.src = src; })} previewAlt={item.image?.alt ?? ""} showPreview={false} />
                     <TextInput label="Texto alternativo" value={item.image?.alt ?? ""} maxLength={160} onChange={(value) => update((draft) => { draft.compliance.certifications[index].image.alt = value; })} />
                   </div>
                 </div>

@@ -22,7 +22,6 @@ import {
   DeveloperMessage,
   developerGhostButtonClassName,
   developerInputClassName,
-  developerSecondaryButtonClassName,
 } from "./ui";
 
 export interface AdminMediaRecord extends ResponsiveImageSources {
@@ -49,11 +48,13 @@ interface DeveloperMediaFieldProps {
   tooltip?: string;
   helpKey?: string;
   previewAlt?: string;
+  previewValue?: string;
+  displayValue?: string;
   className?: string;
   mediaType?: "image" | "video" | "all";
   showPreview?: boolean;
   stackControls?: boolean;
-  equalControlWidths?: boolean;
+  compact?: boolean;
   afterControls?: ReactNode;
   availableMedia?: AdminMediaRecord[];
   showLibraryLink?: boolean;
@@ -64,7 +65,7 @@ function mediaTypeFromUrl(value: string): "image" | "video" {
 }
 
 function isPreviewableAsset(value: string) {
-  return /\.(png|jpe?g|webp|gif|svg|avif|mp4|webm|ogg)$/i.test(value);
+  return value.startsWith("blob:") || /\.(png|jpe?g|webp|gif|svg|avif|mp4|webm|ogg)$/i.test(value);
 }
 
 function mediaTechnicalDetails(item: AdminMediaRecord) {
@@ -87,11 +88,13 @@ export function DeveloperMediaField({
   tooltip,
   helpKey,
   previewAlt,
+  previewValue,
+  displayValue,
   className,
   mediaType = "all",
   showPreview = true,
   stackControls = false,
-  equalControlWidths = false,
+  compact = false,
   afterControls,
   availableMedia,
   showLibraryLink = true,
@@ -134,6 +137,10 @@ export function DeveloperMediaField({
     [availableMedia, data, mediaType]
   );
   const trimmedValue = value.trim();
+  const previewMediaValue = previewValue?.trim() || trimmedValue;
+  const selectedMediaName = media.find((item) => item.url === trimmedValue)?.name?.trim();
+  const displayedValue = displayValue?.trim() || selectedMediaName || trimmedValue;
+  const hasSelectedMedia = previewMediaValue.length > 0;
   const totalPickerPages = Math.max(1, Math.ceil(media.length / MEDIA_PAGE_SIZE));
   const currentPickerPage = Math.min(pickerPage, totalPickerPages - 1);
   const visibleMedia = media.slice(
@@ -179,51 +186,40 @@ export function DeveloperMediaField({
   }
 
   const controls = (
-    <div className="space-y-3">
-      <div
-        className={cn(
-          "grid gap-3",
-          stackControls
-            ? "justify-items-start"
-            : equalControlWidths
-              ? "sm:grid-cols-2"
-              : "sm:grid-cols-[minmax(0,1fr)_auto]"
-        )}
-      >
+    <div className={compact ? "space-y-2.5" : "space-y-3"}>
+      <div>
         <input
           type="hidden"
           value={value}
           required={required}
           readOnly
         />
-        <div
-          className={cn(
-            developerInputClassName,
-            "flex min-h-12 items-center overflow-hidden bg-white/78 text-left"
-          )}
-          title={trimmedValue || "Nenhuma mídia selecionada"}
-        >
-          <span
-            className={cn(
-              "block truncate",
-              trimmedValue ? "text-[var(--foreground)]" : "text-[var(--color-muted-raw)]"
-            )}
-          >
-            {trimmedValue || "Nenhuma mídia selecionada"}
-          </span>
-        </div>
         <button
           type="button"
           onClick={openPicker}
+          aria-haspopup="dialog"
+          aria-label={displayedValue ? `Trocar mídia: ${displayedValue}` : "Escolher mídia na biblioteca"}
+          title={displayedValue || "Escolher mídia na biblioteca"}
           className={cn(
-            developerSecondaryButtonClassName,
-            "whitespace-nowrap",
-            equalControlWidths && "w-full justify-center",
-            stackControls && "min-w-40 justify-center"
+            developerInputClassName,
+            "group flex min-h-12 items-center justify-between gap-3 overflow-hidden text-left hover:border-[var(--primary)]/35 hover:bg-white",
+            compact && "min-h-10 px-3 py-2 text-xs"
           )}
         >
-          <ImagesSquare size={16} weight="bold" />
-          Biblioteca
+          <span
+            className={cn(
+              "block min-w-0 truncate",
+              displayedValue ? "text-[var(--foreground)]" : "text-[var(--color-muted-raw)]"
+            )}
+          >
+            {displayedValue || "Nenhuma mídia selecionada"}
+          </span>
+          <ImagesSquare
+            size={compact ? 15 : 16}
+            weight="bold"
+            aria-hidden="true"
+            className="shrink-0 text-[var(--primary)] transition-transform duration-200 group-hover:scale-110"
+          />
         </button>
       </div>
       {afterControls}
@@ -236,7 +232,6 @@ export function DeveloperMediaField({
           Limpar seleção
         </button>
       ) : null}
-
     </div>
   );
 
@@ -250,17 +245,27 @@ export function DeveloperMediaField({
         helpKey={helpKey}
         className={className}
       >
-        {showPreview ? (
+        {showPreview && hasSelectedMedia ? (
           <div
             className={cn(
               "grid gap-4",
-              stackControls ? "grid-cols-1" : "lg:grid-cols-[340px_minmax(0,1fr)] lg:items-start"
+              compact
+                ? "sm:grid-cols-[minmax(132px,172px)_minmax(0,1fr)] sm:items-start"
+                : stackControls
+                  ? "grid-cols-1"
+                  : "lg:grid-cols-[340px_minmax(0,1fr)] lg:items-start"
             )}
           >
-            <div className={cn(stackControls ? "order-1" : "order-2 lg:order-1")}>
-              <DeveloperMediaPreview value={trimmedValue} previewAlt={previewAlt} mediaType={mediaType} />
+            <div className={cn(compact || stackControls ? "order-1" : "order-2 lg:order-1")}>
+              <DeveloperMediaPreview
+                value={previewMediaValue}
+                previewAlt={previewAlt}
+                mediaType={mediaType}
+                compact={compact}
+                align={compact ? "start" : "center"}
+              />
             </div>
-            <div className={cn(stackControls ? "order-2" : "order-1 lg:order-2")}>{controls}</div>
+            <div className={cn(compact || stackControls ? "order-2" : "order-1 lg:order-2")}>{controls}</div>
           </div>
         ) : (
           controls
@@ -342,12 +347,7 @@ export function DeveloperMediaField({
                             Vídeo
                           </div>
                         ) : (
-                          <img
-                            src={resolveCmsMediaUrl(item.thumbnailUrl || item.url)}
-                            alt={item.name}
-                            className="h-28 w-full object-cover"
-                            loading="lazy"
-                          />
+                          <MediaLibraryImage item={item} />
                         )}
                         <div className="p-3">
                           <p className="truncate text-xs font-semibold text-[var(--foreground)]">{item.name}</p>
@@ -408,6 +408,46 @@ export function DeveloperMediaField({
   );
 }
 
+function MediaLibraryImage({ item }: { item: AdminMediaRecord }) {
+  const thumbnailSrc = resolveCmsMediaUrl(item.thumbnailUrl || item.url);
+  const originalSrc = resolveCmsMediaUrl(item.url);
+  const [source, setSource] = useState(thumbnailSrc);
+  const [unavailable, setUnavailable] = useState(false);
+
+  useEffect(() => {
+    setSource(thumbnailSrc);
+    setUnavailable(false);
+  }, [thumbnailSrc]);
+
+  if (unavailable) {
+    return (
+      <div className="flex h-28 flex-col items-center justify-center gap-1.5 bg-slate-100 px-3 text-center dark:bg-slate-900/50">
+        <ImagesSquare size={19} weight="bold" className="text-slate-400" />
+        <span className="text-[11px] font-medium text-slate-500">Prévia indisponível</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="h-28 overflow-hidden bg-slate-100 dark:bg-slate-900/50">
+      <img
+        src={source}
+        alt={item.name}
+        className="h-full w-full object-cover"
+        loading="lazy"
+        decoding="async"
+        onError={() => {
+          if (source !== originalSrc) {
+            setSource(originalSrc);
+            return;
+          }
+          setUnavailable(true);
+        }}
+      />
+    </div>
+  );
+}
+
 export function DeveloperMediaPreview({
   value,
   previewAlt,
@@ -428,7 +468,9 @@ export function DeveloperMediaPreview({
   const currentType =
     trimmedValue.length > 0 ? mediaTypeFromUrl(trimmedValue) : mediaType === "video" ? "video" : "image";
   const hasPreview = trimmedValue.length > 0 && isPreviewableAsset(trimmedValue);
-  const previewUrl = resolveCmsMediaUrl(trimmedValue);
+  const previewUrl = trimmedValue.startsWith("blob:")
+    ? trimmedValue
+    : resolveCmsMediaUrl(trimmedValue);
 
   return (
     <>

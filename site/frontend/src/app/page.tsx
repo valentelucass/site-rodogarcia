@@ -11,8 +11,7 @@ import ServiceLinesRebrand from "@/components/home/ServiceLinesRebrand";
 import TestimonialsCarousel from "@/components/home/TestimonialsCarousel";
 import TrackingLookupSection from "@/components/home/TrackingLookupSection";
 import { external, seo, site } from "@/lib/routes";
-import { buildCmsMetadata, fetchMediaSlots, mediaSlot } from "@/lib/cmsPublic";
-import { canonicalHomeCertificationUrl } from "@/lib/publicMedia";
+import { buildCmsMetadata } from "@/lib/cmsPublic";
 
 export const dynamic = "force-dynamic";
 
@@ -73,6 +72,7 @@ const EMPTY_HOME_PAGE: HomePageContent = {
     ],
   },
   socialProof: { title: "", feedbacks: [] },
+  certifications: [],
   quickActions: [
     { id: "qa-taxas", order: 1, label: "Taxas", href: "", icon: "FilePdf", type: "download", enabled: false, downloadFile: "" },
     { id: "qa-cotacao", order: 2, label: "Cotação", href: site.quote, icon: "Calculator", type: "link", enabled: true },
@@ -85,66 +85,62 @@ const EMPTY_HOME_PAGE: HomePageContent = {
   ],
 };
 
-const CERTS = [
+const FALLBACK_CERTS = [
   {
     src: "/certificados/iso-9001-marquee.96db5a941c71.webp",
     alt: "ISO 9001",
     title: "ISO 9001",
-    slot: "home.cert.iso",
   },
   {
     src: "/certificados/sassmaq-marquee.2bd290b6d955.webp",
     alt: "SASSMAQ",
     title: "SASSMAQ",
-    slot: "home.cert.sassmaq",
   },
   {
     src: "/certificados/ecovadis-marquee.328117d0b616.webp",
     alt: "EcoVadis",
     title: "EcoVadis",
-    slot: "home.cert.ecovadis",
   },
   {
     src: "/certificados/policia-federal-marquee.e06c0a6ec034.webp",
     alt: "Policia Federal",
     title: "Licenca PF",
-    slot: "home.cert.pf",
   },
   {
     src: "/certificados/policia-civil-sp-marquee.cf85d95a8c02.webp",
     alt: "Policia Civil SP",
     title: "Policia Civil SP",
-    slot: "home.cert.pcsp",
   },
   {
     src: "/certificados/exercito-brasileiro-marquee.25640e0eb885.webp",
     alt: "Exercito Brasileiro",
     title: "Exercito Brasileiro",
-    slot: "home.cert.exercito",
   },
   {
     src: "/certificados/ibama-marquee.4cdbe07db023.webp",
     alt: "IBAMA",
     title: "IBAMA",
-    slot: "home.cert.ibama",
   },
 ] as const;
 
 export default async function HomePage() {
   let homePage = EMPTY_HOME_PAGE;
-  const [mediaSlots, contentResponse] = await Promise.all([
-    fetchMediaSlots(),
-    fetchPublicContent().catch(() => null),
-  ]);
+  const contentResponse = await fetchPublicContent().catch(() => null);
 
   if (contentResponse?.success && contentResponse.data) {
     homePage = contentResponse.data.homePage ?? EMPTY_HOME_PAGE;
   }
 
-  const certs = CERTS.map((cert) => ({
-    ...cert,
-    src: canonicalHomeCertificationUrl(mediaSlot(mediaSlots, cert.slot, cert.src), cert.src),
-  }));
+  const publishedCertifications = Array.isArray(homePage.certifications)
+    ? homePage.certifications
+    : [];
+  const certs = publishedCertifications.length > 0
+    ? publishedCertifications.map((certification) => ({
+      src: certification.image,
+      alt: certification.alt,
+      title: certification.title,
+    }))
+    : contentResponse?.success ? [] : FALLBACK_CERTS;
 
   return (
     <div>
@@ -154,7 +150,7 @@ export default async function HomePage() {
       />
       <PostHeroInteractiveShowcase section={homePage.section1} />
 
-      <section className="py-12 sm:py-16">
+      {certs.length > 0 ? <section className="py-12 sm:py-16">
         <div className="mx-auto mb-10 flex max-w-[1440px] flex-col items-center px-6 text-center">
           <span className="inline-flex items-center gap-2 rounded-full border border-[var(--primary)]/10 bg-[var(--color-primary-soft)] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.24em] text-[var(--primary)]">
             <span className="h-1.5 w-1.5 rounded-full bg-[var(--primary)]" />
@@ -178,12 +174,12 @@ export default async function HomePage() {
               {[...certs, ...certs].map((cert, index) => (
                 <div
                   key={`${cert.title}-${index}`}
-                  className={`group/card flex w-[170px] shrink-0 flex-col items-center justify-center gap-3 transition-all duration-500 hover:-translate-y-1 motion-reduce:transition-none motion-reduce:hover:translate-y-0 sm:w-[200px] lg:w-[220px] ${index >= CERTS.length ? "certifications-marquee-copy" : ""}`}
-                  aria-hidden={index >= CERTS.length ? true : undefined}
+                  className={`group/card flex w-[170px] shrink-0 flex-col items-center justify-center gap-3 transition-all duration-500 hover:-translate-y-1 motion-reduce:transition-none motion-reduce:hover:translate-y-0 sm:w-[200px] lg:w-[220px] ${index >= certs.length ? "certifications-marquee-copy" : ""}`}
+                  aria-hidden={index >= certs.length ? true : undefined}
                 >
                   <img
                     src={cert.src}
-                    alt={index < CERTS.length ? cert.alt : ""}
+                    alt={index < certs.length ? cert.alt : ""}
                     width={340}
                     height={176}
                     className="h-auto w-[150px] grayscale object-contain opacity-55 transition-all duration-500 group-hover/card:scale-[1.08] group-hover/card:grayscale-0 group-hover/card:opacity-100 motion-reduce:transition-none motion-reduce:group-hover/card:scale-100 sm:w-[170px]"
@@ -198,7 +194,7 @@ export default async function HomePage() {
             </div>
           </div>
         </div>
-      </section>
+      </section> : null}
 
       <OperationsCarousel section={homePage.section2} />
       <ServiceLinesRebrand section={homePage.section3} />

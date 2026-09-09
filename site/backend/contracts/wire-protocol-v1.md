@@ -28,6 +28,7 @@ Ordem global: headers de segurança, CORS, parser JSON estrito de 2 MiB e roteam
 - Origem permitida é refletida em `Access-Control-Allow-Origin` com credenciais; origem proibida não recebe headers CORS.
 - Preflight permitido responde `204` antes das rotas e anuncia `GET,HEAD,PUT,PATCH,POST,DELETE`.
 - Respostas mantêm CSP, COOP, CORP, Referrer-Policy, HSTS, `X-Content-Type-Options: nosniff`, `X-Frame-Options: SAMEORIGIN` e remoção de `X-Powered-By`.
+- Em HTTP/1.1, respostas reutilizáveis preservam `Connection: keep-alive` e `Keep-Alive: timeout=5`. Os status que encerram a conexão no Tomcat (`400`, `408`, `411`, `413`, `414`, `500`, `501`, `503`) anunciam somente `Connection: close`, sem `Keep-Alive`; nunca se deve anunciar reutilização de um socket encerrado. Isso inclui o erro de parsing JSON, cujo status `500`, corpo e headers de segurança/CORS permanecem iguais.
 - O backend não adiciona cookie, headers de rate limit, `Retry-After`, challenge de autenticação ou dados internos.
 
 ## Rotas, status e efeitos

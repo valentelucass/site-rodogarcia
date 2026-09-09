@@ -1,5 +1,7 @@
 "use client";
 
+import { useDeveloperNotifier } from "@/components/developer/DeveloperNotifications";
+
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { ArrowRight, ArrowSquareOut, Eye, FloppyDisk, RocketLaunch } from "@phosphor-icons/react";
@@ -245,7 +247,7 @@ export default function LandingPagesPage() {
   const [newProjectError, setNewProjectError] = useState<string | null>(null);
   const [templatesPage, setTemplatesPage] = useState(0);
   const [projectsPage, setProjectsPage] = useState(0);
-  const [message, setMessage] = useState<{ tone: "success" | "error"; text: string } | null>(null);
+  const notify = useDeveloperNotifier();
   const [saving, setSaving] = useState(false);
   const [uploadingMedia, setUploadingMedia] = useState(false);
   const [openingPreview, setOpeningPreview] = useState(false);
@@ -338,7 +340,7 @@ export default function LandingPagesPage() {
     setUnpublishAt(localDateTime(created.scheduledUnpublishAt));
     setNewProjectStep("template");
     setNewProjectDialogOpen(false);
-    setMessage({ tone: "success", text: "Projeto criado como rascunho. Agora personalize o conteúdo e salve as próximas alterações." });
+    notify({ tone: "success", text: "Projeto criado como rascunho. Agora personalize o conteúdo e salve as próximas alterações." });
     invalidateAdminResource(adminResourceKeys.landings);
     await refresh();
   }
@@ -346,7 +348,7 @@ export default function LandingPagesPage() {
   async function save(event: React.FormEvent) {
     event.preventDefault();
     setSaving(true);
-    setMessage(null);
+    notify(null);
     const endpoint = form.id ? api.admin.landing(form.id) : api.admin.landings;
     const result = await apiRequest<{ landing: LandingForm }>(endpoint, {
       method: form.id ? "PUT" : "POST",
@@ -355,7 +357,7 @@ export default function LandingPagesPage() {
     setSaving(false);
 
     if (!result.success) {
-      setMessage({ tone: "error", text: result.error ?? "Não foi possível salvar a landing." });
+      notify({ tone: "error", text: result.error ?? "Não foi possível salvar a landing." });
       return;
     }
 
@@ -367,19 +369,19 @@ export default function LandingPagesPage() {
       setUnpublishAt(localDateTime(saved.scheduledUnpublishAt));
     }
     setCreatingNew(false);
-    setMessage({ tone: "success", text: "Landing page salva como rascunho. Agora você pode abrir a prévia privada." });
+    notify({ tone: "success", text: "Landing page salva como rascunho. Agora você pode abrir a prévia privada." });
     invalidateAdminResource(adminResourceKeys.landings);
     await refresh();
   }
 
   async function changePublication(publish: boolean) {
     if (!form.id) {
-      setMessage({ tone: "error", text: "Salve o rascunho antes de publicar." });
+      notify({ tone: "error", text: "Salve o rascunho antes de publicar." });
       return;
     }
 
     setSaving(true);
-    setMessage(null);
+    notify(null);
     const result = await apiRequest<{ landing: LandingForm }>(
       publish ? api.admin.publishLanding(form.id) : api.admin.unpublishLanding(form.id),
       { method: "POST" },
@@ -387,33 +389,33 @@ export default function LandingPagesPage() {
     setSaving(false);
 
     if (!result.success) {
-      setMessage({ tone: "error", text: result.error ?? "Não foi possível alterar a publicação." });
+      notify({ tone: "error", text: result.error ?? "Não foi possível alterar a publicação." });
       return;
     }
 
     if (result.data?.landing) setForm(normalizeLanding(result.data.landing));
-    setMessage({ tone: "success", text: publish ? "Landing page publicada." : "Landing page despublicada." });
+    notify({ tone: "success", text: publish ? "Landing page publicada." : "Landing page despublicada." });
     invalidateAdminResource(adminResourceKeys.landings);
     await refresh();
   }
 
   async function openPreview() {
     if (!form.id) {
-      setMessage({ tone: "error", text: "Salve o rascunho antes de abrir a prévia." });
+      notify({ tone: "error", text: "Salve o rascunho antes de abrir a prévia." });
       return;
     }
     if (hasUnsavedChanges) {
-      setMessage({ tone: "error", text: "Salve o rascunho antes de abrir a prévia pública; ela sempre mostra a última versão persistida." });
+      notify({ tone: "error", text: "Salve o rascunho antes de abrir a prévia pública; ela sempre mostra a última versão persistida." });
       return;
     }
 
     setOpeningPreview(true);
-    setMessage(null);
+    notify(null);
     const result = await apiRequest<{ previewPath: string }>(api.admin.landingPreview(form.id));
     setOpeningPreview(false);
 
     if (!result.success || !result.data?.previewPath) {
-      setMessage({ tone: "error", text: result.error ?? "Não foi possível gerar a prévia privada." });
+      notify({ tone: "error", text: result.error ?? "Não foi possível gerar a prévia privada." });
       return;
     }
 
@@ -423,7 +425,7 @@ export default function LandingPagesPage() {
 
   async function uploadMedia(file: File, alt = ""): Promise<LandingMedia | null> {
     setUploadingMedia(true);
-    setMessage(null);
+    notify(null);
     const body = new FormData();
     body.append("file", file);
     body.append("alt", alt);
@@ -432,13 +434,13 @@ export default function LandingPagesPage() {
 
     const uploaded = result.data?.media;
     if (!result.success || !uploaded) {
-      setMessage({ tone: "error", text: result.error ?? "Não foi possível enviar a imagem." });
+      notify({ tone: "error", text: result.error ?? "Não foi possível enviar a imagem." });
       return null;
     }
 
     invalidateAdminResource("admin:landing-media");
     await refreshMedia();
-    setMessage({ tone: "success", text: "Mídia enviada, tratada e selecionada nesta área. Salve a landing para publicar a alteração." });
+    notify({ tone: "success", text: "Mídia enviada, tratada e selecionada nesta área. Salve a landing para publicar a alteração." });
     return uploaded;
   }
 
@@ -446,7 +448,7 @@ export default function LandingPagesPage() {
     if (!form.id) return;
     const result = await apiRequest<{ landing: LandingForm }>(api.admin.duplicateLanding(form.id), { method: "POST" });
     if (!result.success || !result.data?.landing) {
-      setMessage({ tone: "error", text: result.error ?? "Não foi possível duplicar a campanha." });
+      notify({ tone: "error", text: result.error ?? "Não foi possível duplicar a campanha." });
       return;
     }
     const duplicated = normalizeLanding(result.data.landing);
@@ -454,7 +456,7 @@ export default function LandingPagesPage() {
     setForm(duplicated);
     setSavedFingerprint(JSON.stringify(duplicated));
     setPreviewPath(null);
-    setMessage({ tone: "success", text: "Campanha duplicada como rascunho independente." });
+    notify({ tone: "success", text: "Campanha duplicada como rascunho independente." });
     invalidateAdminResource(adminResourceKeys.landings);
     await refresh();
   }
@@ -463,13 +465,13 @@ export default function LandingPagesPage() {
     if (!form.id) return;
     const result = await apiRequest<{ landing: LandingForm }>(api.admin.archiveLanding(form.id), { method: "POST" });
     if (!result.success || !result.data?.landing) {
-      setMessage({ tone: "error", text: result.error ?? "Não foi possível arquivar a campanha." });
+      notify({ tone: "error", text: result.error ?? "Não foi possível arquivar a campanha." });
       return;
     }
     const archived = normalizeLanding(result.data.landing);
     setForm(archived);
     setSavedFingerprint(JSON.stringify(archived));
-    setMessage({ tone: "success", text: "Campanha arquivada. Ela pode ser excluída com segurança quando não for mais necessária." });
+    notify({ tone: "success", text: "Campanha arquivada. Ela pode ser excluída com segurança quando não for mais necessária." });
     invalidateAdminResource(adminResourceKeys.landings);
     await refresh();
   }
@@ -478,7 +480,7 @@ export default function LandingPagesPage() {
     if (!form.id || form.status !== "archived" || !window.confirm("Excluir definitivamente esta campanha arquivada? As mídias continuam preservadas na biblioteca.")) return;
     const result = await apiRequest(api.admin.landing(form.id), { method: "DELETE" });
     if (!result.success) {
-      setMessage({ tone: "error", text: result.error ?? "Não foi possível excluir a campanha." });
+      notify({ tone: "error", text: result.error ?? "Não foi possível excluir a campanha." });
       return;
     }
     setCreatingNew(true);
@@ -486,7 +488,7 @@ export default function LandingPagesPage() {
     setSavedFingerprint("");
     setPreviewPath(null);
     setRevisions([]);
-    setMessage({ tone: "success", text: "Campanha removida. Nenhuma mídia compartilhada foi excluída." });
+    notify({ tone: "success", text: "Campanha removida. Nenhuma mídia compartilhada foi excluída." });
     invalidateAdminResource(adminResourceKeys.landings);
     await refresh();
   }
@@ -498,13 +500,13 @@ export default function LandingPagesPage() {
       body: JSON.stringify({ publishAt: isoDateTime(publishAt), unpublishAt: isoDateTime(unpublishAt) }),
     });
     if (!result.success || !result.data?.landing) {
-      setMessage({ tone: "error", text: result.error ?? "Não foi possível programar a campanha." });
+      notify({ tone: "error", text: result.error ?? "Não foi possível programar a campanha." });
       return;
     }
     const scheduled = normalizeLanding(result.data.landing);
     setForm(scheduled);
     setSavedFingerprint(JSON.stringify(scheduled));
-    setMessage({ tone: "success", text: "Programação salva. A campanha é publicada e despublicada automaticamente nos horários informados." });
+    notify({ tone: "success", text: "Programação salva. A campanha é publicada e despublicada automaticamente nos horários informados." });
     invalidateAdminResource(adminResourceKeys.landings);
     await refresh();
   }
@@ -513,7 +515,7 @@ export default function LandingPagesPage() {
     if (!form.id) return;
     const result = await apiRequest<{ revisions: LandingRevision[] }>(api.admin.landingRevisions(form.id));
     if (!result.success) {
-      setMessage({ tone: "error", text: result.error ?? "Não foi possível carregar o histórico." });
+      notify({ tone: "error", text: result.error ?? "Não foi possível carregar o histórico." });
       return;
     }
     setRevisions(result.data?.revisions ?? []);
@@ -523,13 +525,13 @@ export default function LandingPagesPage() {
     if (!form.id || !window.confirm("Restaurar esta revisão? O estado atual ficará salvo no histórico antes da restauração.")) return;
     const result = await apiRequest<{ landing: LandingForm }>(api.admin.rollbackLanding(form.id, revisionId), { method: "POST" });
     if (!result.success || !result.data?.landing) {
-      setMessage({ tone: "error", text: result.error ?? "Não foi possível restaurar a revisão." });
+      notify({ tone: "error", text: result.error ?? "Não foi possível restaurar a revisão." });
       return;
     }
     const restored = normalizeLanding(result.data.landing);
     setForm(restored);
     setSavedFingerprint(JSON.stringify(restored));
-    setMessage({ tone: "success", text: "Revisão restaurada e o estado anterior foi mantido no histórico." });
+    notify({ tone: "success", text: "Revisão restaurada e o estado anterior foi mantido no histórico." });
     await loadRevisions();
     invalidateAdminResource(adminResourceKeys.landings);
     await refresh();
@@ -538,7 +540,7 @@ export default function LandingPagesPage() {
   async function deleteMedia(item: LandingMedia) {
     const result = await apiRequest(api.admin.landingMediaItem(item.id), { method: "DELETE" });
     if (!result.success) {
-      setMessage({ tone: "error", text: result.error ?? "Não foi possível excluir a imagem." });
+      notify({ tone: "error", text: result.error ?? "Não foi possível excluir a imagem." });
       return;
     }
 
@@ -555,7 +557,7 @@ export default function LandingPagesPage() {
     }));
     invalidateAdminResource("admin:landing-media");
     await refreshMedia();
-    setMessage({ tone: "success", text: "Imagem removida da biblioteca. Salve a landing se ela estava em uso." });
+    notify({ tone: "success", text: "Imagem removida da biblioteca. Salve a landing se ela estava em uso." });
   }
 
   async function updateMedia(item: LandingMedia, update: { alt?: string; poster?: string }) {
@@ -564,7 +566,7 @@ export default function LandingPagesPage() {
       body: JSON.stringify(update),
     });
     if (!result.success) {
-      setMessage({ tone: "error", text: result.error ?? "Não foi possível atualizar a acessibilidade da mídia." });
+      notify({ tone: "error", text: result.error ?? "Não foi possível atualizar a acessibilidade da mídia." });
       return;
     }
     invalidateAdminResource("admin:landing-media");
@@ -577,13 +579,12 @@ export default function LandingPagesPage() {
     {error ? <DeveloperMessage tone="error">{error}</DeveloperMessage> : null}
     {mediaLoading ? <div className="mt-3"><DeveloperMessage tone="info">Carregando biblioteca da campanha...</DeveloperMessage></div> : null}
     {mediaError ? <div className="mt-3"><DeveloperMessage tone="error">{mediaError}</DeveloperMessage></div> : null}
-    {message ? <div className="mt-5"><DeveloperMessage tone={message.tone}>{message.text}</DeveloperMessage></div> : null}
 
     <DeveloperCard className="mt-5 py-4">
       <DeveloperSectionHeading eyebrow="Projetos e sites" title="Seus projetos" action={<button type="button" onClick={openNewProjectDialog} className={`${developerPrimaryButtonClassName} min-h-9 px-3 py-2 text-xs`}>Iniciar novo projeto</button>} />
       {landings.length === 0 && !loading ? <p className="mt-2 text-sm text-[var(--color-muted-raw)]">Nenhum projeto criado. Clique em <strong className="font-semibold text-[var(--foreground)]">Iniciar novo projeto</strong> para escolher um template.</p> : null}
       {landings.length > 0 ? <><div className="mt-3 grid grid-cols-[repeat(auto-fill,minmax(12.5rem,14.5rem))] justify-start gap-3">
-        {visibleProjects.map((landing) => <LandingProjectCard key={landing.id} landing={landing} active={form.id === landing.id} onOpen={() => { setCreatingNew(false); setForm(landing); setSavedFingerprint(JSON.stringify(landing)); setPublishAt(localDateTime(landing.scheduledPublishAt)); setUnpublishAt(localDateTime(landing.scheduledUnpublishAt)); setPreviewPath(null); setRevisions([]); setMessage(null); }} />)}
+        {visibleProjects.map((landing) => <LandingProjectCard key={landing.id} landing={landing} active={form.id === landing.id} onOpen={() => { setCreatingNew(false); setForm(landing); setSavedFingerprint(JSON.stringify(landing)); setPublishAt(localDateTime(landing.scheduledPublishAt)); setUnpublishAt(localDateTime(landing.scheduledUnpublishAt)); setPreviewPath(null); setRevisions([]); notify(null); }} />)}
       </div><DeveloperCarouselPagination currentPage={projectsPage} totalPages={projectsTotalPages} onNext={() => setProjectsPage((current) => Math.min(current + 1, projectsTotalPages - 1))} onPrev={() => setProjectsPage((current) => Math.max(current - 1, 0))} compact /></> : null}
     </DeveloperCard>
 

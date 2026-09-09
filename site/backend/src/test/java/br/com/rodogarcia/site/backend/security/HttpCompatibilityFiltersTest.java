@@ -11,6 +11,9 @@ import br.com.rodogarcia.site.backend.config.ApplicationProperties;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -85,6 +88,45 @@ class HttpCompatibilityFiltersTest {
         assertThat(response.getHeader("Access-Control-Allow-Headers"))
             .isEqualTo("X-Test, Content-Type");
         assertThat(response.getHeader("Vary")).isEqualTo("Origin, Access-Control-Request-Headers");
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {400, 408, 411, 413, 414, 500, 501, 503})
+    void doesNotAdvertiseKeepAliveForStatusesThatCloseTheSocket(int status) throws Exception {
+        for (boolean useSendError : new boolean[] {false, true}) {
+            MockHttpServletRequest request = new MockHttpServletRequest("GET", "/health");
+            MockHttpServletResponse response = new MockHttpServletResponse();
+
+            new SecurityHeadersFilter().doFilter(request, response, (ignored, filtered) -> {
+                HttpServletResponse httpResponse = (HttpServletResponse) filtered;
+                if (useSendError) {
+                    httpResponse.sendError(status);
+                } else {
+                    httpResponse.setStatus(status);
+                    httpResponse.flushBuffer();
+                }
+            });
+
+            assertThat(response.getHeaders("Connection")).containsExactly("close");
+            assertThat(response.getHeader("Keep-Alive")).isNull();
+            assertThat(response.getHeader("X-Content-Type-Options")).isEqualTo("nosniff");
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {200, 204, 304, 401, 403, 404, 415, 422, 429, 502, 504})
+    void preservesKeepAliveForReusableResponses(int status) throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/health");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        new SecurityHeadersFilter().doFilter(request, response, (ignored, filtered) -> {
+            HttpServletResponse httpResponse = (HttpServletResponse) filtered;
+            httpResponse.setStatus(500);
+            httpResponse.setStatus(status);
+        });
+
+        assertThat(response.getHeaders("Connection")).containsExactly("keep-alive");
+        assertThat(response.getHeader("Keep-Alive")).isEqualTo("timeout=5");
     }
 
     @Test

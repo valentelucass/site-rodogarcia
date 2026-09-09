@@ -1,5 +1,7 @@
 "use client";
 
+import { useDeveloperNotifier } from "@/components/developer/DeveloperNotifications";
+
 import { useEffect, useMemo, useState } from "react";
 import {
   ArrowSquareOut,
@@ -161,8 +163,7 @@ export default function PopupExitPage() {
   const { apiRequest } = useApiRequest();
   const [config, setConfig] = useState<PopupConfig>(DEFAULT_CONFIG);
   const [saving, setSaving] = useState(false);
-  const [status, setStatus] = useState<"" | "success" | "error">("");
-  const [statusMessage, setStatusMessage] = useState("");
+  const notify = useDeveloperNotifier();
   const [previewRevision, setPreviewRevision] = useState(0);
   const [defaultImageFramingOpen, setDefaultImageFramingOpen] = useState(false);
   const [desktopImageFramingOpen, setDesktopImageFramingOpen] = useState(false);
@@ -265,19 +266,16 @@ export default function PopupExitPage() {
 
   async function handleSave() {
     if (!config.title.trim() || !config.description.trim() || !config.buttonText.trim()) {
-      setStatus("error");
-      setStatusMessage("Preencha título, descrição e texto do botão antes de salvar.");
+      notify({ tone: "error", text: "Preencha título, descrição e texto do botão antes de salvar." });
       return;
     }
     if (!config.enableName && !config.enableEmail && !config.enablePhone) {
-      setStatus("error");
-      setStatusMessage("Ative ao menos um campo de contato antes de salvar.");
+      notify({ tone: "error", text: "Ative ao menos um campo de contato antes de salvar." });
       return;
     }
 
     setSaving(true);
-    setStatus("");
-    setStatusMessage("");
+    notify(null);
 
     const response = await apiRequest(api.popup.config, {
       method: "POST",
@@ -287,14 +285,12 @@ export default function PopupExitPage() {
     setSaving(false);
 
     if (!response.success) {
-      setStatus("error");
-      setStatusMessage(response.error ?? "Falha ao salvar o popup.");
+      notify({ tone: "error", text: response.error ?? "Falha ao salvar o popup." });
       return;
     }
 
     invalidateAdminResource([adminResourceKeys.popup, adminResourceKeys.dashboard]);
-    setStatus("success");
-    setStatusMessage("Configuração do popup salva com sucesso.");
+    notify({ tone: "success", text: "Configuração do popup salva com sucesso." });
     setPreviewRevision((revision) => revision + 1);
     await refresh();
   }
@@ -329,12 +325,6 @@ export default function PopupExitPage() {
       {loading ? (
         <div className="mt-6">
           <DeveloperMessage tone="info">Carregando configuração do popup...</DeveloperMessage>
-        </div>
-      ) : null}
-
-      {status === "error" ? (
-        <div className="mt-6">
-          <DeveloperMessage tone="error">{statusMessage}</DeveloperMessage>
         </div>
       ) : null}
 
@@ -742,13 +732,7 @@ export default function PopupExitPage() {
                 </button>
               </div>
             </div>
-            {status === "success" ? (
-              <div className="mt-4">
-                <DeveloperMessage tone="success">{statusMessage}</DeveloperMessage>
-              </div>
-            ) : null}
           </DeveloperCard>
-
 
         {/* Card — Análise */}
           <DeveloperCard>

@@ -836,6 +836,57 @@
         "type": "external",
         "enabled": true
       }
+    ],
+    "certifications": [
+      {
+        "id": "home-cert-iso",
+        "order": 1,
+        "title": "ISO 9001",
+        "alt": "Logo ISO 9001",
+        "image": "/certificados/iso-9001-marquee.96db5a941c71.webp"
+      },
+      {
+        "id": "home-cert-sassmaq",
+        "order": 2,
+        "title": "SASSMAQ",
+        "alt": "Logo SASSMAQ",
+        "image": "/certificados/sassmaq-marquee.2bd290b6d955.webp"
+      },
+      {
+        "id": "home-cert-ecovadis",
+        "order": 3,
+        "title": "EcoVadis",
+        "alt": "Logo EcoVadis",
+        "image": "/certificados/ecovadis-marquee.328117d0b616.webp"
+      },
+      {
+        "id": "home-cert-pf",
+        "order": 4,
+        "title": "Licença PF",
+        "alt": "Logo da Polícia Federal",
+        "image": "/certificados/policia-federal-marquee.e06c0a6ec034.webp"
+      },
+      {
+        "id": "home-cert-pcsp",
+        "order": 5,
+        "title": "Polícia Civil SP",
+        "alt": "Logo da Polícia Civil de São Paulo",
+        "image": "/certificados/policia-civil-sp-marquee.cf85d95a8c02.webp"
+      },
+      {
+        "id": "home-cert-exercito",
+        "order": 6,
+        "title": "Exército Brasileiro",
+        "alt": "Logo do Exército Brasileiro",
+        "image": "/certificados/exercito-brasileiro-marquee.25640e0eb885.webp"
+      },
+      {
+        "id": "home-cert-ibama",
+        "order": 7,
+        "title": "IBAMA",
+        "alt": "Logo IBAMA",
+        "image": "/certificados/ibama-marquee.4cdbe07db023.webp"
+      }
     ]
   },
   "servicesPage": {
@@ -964,23 +1015,8 @@
   },
   "aboutPage": {
     "hero": {
-      "eyebrow": "Nossa história",
       "title": "Mais de 35 anos conectando o Brasil",
       "description": "Desde 1989, transformando a logística com excelência, tecnologia e compromisso com cada entrega.",
-      "stats": [
-        {
-          "value": "35+",
-          "label": "Anos de experiência"
-        },
-        {
-          "value": "1.500+",
-          "label": "Pontos de coleta"
-        },
-        {
-          "value": "1M+",
-          "label": "Pacotes processados"
-        }
-      ],
       "media": {
         "src": "/motorista-rodogarcia.abbf7875cfae.webp",
         "alt": "Operacao Rodogarcia em movimento",
@@ -1003,6 +1039,21 @@
           "label": "Conhecer serviços",
           "url": "/servicos",
           "external": false
+        }
+      ],
+      "eyebrow": "Nossa história",
+      "stats": [
+        {
+          "value": "35+",
+          "label": "Anos de experiência"
+        },
+        {
+          "value": "1.500+",
+          "label": "Pontos de coleta"
+        },
+        {
+          "value": "1M+",
+          "label": "Pacotes processados"
         }
       ]
     },

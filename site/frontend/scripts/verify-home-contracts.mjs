@@ -124,7 +124,9 @@ async function verifyLoadingAndDomContracts() {
   assert.doesNotMatch(header, /fetch\s*\(/);
   assert.match(header, /prefetch=\{[^\n]*drawerOpen/);
   assert.match(search, /prefetch=\{open\}/);
-  assert.match(home, /Promise\.all\(/);
+  assert.match(home, /fetchPublicContent\(\)\.catch/);
+  assert.match(home, /homePage\.certifications/);
+  assert.doesNotMatch(home, /fetchMediaSlots|mediaSlot\(|canonicalHomeCertificationUrl/);
   assert.match(home, /src=\{cert\.src\}[\s\S]{0,180}width=\{340\}[\s\S]{0,80}height=\{176\}/);
   assert.match(home, /certifications-marquee-copy/);
   assert.match(globalStyles, /@keyframes certifications-marquee/);

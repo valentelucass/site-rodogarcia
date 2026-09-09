@@ -43,6 +43,36 @@ class HomeContentAdminServiceTest {
     }
 
     @Test
+    void persistsAFlexibleCertificationCollectionAndAllowsItsRemoval() {
+        ObjectNode payload = mapper.createObjectNode();
+        ArrayNode items = payload.putArray("items");
+        items.addObject().put("id", "cert-a").put("title", "ISO 9001")
+            .put("alt", "Logo ISO 9001").put("image", "/cert-a.webp");
+        items.addObject().put("id", "cert-b").put("title", "SASSMAQ")
+            .put("alt", "Logo SASSMAQ").put("image", "/cert-b.webp");
+
+        ObjectNode updated = home.replaceSection(ContentDefaults.home(mapper), "certifications", payload);
+
+        assertThat(updated.path("certifications")).hasSize(2);
+        assertThat(updated.path("certifications").get(1).path("order").asInt()).isEqualTo(2);
+
+        ObjectNode removePayload = mapper.createObjectNode();
+        removePayload.putArray("items");
+        ObjectNode removed = home.replaceSection(updated, "certifications", removePayload);
+        assertThat(removed.path("certifications")).isEmpty();
+    }
+
+    @Test
+    void rejectsIncompleteCertifications() {
+        ObjectNode payload = mapper.createObjectNode();
+        payload.putArray("items").addObject().put("title", "ISO 9001").put("alt", "Logo ISO");
+
+        assertThatThrownBy(() -> home.replaceSection(ContentDefaults.home(mapper), "certifications", payload))
+            .isInstanceOf(ApiException.class)
+            .hasMessageContaining("nome, descrição alternativa e imagem são obrigatórios");
+    }
+
+    @Test
     void rejectsVideoModeWithAnImageAsset() {
         ObjectNode payload = mapper.createObjectNode();
         ObjectNode slide = payload.putArray("slides").addObject();

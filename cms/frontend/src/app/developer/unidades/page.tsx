@@ -1,5 +1,7 @@
 "use client";
 
+import { useDeveloperNotifier } from "@/components/developer/DeveloperNotifications";
+
 import { useState } from "react";
 import {
   CheckCircle,
@@ -106,14 +108,14 @@ export default function UnidadesPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<UnitFormState>(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
-  const [status, setStatus] = useState("");
+  const notify = useDeveloperNotifier();
   const { pages, currentPage, totalPages, nextPage, prevPage } =
     useCarouselPagination(items, 3);
 
   function resetForm() {
     setEditingId(null);
     setForm(EMPTY_FORM);
-    setStatus("");
+    notify(null);
   }
 
   function editItem(item: UnitItem) {
@@ -135,7 +137,7 @@ export default function UnidadesPage() {
       isDefault: item.isDefault,
       active: item.active,
     });
-    setStatus("");
+    notify(null);
   }
 
   async function handleSubmit(event: React.FormEvent) {
@@ -158,21 +160,21 @@ export default function UnidadesPage() {
     };
 
     if (!payload.name || !BRAZILIAN_STATE_CODES.includes(payload.state as (typeof BRAZILIAN_STATE_CODES)[number]) || !payload.address) {
-      setStatus("Preencha nome, uma UF brasileira válida e endereço.");
+      notify({ tone: "error", text: "Preencha nome, uma UF brasileira válida e endereço." });
       return;
     }
 
     if (!payload.phone && !payload.email) {
-      setStatus("Informe ao menos telefone ou e-mail da unidade.");
+      notify({ tone: "error", text: "Informe ao menos telefone ou e-mail da unidade." });
       return;
     }
     if (!payload.additionalEmail) {
-      setStatus("Informe o e-mail adicional da unidade.");
+      notify({ tone: "error", text: "Informe o e-mail adicional da unidade." });
       return;
     }
 
     setSaving(true);
-    setStatus("");
+    notify(null);
 
     const response = editingId
       ? await updateItem(editingId, payload)
@@ -181,32 +183,32 @@ export default function UnidadesPage() {
     setSaving(false);
 
     if (!response.success) {
-      setStatus(response.error ?? "Falha ao salvar a unidade.");
+      notify({ tone: "error", text: response.error ?? "Falha ao salvar a unidade." });
       return;
     }
 
     resetForm();
-    setStatus("Unidade salva com sucesso.");
+    notify({ tone: "success", text: "Unidade salva com sucesso." });
   }
 
   async function toggleItem(item: UnitItem) {
     const response = await updateItem(item.id, { ...item, active: !item.active });
     if (!response.success) {
-      setStatus(response.error ?? "Falha ao atualizar a unidade.");
+      notify({ tone: "error", text: response.error ?? "Falha ao atualizar a unidade." });
     }
   }
 
   async function deleteItem(id: string) {
     const response = await removeItem(id);
     if (!response.success) {
-      setStatus(response.error ?? "Falha ao excluir a unidade.");
+      notify({ tone: "error", text: response.error ?? "Falha ao excluir a unidade." });
     }
   }
 
   async function move(id: string, direction: -1 | 1) {
     const response = await moveItem(id, direction);
     if (!response.success && response.error !== "Movimento invalido.") {
-      setStatus(response.error ?? "Falha ao reordenar a unidade.");
+      notify({ tone: "error", text: response.error ?? "Falha ao reordenar a unidade." });
     }
   }
 
@@ -432,12 +434,6 @@ export default function UnidadesPage() {
               </label>
               </div>
             </fieldset>
-
-            {status ? (
-              <DeveloperMessage tone={status.includes("sucesso") ? "success" : "error"}>
-                {status}
-              </DeveloperMessage>
-            ) : null}
 
             <div className="flex flex-col gap-2 sm:flex-row">
               <button type="submit" disabled={saving} className={developerPrimaryButtonClassName}>

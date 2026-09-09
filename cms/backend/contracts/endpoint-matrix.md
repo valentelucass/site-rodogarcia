@@ -1,6 +1,6 @@
 # CMS endpoint matrix v1
 
-O artefato consumível é [`endpoint-manifest.v1.json`](./endpoint-manifest.v1.json). Ele inventaria **95 registros sob `/api` + `/health` + `/ready` = 97 endpoints explícitos**, além da superfície wildcard `/uploads/*`.
+O artefato consumível é [`endpoint-manifest.v1.json`](./endpoint-manifest.v1.json). Ele inventaria **96 registros sob `/api` + `/health` + `/ready` = 98 endpoints explícitos**, além da superfície wildcard `/uploads/*`.
 
 O conjunto é servido por `cms/backend` em Spring MVC. Nomes de middleware e observações de Express existentes no manifesto descrevem a captura histórica que o contrato compatível preserva; não apontam para uma implementação Node disponível.
 

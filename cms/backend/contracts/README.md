@@ -1,6 +1,6 @@
 # Contratos do CMS Spring
 
-- `endpoint-manifest.v1.json`: fonte consumível dos 97 endpoints explícitos, wildcard de uploads, autorização, request profile, stores e efeitos.
+- `endpoint-manifest.v1.json`: fonte consumível dos 98 endpoints explícitos, wildcard de uploads, autorização, request profile, stores e efeitos.
 - `endpoint-matrix.md`: leitura humana do inventário e das regras de protocolo.
 - `storage-contract-v1.md`: paths físicos, ownership e efeitos dos 24 destinos configuráveis, uploads e assets.
 - `../../../docs/spring-mvc/runtime-topology.md`: portas, ingressos, gateway, ambiente, artefatos e rollback JAR.

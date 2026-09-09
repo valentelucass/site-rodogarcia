@@ -85,6 +85,24 @@ class PublicContentServiceTest {
     }
 
     @Test
+    void exposesOnlyCompleteCertificationItemsAndKeepsTheirOrder() {
+        PublicContentService service = serviceWith(mapper.createObjectNode());
+        ObjectNode home = mapper.createObjectNode();
+        ArrayNode certifications = home.putArray("certifications");
+        certifications.addObject().put("id", "ignored").put("title", "Sem imagem").put("alt", "Sem imagem");
+        certifications.addObject().put("id", "cert-b").put("order", 2).put("title", "SASSMAQ")
+            .put("alt", "Logo SASSMAQ").put("image", "/cert-b.webp");
+        certifications.addObject().put("id", "cert-a").put("order", 1).put("title", "ISO 9001")
+            .put("alt", "Logo ISO 9001").put("image", "/cert-a.webp");
+
+        ObjectNode normalized = service.publicHome(home);
+
+        assertThat(normalized.path("certifications")).hasSize(2);
+        assertThat(normalized.path("certifications").get(0).path("id").asString()).isEqualTo("cert-a");
+        assertThat(normalized.path("certifications").get(0).path("image").asString()).isEqualTo("/cert-a.webp");
+    }
+
+    @Test
     void keepsPublicUnitNullishAliasAndBooleanSemantics() {
         ObjectNode content = mapper.createObjectNode();
         ArrayNode units = content.putArray("units");

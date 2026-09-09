@@ -1,5 +1,7 @@
 "use client";
 
+import { useDeveloperNotifier } from "@/components/developer/DeveloperNotifications";
+
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   ArrowDown,
@@ -398,7 +400,7 @@ export default function FooterLinksCmsPage() {
   const [content, setContent] = useState<FooterLinksContent>(DEFAULT_FOOTER_LINKS);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<SectionKey | "">("");
-  const [status, setStatus] = useState<{ tone: "success" | "error" | "info"; text: string } | null>(null);
+  const notify = useDeveloperNotifier();
   const [activeStep, setActiveStep] = useState<FooterStepKey>("institutional");
   const [previewRevision, setPreviewRevision] = useState(0);
 
@@ -411,9 +413,9 @@ export default function FooterLinksCmsPage() {
       if (!alive) return;
       if (response.success) {
         setContent(response.data?.footerLinks ?? DEFAULT_FOOTER_LINKS);
-        setStatus(null);
+        notify(null);
       } else {
-        setStatus({ tone: "error", text: response.error ?? "Falha ao carregar FOOTER LINKS." });
+        notify({ tone: "error", text: response.error ?? "Falha ao carregar FOOTER LINKS." });
       }
       setLoading(false);
     }
@@ -423,7 +425,7 @@ export default function FooterLinksCmsPage() {
     return () => {
       alive = false;
     };
-  }, [apiRequest]);
+  }, [apiRequest, notify]);
 
   const stats = useMemo(
     () => [
@@ -456,7 +458,7 @@ export default function FooterLinksCmsPage() {
 
   async function saveSection(sectionKey: SectionKey, payload: FooterGlobalContent | FooterLinksTermsContent | FooterLinksHelpContent | FooterLinksPrivacyContent) {
     setSaving(sectionKey);
-    setStatus(null);
+    notify(null);
     const response = await apiRequest<{ footerLinks?: FooterLinksContent }>(
       api.admin.footerLinksSection(sectionKey),
       {
@@ -466,12 +468,12 @@ export default function FooterLinksCmsPage() {
     );
     setSaving("");
     if (!response.success) {
-      setStatus({ tone: "error", text: response.error ?? "Falha ao salvar seção." });
+      notify({ tone: "error", text: response.error ?? "Falha ao salvar seção." });
       return;
     }
     setContent(response.data?.footerLinks ?? content);
     setPreviewRevision((current) => current + 1);
-    setStatus({ tone: "success", text: "FOOTER LINKS salvo com sucesso." });
+    notify({ tone: "success", text: "FOOTER LINKS salvo com sucesso." });
   }
 
   return (
@@ -490,7 +492,6 @@ export default function FooterLinksCmsPage() {
       />
 
       {loading ? <div className="mt-5"><DeveloperMessage tone="info">Carregando...</DeveloperMessage></div> : null}
-      {status ? <div className="mt-5"><DeveloperMessage tone={status.tone}>{status.text}</DeveloperMessage></div> : null}
 
       <div className="mt-5">
         <DeveloperResponsivePreview

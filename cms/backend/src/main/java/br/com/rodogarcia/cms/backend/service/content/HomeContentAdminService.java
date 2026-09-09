@@ -4,6 +4,7 @@ import java.util.Set;
 
 import br.com.rodogarcia.cms.backend.exception.ApiException;
 import br.com.rodogarcia.cms.backend.model.content.ContentDefaults;
+import br.com.rodogarcia.cms.backend.model.content.HomeCertificationDefaults;
 import br.com.rodogarcia.cms.backend.model.content.ContentJson;
 import br.com.rodogarcia.cms.backend.model.content.ContentKeys;
 import br.com.rodogarcia.cms.backend.model.content.MediaPresentation;
@@ -45,6 +46,7 @@ public final class HomeContentAdminService {
         result.set("regionalPresence", regionalPresence(source.get("regionalPresence")));
         result.set("trackingCta", trackingCta(source.get("trackingCta")));
         result.set("socialProof", socialProof(source.get("socialProof")));
+        result.set("certifications", certifications(source.get("certifications")));
         result.set("quickActions", quickActions(source.get("quickActions")));
         return result;
     }
@@ -63,6 +65,12 @@ public final class HomeContentAdminService {
             case "regionalPresence" -> current.set("regionalPresence", regionalPresence(payload));
             case "trackingCta" -> current.set("trackingCta", trackingCta(payload));
             case "socialProof" -> current.set("socialProof", socialProof(payload));
+            case "certifications" -> {
+                if (!payload.has("items") || !payload.get("items").isArray()) {
+                    throw new ApiException(422, "Certificações: envie a lista de itens.");
+                }
+                current.set("certifications", certifications(payload.get("items")));
+            }
             case "quickActions" -> current.set(
                 "quickActions",
                 payload.has("quickActions") && payload.get("quickActions").isArray()
@@ -106,6 +114,7 @@ public final class HomeContentAdminService {
         social.put("title", "");
         social.set("feedbacks", mapper.createArrayNode());
         result.set("socialProof", social);
+        result.set("certifications", HomeCertificationDefaults.items(mapper));
         result.set("quickActions", ContentDefaults.home(mapper).path("quickActions").deepCopy());
         return result;
     }
@@ -287,6 +296,25 @@ public final class HomeContentAdminService {
         return result;
     }
 
+    private ArrayNode certifications(JsonNode value) {
+        if (value == null || !value.isArray()) return HomeCertificationDefaults.items(mapper);
+
+        ArrayNode result = mapper.createArrayNode();
+        int index = 0;
+        for (JsonNode raw : ContentJson.array(value)) {
+            if (index == 24) break;
+            ObjectNode input = ContentJson.object(raw);
+            ObjectNode item = mapper.createObjectNode();
+            item.put("id", textOrId(input.get("id"), "home_certification"));
+            item.put("order", ++index);
+            item.put("title", ContentJson.text(input.get("title"), 80));
+            item.put("alt", ContentJson.text(input.get("alt"), 160));
+            item.put("image", mediaValidator.image(input.get("image"), "Certificação " + index));
+            result.add(item);
+        }
+        return result;
+    }
+
     private ArrayNode quickActions(JsonNode value) {
         ArrayNode result = mapper.createArrayNode();
         int index = 0;
@@ -373,6 +401,7 @@ public final class HomeContentAdminService {
             case "regionalPresence" -> validateRegional(ContentJson.object(home.get("regionalPresence")));
             case "trackingCta" -> validateTracking(ContentJson.object(home.get("trackingCta")));
             case "socialProof" -> validateSocial(ContentJson.object(home.get("socialProof")));
+            case "certifications" -> validateCertifications(ContentJson.array(home.get("certifications")));
             case "quickActions" -> validateQuick(ContentJson.array(home.get("quickActions")));
             default -> throw new ApiException(404, "Seção da Home não encontrada.");
         }
@@ -482,6 +511,17 @@ public final class HomeContentAdminService {
             ObjectNode item = ContentJson.object(raw);
             if (!hasText(item, "name") || !hasText(item, "role") || !hasText(item, "context") || !hasText(item, "testimonial")) {
                 throw new ApiException(422, "Prova Social: nome, cargo, contexto da operação e depoimento são obrigatórios.");
+            }
+        }
+    }
+
+    private void validateCertifications(ArrayNode certifications) {
+        int index = 0;
+        for (JsonNode raw : certifications) {
+            ObjectNode certification = ContentJson.object(raw);
+            String prefix = "Certificação " + (++index);
+            if (!hasText(certification, "title") || !hasText(certification, "alt") || !hasText(certification, "image")) {
+                throw new ApiException(422, prefix + ": nome, descrição alternativa e imagem são obrigatórios.");
             }
         }
     }

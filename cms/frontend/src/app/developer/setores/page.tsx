@@ -1,5 +1,7 @@
 "use client";
 
+import { useDeveloperNotifier } from "@/components/developer/DeveloperNotifications";
+
 import { useRef, useState } from "react";
 import { CheckCircle, PencilSimple, Trash, X } from "@phosphor-icons/react";
 import { useApiRequest } from "@/hooks/useApiRequest";
@@ -49,16 +51,16 @@ export default function SetoresPage() {
   const [editingId, setEditingId] = useState("");
   const [form, setForm] = useState(EMPTY_SECTOR);
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState("");
+  const notify = useDeveloperNotifier();
   const [formHighlighted, setFormHighlighted] = useState(false);
   const formPanelRef = useRef<HTMLDivElement>(null);
 
-  function resetForm() { setEditingId(""); setForm(EMPTY_SECTOR); setMessage(""); setFormHighlighted(false); }
+  function resetForm() { setEditingId(""); setForm(EMPTY_SECTOR); notify(null); setFormHighlighted(false); }
   function edit(sector: Sector) {
     if (!isSupreme) return;
     setEditingId(sector.id);
     setForm({ name: sector.name, description: sector.description, permissions: sector.permissions, active: sector.active });
-    setMessage("");
+    notify(null);
     setFormHighlighted(true);
     window.requestAnimationFrame(() => formPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
     window.setTimeout(() => setFormHighlighted(false), 1600);
@@ -68,23 +70,23 @@ export default function SetoresPage() {
   }
   async function save(event: React.FormEvent) {
     event.preventDefault();
-    if (!isSupreme) { setMessage("Somente o usuário supremo pode administrar setores."); return; }
-    if (!form.name.trim()) { setMessage("Informe o nome do setor."); return; }
-    setSaving(true); setMessage("");
+    if (!isSupreme) { notify({ tone: "error", text: "Somente o usuário supremo pode administrar setores." }); return; }
+    if (!form.name.trim()) { notify({ tone: "error", text: "Informe o nome do setor." }); return; }
+    setSaving(true); notify(null);
     const payload = { ...form, name: form.name.trim(), description: form.description.trim() };
     const response = editingId
       ? await apiRequest(api.admin.accessProfile(editingId), { method: "PUT", body: JSON.stringify(payload) })
       : await apiRequest(api.admin.accessProfiles, { method: "POST", body: JSON.stringify(payload) });
     setSaving(false);
-    if (!response.success) { setMessage(response.error ?? "Não foi possível salvar o setor."); return; }
+    if (!response.success) { notify({ tone: "error", text: response.error ?? "Não foi possível salvar o setor." }); return; }
     invalidateAdminResource(["admin:access-profiles", "admin:access-profiles-for-users", adminResourceKeys.users]);
-    await refresh(); resetForm(); setMessage("Setor salvo com sucesso.");
+    await refresh(); resetForm(); notify({ tone: "success", text: "Setor salvo com sucesso." });
   }
   async function remove(sector: Sector) {
-    if (!isSupreme) { setMessage("Somente o usuário supremo pode administrar setores."); return; }
+    if (!isSupreme) { notify({ tone: "error", text: "Somente o usuário supremo pode administrar setores." }); return; }
     if (!window.confirm(`Excluir o setor “${sector.name}”? Usuários vinculados perderão as permissões herdadas dele; somente exceções individuais explícitas continuarão válidas até receberem outro setor ativo.`)) return;
     const response = await apiRequest(api.admin.accessProfile(sector.id), { method: "DELETE" });
-    if (!response.success) { setMessage(response.error ?? "Não foi possível excluir o setor."); return; }
+    if (!response.success) { notify({ tone: "error", text: response.error ?? "Não foi possível excluir o setor." }); return; }
     invalidateAdminResource(["admin:access-profiles", "admin:access-profiles-for-users"]);
     await refresh();
   }
@@ -135,7 +137,7 @@ export default function SetoresPage() {
             </div>
           </DeveloperField>
           <label className="flex items-center gap-3 text-sm font-semibold text-[var(--foreground)]"><input type="checkbox" checked={form.active} onChange={(event) => setForm((current) => ({ ...current, active: event.target.checked }))} className="h-4 w-4 accent-[var(--primary)]" /><span>Setor ativo</span><DeveloperHelp label="Status do setor" templateKey="status-do-setor" /></label>
-          {message ? <DeveloperMessage tone={message.includes("sucesso") ? "success" : "error"}>{message}</DeveloperMessage> : null}
+
           <div className="flex flex-wrap gap-2"><button type="submit" disabled={saving} className={developerPrimaryButtonClassName}><CheckCircle size={16} weight="bold" />{saving ? "Salvando..." : editingId ? "Salvar setor" : "Criar setor"}</button>{editingId ? <button type="button" onClick={resetForm} className={developerSecondaryButtonClassName}><X size={16} weight="bold" />Cancelar</button> : null}</div>
         </form>
       </DeveloperCard>

@@ -1,5 +1,7 @@
 "use client";
 
+import { useDeveloperNotifier } from "@/components/developer/DeveloperNotifications";
+
 import { useEffect, useState } from "react";
 import { ArrowDown, ArrowUp, CheckCircle, Plus, Trash } from "@phosphor-icons/react";
 import { DeveloperCard, DeveloperField, DeveloperHero, DeveloperMessage, DeveloperPage, DeveloperSectionHeading, developerDangerButtonClassName, developerGhostButtonClassName, developerInputClassName, developerPrimaryButtonClassName, developerSecondaryButtonClassName } from "@/components/developer/ui";
@@ -25,7 +27,7 @@ export default function HeaderNavigationCmsPage() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [openIndex, setOpenIndex] = useState<number | null>(0);
-  const [message, setMessage] = useState<{ type: "success" | "error" | "info"; text: string } | null>(null);
+  const notify = useDeveloperNotifier();
 
   useEffect(() => {
     let cancelled = false;
@@ -41,13 +43,13 @@ export default function HeaderNavigationCmsPage() {
         }
         const error = response.error ?? "Não foi possível carregar a navegação.";
         setLoadError(error);
-        setMessage({ type: "error", text: error });
+        notify({ tone: "error", text: error });
       })
       .catch(() => {
         if (cancelled) return;
         const error = "Não foi possível carregar a navegação.";
         setLoadError(error);
-        setMessage({ type: "error", text: error });
+        notify({ tone: "error", text: error });
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -56,7 +58,7 @@ export default function HeaderNavigationCmsPage() {
     return () => {
       cancelled = true;
     };
-  }, [apiRequest]);
+  }, [apiRequest, notify]);
 
   const update = (index: number, patch: Partial<HeaderNavigationItem>) => setContent((current) => ({
     items: current.items.map((item, itemIndex) => itemIndex === index ? { ...item, ...patch } : item),
@@ -71,26 +73,26 @@ export default function HeaderNavigationCmsPage() {
     items.splice(target, 0, item);
     return { items: items.map((entry, itemIndex) => ({ ...entry, order: itemIndex + 1 })) };
     });
-    setMessage({ type: "info", text: `“${itemLabel}” agora está na posição ${target + 1}. Salve para publicar a nova ordem.` });
+    notify({ tone: "info", text: `“${itemLabel}” agora está na posição ${target + 1}. Salve para publicar a nova ordem.` });
   };
 
   const save = async (event: React.FormEvent) => {
     event.preventDefault();
     if (loading || loadError) return;
     setSaving(true);
-    setMessage(null);
+    notify(null);
     const response = await apiRequest<{ headerNavigation?: HeaderNavigationContent }>(api.admin.headerNavigation, { method: "PUT", body: JSON.stringify(content) });
     setSaving(false);
-    if (!response.success) return setMessage({ type: "error", text: response.error ?? "Não foi possível salvar." });
+    if (!response.success) return notify({ tone: "error", text: response.error ?? "Não foi possível salvar." });
     setContent(response.data?.headerNavigation ?? content);
-    setMessage({ type: "success", text: "Navegação salva. O menu lateral público já usa esta configuração." });
+    notify({ tone: "success", text: "Navegação salva. O menu lateral público já usa esta configuração." });
   };
 
   return <DeveloperPage>
     <DeveloperHero eyebrow="Estrutura do site" title="Navegação" description="Organize os links do menu lateral." stats={[{ label: "Itens", value: content.items.length }]} />
     <DeveloperCard>
       <DeveloperSectionHeading title="Barra de navegação" description="Defina nome, destino, grupo e destaque. Os controles Subir e Descer no cabeçalho organizam a ordem, mesmo com o item fechado." />
-      {message ? <div className="mb-5" aria-live="polite"><DeveloperMessage tone={message.type}>{message.text}</DeveloperMessage></div> : null}
+
       {loading ? <DeveloperMessage tone="info">Carregando a navegação publicada...</DeveloperMessage> : null}
       {!loading && !loadError ? <form className="space-y-4" onSubmit={save}>
         <DeveloperCmsAccordion

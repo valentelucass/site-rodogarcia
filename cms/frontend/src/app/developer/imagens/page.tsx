@@ -1,5 +1,7 @@
 "use client";
 
+import { useDeveloperNotifier } from "@/components/developer/DeveloperNotifications";
+
 import { useEffect, useMemo, useState } from "react";
 import type { ResponsiveImageSources } from "@shared/types/media";
 import {
@@ -128,8 +130,7 @@ export default function ImagensPage() {
   const [replacing, setReplacing] = useState(false);
   const [savingSlots, setSavingSlots] = useState(false);
   const [deletingUrl, setDeletingUrl] = useState("");
-  const [status, setStatus] = useState<"" | "success" | "error" | "info">("");
-  const [message, setMessage] = useState("");
+  const notify = useDeveloperNotifier();
   const { data, loading, error, refresh } = useAdminResource<{
     images: AdminImageRecord[];
     slots: Record<string, string>;
@@ -206,8 +207,7 @@ export default function ImagensPage() {
       setPreviewOpen(false);
       setUploadFile(null);
       setFileName("");
-      setStatus("error");
-      setMessage("Formato não suportado. Use PNG, JPG, WebP, AVIF, MP4, WebM ou Ogg.");
+      notify({ tone: "error", text: "Formato não suportado. Use PNG, JPG, WebP, AVIF, MP4, WebM ou Ogg." });
       event.target.value = "";
       return;
     }
@@ -220,12 +220,9 @@ export default function ImagensPage() {
       setPreviewOpen(false);
       setUploadFile(null);
       setFileName("");
-      setStatus("error");
-      setMessage(
-        file.type.startsWith("video/")
+      notify({ tone: "error", text: file.type.startsWith("video/")
           ? "Video acima de 64 MB. Reduza o arquivo antes de enviar."
-          : "Imagem acima de 8 MB. Reduza o arquivo antes de enviar."
-      );
+          : "Imagem acima de 8 MB. Reduza o arquivo antes de enviar." });
       event.target.value = "";
       return;
     }
@@ -236,16 +233,14 @@ export default function ImagensPage() {
       setPreviewUrl(result);
       setUploadFile(file);
       setFileName(file.name);
-      setStatus("info");
-      setMessage(`Arquivo pronto para upload: ${file.name}`);
+      notify({ tone: "info", text: `Arquivo pronto para upload: ${file.name}` });
     };
     reader.readAsDataURL(file);
   }
 
   async function handleUpload() {
     if (!uploadFile || !fileName) {
-      setStatus("error");
-      setMessage("Selecione uma mídia antes de enviar.");
+      notify({ tone: "error", text: "Selecione uma mídia antes de enviar." });
       return;
     }
 
@@ -259,8 +254,7 @@ export default function ImagensPage() {
     setUploading(false);
 
     if (!response.success) {
-      setStatus("error");
-      setMessage(response.error ?? "Falha ao enviar a imagem.");
+      notify({ tone: "error", text: response.error ?? "Falha ao enviar a imagem." });
       return;
     }
 
@@ -268,16 +262,14 @@ export default function ImagensPage() {
     setPreviewOpen(false);
     setUploadFile(null);
     setFileName("");
-    setStatus("success");
-    setMessage("Imagem enviada e otimizada com sucesso.");
+    notify({ tone: "success", text: "Imagem enviada e otimizada com sucesso." });
     invalidateAdminResource([adminResourceKeys.images, adminResourceKeys.mediaManager, adminResourceKeys.dashboard]);
     await refresh();
   }
 
   async function handleReplace() {
     if (!fromUrl || !toUrl) {
-      setStatus("error");
-      setMessage("Preencha a URL atual e a nova URL.");
+      notify({ tone: "error", text: "Preencha a URL atual e a nova URL." });
       return;
     }
 
@@ -289,13 +281,11 @@ export default function ImagensPage() {
     setReplacing(false);
 
     if (!response.success) {
-      setStatus("error");
-      setMessage(response.error ?? "Falha ao substituir referências.");
+      notify({ tone: "error", text: response.error ?? "Falha ao substituir referências." });
       return;
     }
 
-    setStatus("success");
-    setMessage("Referências atualizadas com sucesso.");
+    notify({ tone: "success", text: "Referências atualizadas com sucesso." });
     invalidateAdminResource([adminResourceKeys.images, adminResourceKeys.mediaManager, adminResourceKeys.dashboard]);
     await refresh();
   }
@@ -314,13 +304,11 @@ export default function ImagensPage() {
     setDeletingUrl("");
 
     if (!response.success) {
-      setStatus("error");
-      setMessage(response.error ?? "Não foi possível excluir a mídia.");
+      notify({ tone: "error", text: response.error ?? "Não foi possível excluir a mídia." });
       return;
     }
 
-    setStatus("success");
-    setMessage(image.references > 0 ? "Mídia excluída e referências removidas." : "Mídia excluída com sucesso.");
+    notify({ tone: "success", text: image.references > 0 ? "Mídia excluída e referências removidas." : "Mídia excluída com sucesso." });
     invalidateAdminResource([adminResourceKeys.images, adminResourceKeys.mediaManager, adminResourceKeys.dashboard]);
     await refresh();
   }
@@ -334,13 +322,11 @@ export default function ImagensPage() {
     setSavingSlots(false);
 
     if (!response.success) {
-      setStatus("error");
-      setMessage(response.error ?? "Falha ao salvar slots de mídia.");
+      notify({ tone: "error", text: response.error ?? "Falha ao salvar slots de mídia." });
       return;
     }
 
-    setStatus("success");
-    setMessage("Slots de mídia salvos com sucesso.");
+    notify({ tone: "success", text: "Slots de mídia salvos com sucesso." });
     invalidateAdminResource([adminResourceKeys.images, adminResourceKeys.mediaManager, adminResourceKeys.mediaSlots, adminResourceKeys.dashboard]);
     await refresh();
   }
@@ -362,16 +348,6 @@ export default function ImagensPage() {
       {loading ? (
         <div className="mt-6">
           <DeveloperMessage tone="info">Carregando biblioteca de imagens...</DeveloperMessage>
-        </div>
-      ) : null}
-
-      {status ? (
-        <div className="mt-6">
-          <DeveloperMessage
-            tone={status === "success" ? "success" : status === "error" ? "error" : "info"}
-          >
-            {message}
-          </DeveloperMessage>
         </div>
       ) : null}
 
@@ -711,8 +687,7 @@ export default function ImagensPage() {
                             type="button"
                             onClick={() => {
                               setFromUrl(image.url);
-                              setStatus("info");
-                              setMessage(`Mídia preenchida como origem: ${image.url}`);
+                              notify({ tone: "info", text: `Mídia preenchida como origem: ${image.url}` });
                             }}
                             className={`${developerSecondaryButtonClassName} min-h-10 rounded-xl px-3 py-2 text-xs`}
                           >
@@ -723,8 +698,7 @@ export default function ImagensPage() {
                             type="button"
                             onClick={() => {
                               setToUrl(image.url);
-                              setStatus("info");
-                              setMessage(`Mídia preenchida como destino: ${image.url}`);
+                              notify({ tone: "info", text: `Mídia preenchida como destino: ${image.url}` });
                             }}
                             className={`${developerSecondaryButtonClassName} min-h-10 rounded-xl px-3 py-2 text-xs`}
                           >

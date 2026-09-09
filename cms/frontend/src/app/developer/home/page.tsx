@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useDeveloperNotifier } from "@/components/developer/DeveloperNotifications";
+
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   ArrowDown,
   ArrowUp,
@@ -11,10 +13,10 @@ import {
   ImageSquare,
   Plus,
   Trash,
+  UploadSimple,
   VideoCamera,
 } from "@phosphor-icons/react";
 import { useApiRequest } from "@/hooks/useApiRequest";
-import { useCarouselPagination } from "@/hooks/useCarouselPagination";
 import {
   adminResourceKeys,
   invalidateAdminResource,
@@ -22,6 +24,7 @@ import {
 import { api, external, site } from "@/lib/routes";
 import type {
   HomeFeedback,
+  HomeCertification,
   HomeHeroButton,
   HomeHeroMode,
   HomeHeroSlide,
@@ -128,26 +131,74 @@ const HOME_STEPS = [
 ] as const;
 
 type HomeStepKey = (typeof HOME_STEPS)[number]["key"];
+type HomeStep = (typeof HOME_STEPS)[number];
 
-const HOME_CERTIFICATION_SLOTS = [
-  { key: "home.cert.iso", label: "ISO 9001", alt: "Logo ISO 9001" },
-  { key: "home.cert.sassmaq", label: "SASSMAQ", alt: "Logo SASSMAQ" },
-  { key: "home.cert.ecovadis", label: "EcoVadis", alt: "Logo EcoVadis" },
-  { key: "home.cert.pf", label: "Licença PF", alt: "Logo da Polícia Federal" },
-  { key: "home.cert.pcsp", label: "Polícia Civil SP", alt: "Logo da Polícia Civil de São Paulo" },
-  { key: "home.cert.exercito", label: "Exército Brasileiro", alt: "Logo do Exército Brasileiro" },
-  { key: "home.cert.ibama", label: "IBAMA", alt: "Logo do IBAMA" },
-] as const;
+const HOME_STEP_GAP = 6;
+const HOME_STEP_BUTTON_MIN_WIDTH = 124;
+
+function homeStepButtonWidth(title: string) {
+  // Número, espaço interno e ícone ocupam uma largura fixa; o título completa somente o necessário.
+  return Math.max(HOME_STEP_BUTTON_MIN_WIDTH, Math.ceil(title.length * 7) + 54);
+}
+
+function paginateHomeSteps(steps: readonly HomeStep[], availableWidth: number): HomeStep[][] {
+  if (!availableWidth) return [Array.from(steps)];
+
+  const pages: HomeStep[][] = [];
+  let page: HomeStep[] = [];
+  let usedWidth = 0;
+
+  for (const step of steps) {
+    const stepWidth = homeStepButtonWidth(step.title);
+    const nextWidth = page.length ? usedWidth + HOME_STEP_GAP + stepWidth : stepWidth;
+    if (page.length && nextWidth > availableWidth) {
+      pages.push(page);
+      page = [step];
+      usedWidth = stepWidth;
+    } else {
+      page.push(step);
+      usedWidth = nextWidth;
+    }
+  }
+
+  if (page.length) pages.push(page);
+  return pages;
+}
+
+const CERTIFICATION_IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp", "image/avif"] as const;
+const MAX_CERTIFICATION_IMAGE_BYTES = 8 * 1024 * 1024;
 
 interface HomeCertificationConfiguration {
-  slots?: Record<string, string>;
+  items?: HomeCertification[];
   images?: AdminMediaRecord[];
 }
 
-function normalizeHomeCertificationSlots(slots?: Record<string, string>): Record<string, string> {
-  return Object.fromEntries(
-    HOME_CERTIFICATION_SLOTS.map(({ key }) => [key, slots?.[key] ?? ""])
-  );
+interface CertificationUploadPreview {
+  previewUrl: string;
+  fileName: string;
+}
+
+function emptyCertification(index: number): HomeCertification {
+  return {
+    id: createId("home-certification"),
+    order: index + 1,
+    title: "",
+    alt: "",
+    image: "",
+  };
+}
+
+function normalizeCertifications(items?: HomeCertification[]): HomeCertification[] {
+  if (!Array.isArray(items)) return [];
+  return items.slice(0, 24).map((item, index) => ({
+    ...emptyCertification(index),
+    ...item,
+    id: item.id || createId("home-certification"),
+    order: index + 1,
+    title: item.title ?? "",
+    alt: item.alt ?? "",
+    image: item.image ?? "",
+  }));
 }
 
 const EMPTY_MEDIA: HomeMedia = {
@@ -342,6 +393,7 @@ function emptyHomePage(): HomePageContent {
       ],
     },
     socialProof: { title: "", feedbacks: [] },
+    certifications: [],
     quickActions: DEFAULT_QUICK_ACTIONS.map((action) => ({ ...action })),
   };
 }
@@ -502,6 +554,7 @@ function normalizeHomePage(data?: HomePageContent): HomePageContent {
         ? data.socialProof.feedbacks
         : [],
     },
+    certifications: normalizeCertifications(data.certifications),
     quickActions: normalizeQuickActions(data.quickActions),
   };
 }
@@ -838,16 +891,16 @@ function SaveButton({
 export default function DeveloperHomePage() {
   const { apiRequest } = useApiRequest();
   const [home, setHome] = useState<HomePageContent>(emptyHomePage);
-  const [certificationSlots, setCertificationSlots] = useState<Record<string, string>>(
-    normalizeHomeCertificationSlots
-  );
+  const [certifications, setCertifications] = useState<HomeCertification[]>([]);
   const [certificationImages, setCertificationImages] = useState<AdminMediaRecord[]>([]);
+  const [uploadingCertificationId, setUploadingCertificationId] = useState("");
+  const [certificationUploadPreviews, setCertificationUploadPreviews] = useState<Record<string, CertificationUploadPreview>>({});
   const [availableUnits, setAvailableUnits] = useState<OperationalUnit[]>([]);
   const [unitsReferenceAvailable, setUnitsReferenceAvailable] = useState<boolean | null>(null);
   const [activeStep, setActiveStep] = useState<HomeStepKey>("hero");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<SaveKey | "">("");
-  const [status, setStatus] = useState<{ tone: "success" | "error" | "info"; text: string } | null>(null);
+  const notify = useDeveloperNotifier();
   const [openHeroSlide, setOpenHeroSlide] = useState<number | null>(null);
   const [openQuickAction, setOpenQuickAction] = useState<number | null>(null);
   const [openSection1Item, setOpenSection1Item] = useState<number | null>(null);
@@ -856,6 +909,9 @@ export default function DeveloperHomePage() {
   const [openRegionalUnit, setOpenRegionalUnit] = useState<number | null>(null);
   const [openFeedback, setOpenFeedback] = useState<number | null>(null);
   const [previewRevision, setPreviewRevision] = useState(0);
+  const homeStepsNavigationRef = useRef<HTMLElement>(null);
+  const [homeStepsAvailableWidth, setHomeStepsAvailableWidth] = useState(0);
+  const [homeStepPage, setHomeStepPage] = useState(0);
 
   useEffect(() => {
     let alive = true;
@@ -870,16 +926,16 @@ export default function DeveloperHomePage() {
       if (response.success) {
         setHome(normalizeHomePage(response.data?.homePage));
         if (certificationsResponse.success) {
-          setCertificationSlots(normalizeHomeCertificationSlots(certificationsResponse.data?.slots));
+          setCertifications(normalizeCertifications(certificationsResponse.data?.items));
           setCertificationImages(certificationsResponse.data?.images ?? []);
         } else {
-          setCertificationSlots(normalizeHomeCertificationSlots());
+          setCertifications([]);
           setCertificationImages([]);
         }
         if (unitsResponse.success) {
           setAvailableUnits(unitsResponse.data?.items ?? []);
           setUnitsReferenceAvailable(true);
-          setStatus(
+          notify(
             certificationsResponse.success
               ? null
               : {
@@ -890,14 +946,14 @@ export default function DeveloperHomePage() {
         } else if (unitsResponse.status === 403) {
           setAvailableUnits([]);
           setUnitsReferenceAvailable(false);
-          setStatus({
+          notify({
             tone: certificationsResponse.success ? "info" : "error",
             text: certificationsResponse.success
               ? "Seu perfil não pode consultar a lista de Unidades. Os cards da Home continuam disponíveis; vínculos já existentes são preservados."
               : certificationsResponse.error ?? "Não foi possível carregar as certificações da Home.",
           });
         } else {
-          setStatus({
+          notify({
             tone: "error",
             text: certificationsResponse.success
               ? "Não foi possível carregar as referências de Unidades. Tente novamente."
@@ -905,7 +961,7 @@ export default function DeveloperHomePage() {
           });
         }
       } else {
-        setStatus({ tone: "error", text: response.error ?? "Falha ao carregar a Home." });
+        notify({ tone: "error", text: response.error ?? "Falha ao carregar a Home." });
       }
       setLoading(false);
     }
@@ -913,7 +969,7 @@ export default function DeveloperHomePage() {
     return () => {
       alive = false;
     };
-  }, [apiRequest]);
+  }, [apiRequest, notify]);
 
   const summary = useMemo(
     () => ({
@@ -930,21 +986,44 @@ export default function DeveloperHomePage() {
     HOME_STEPS.findIndex((step) => step.key === activeStep)
   );
   const activeStepInfo = HOME_STEPS[activeStepIndex] ?? HOME_STEPS[0];
-  const {
-    pages: homeStepPages,
-    currentPage: homeStepPage,
-    totalPages: homeStepTotalPages,
-    nextPage: nextHomeStepPage,
-    prevPage: prevHomeStepPage,
-    goToPage: goToHomeStepPage,
-  } = useCarouselPagination(HOME_STEPS, 4);
+  const homeStepPages = useMemo(
+    () => paginateHomeSteps(HOME_STEPS, homeStepsAvailableWidth),
+    [homeStepsAvailableWidth]
+  );
+  const homeStepTotalPages = homeStepPages.length;
+  const hasHomeStepPagination = homeStepTotalPages > 1;
+  const goToHomeStepPage = useCallback((page: number) => {
+    setHomeStepPage(Math.max(0, Math.min(homeStepTotalPages - 1, page)));
+  }, [homeStepTotalPages]);
+  const nextHomeStepPage = useCallback(() => {
+    setHomeStepPage((page) => Math.min(homeStepTotalPages - 1, page + 1));
+  }, [homeStepTotalPages]);
+  const prevHomeStepPage = useCallback(() => {
+    setHomeStepPage((page) => Math.max(0, page - 1));
+  }, []);
+
+  useEffect(() => {
+    const navigation = homeStepsNavigationRef.current;
+    if (!navigation) return;
+    const updateWidth = () => setHomeStepsAvailableWidth(Math.floor(navigation.clientWidth));
+    updateWidth();
+    const observer = new ResizeObserver(updateWidth);
+    observer.observe(navigation);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (homeStepPage >= homeStepTotalPages) {
+      setHomeStepPage(Math.max(0, homeStepTotalPages - 1));
+    }
+  }, [homeStepPage, homeStepTotalPages]);
 
   useEffect(() => {
     const page = homeStepPages.findIndex((steps) =>
       steps.some((step) => step.key === activeStep)
     );
     if (page >= 0) goToHomeStepPage(page);
-  }, [activeStep, homeStepPages]);
+  }, [activeStep, goToHomeStepPage, homeStepPages]);
 
   function selectStep(step: HomeStepKey) {
     setActiveStep(step);
@@ -957,7 +1036,7 @@ export default function DeveloperHomePage() {
 
   async function saveSection(section: SaveKey, endpoint: string, payload: unknown) {
     setSaving(section);
-    setStatus(null);
+    notify(null);
     const response = await apiRequest<{ homePage?: HomePageContent }>(endpoint, {
       method: "PUT",
       body: JSON.stringify(payload),
@@ -965,44 +1044,103 @@ export default function DeveloperHomePage() {
     setSaving("");
 
     if (!response.success) {
-      setStatus({ tone: "error", text: response.error ?? "Falha ao salvar a Home." });
+      notify({ tone: "error", text: response.error ?? "Falha ao salvar a Home." });
       return;
     }
 
     setHome(normalizeHomePage(response.data?.homePage));
     setPreviewRevision((revision) => revision + 1);
-    setStatus({ tone: "success", text: "Bloco salvo com sucesso." });
+    notify({ tone: "success", text: "Bloco salvo com sucesso." });
     invalidateAdminResource([adminResourceKeys.dashboard, adminResourceKeys.images]);
   }
 
   async function saveCertifications() {
     setSaving("certifications");
-    setStatus(null);
-    const response = await apiRequest<{ slots?: Record<string, string> }>(
+    notify(null);
+    const response = await apiRequest<{ items?: HomeCertification[] }>(
       api.admin.homeCertifications,
       {
         method: "PUT",
-        body: JSON.stringify({ slots: certificationSlots }),
+        body: JSON.stringify({ items: certifications }),
       }
     );
     setSaving("");
 
     if (!response.success) {
-      setStatus({
+      notify({
         tone: "error",
         text: response.error ?? "Falha ao salvar as certificações da Home.",
       });
       return;
     }
 
-    setCertificationSlots(normalizeHomeCertificationSlots(response.data?.slots));
+    setCertifications(normalizeCertifications(response.data?.items));
     setPreviewRevision((revision) => revision + 1);
-    setStatus({ tone: "success", text: "Certificações salvas com sucesso." });
+    notify({ tone: "success", text: "Certificações salvas com sucesso." });
     invalidateAdminResource([
       adminResourceKeys.dashboard,
       adminResourceKeys.images,
-      adminResourceKeys.mediaSlots,
     ]);
+  }
+
+  function updateCertification(index: number, patch: Partial<HomeCertification>) {
+    setCertifications((current) => current.map((item, itemIndex) => (
+      itemIndex === index ? { ...item, ...patch } : item
+    )));
+  }
+
+  async function uploadCertificationImage(certificationId: string, file: File | undefined) {
+    if (!file) return;
+    if (!CERTIFICATION_IMAGE_TYPES.includes(file.type as (typeof CERTIFICATION_IMAGE_TYPES)[number])) {
+      notify({ tone: "error", text: "Formato não suportado. Envie PNG, JPG, WebP ou AVIF." });
+      return;
+    }
+    if (file.size > MAX_CERTIFICATION_IMAGE_BYTES) {
+      notify({ tone: "error", text: "Imagem acima de 8 MB. Reduza o arquivo antes de enviar." });
+      return;
+    }
+
+    const localPreviewUrl = URL.createObjectURL(file);
+    setCertificationUploadPreviews((current) => ({
+      ...current,
+      [certificationId]: {
+        previewUrl: localPreviewUrl,
+        fileName: file.name,
+      },
+    }));
+    setUploadingCertificationId(certificationId);
+    notify(null);
+    const formData = new FormData();
+    formData.append("media", file);
+    try {
+      const response = await apiRequest<{ image?: AdminMediaRecord; images?: AdminMediaRecord[] }>(api.admin.homeCertificationMedia, {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.success || !response.data?.image?.url) {
+        notify({ tone: "error", text: response.error ?? "Não foi possível enviar o logo." });
+        return;
+      }
+
+      const uploadedImage = response.data.image;
+      setCertifications((current) => current.map((item) => (
+        item.id === certificationId ? { ...item, image: uploadedImage.url } : item
+      )));
+      setCertificationImages((current) => {
+        const next = response.data?.images ?? [uploadedImage, ...current];
+        return next.filter((item) => (item.mediaType ?? "image") === "image");
+      });
+      notify({ tone: "success", text: "Logo enviado, otimizado e selecionado neste card. Salve as certificações para publicar." });
+      invalidateAdminResource([adminResourceKeys.dashboard, adminResourceKeys.images, adminResourceKeys.mediaManager]);
+    } finally {
+      setUploadingCertificationId("");
+      setCertificationUploadPreviews((current) => {
+        const { [certificationId]: _removedPreview, ...remaining } = current;
+        return remaining;
+      });
+      URL.revokeObjectURL(localPreviewUrl);
+    }
   }
 
   function updateHeroSlide(index: number, patch: Partial<HomeHeroSlide>) {
@@ -1222,11 +1360,7 @@ export default function DeveloperHomePage() {
           <DeveloperMessage tone="info">Carregando configuracao da Home...</DeveloperMessage>
         </div>
       ) : null}
-      {status ? (
-        <div className="mt-5">
-          <DeveloperMessage tone={status.tone}>{status.text}</DeveloperMessage>
-        </div>
-      ) : null}
+
       <div className="mt-5">
         <DeveloperResponsivePreview href={site.home} title="Preview Home" revision={previewRevision} />
       </div>
@@ -1244,44 +1378,51 @@ export default function DeveloperHomePage() {
               {activeStepInfo.description}
             </p>
           </div>
-          <div className="inline-flex w-fit items-center rounded-full border border-[var(--primary)]/14 bg-white/72 p-1 shadow-[0_8px_20px_rgba(29,78,216,0.07)]">
-            <button
-              type="button"
-              onClick={prevHomeStepPage}
-              disabled={homeStepPage === 0}
-              className={cn(
-                "inline-flex min-h-8 items-center justify-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-slate-600 transition-colors hover:bg-white hover:text-[var(--foreground)] disabled:cursor-not-allowed disabled:opacity-40"
-              )}
-            >
-              <CaretLeft size={16} weight="bold" />
-              Página anterior
-            </button>
-            <span className="px-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--color-muted-raw)]">
-              {homeStepPage + 1}/{homeStepTotalPages}
-            </span>
-            <button
-              type="button"
-              onClick={nextHomeStepPage}
-              disabled={homeStepPage === homeStepTotalPages - 1}
-              className={cn(
-                "inline-flex min-h-8 items-center justify-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-slate-600 transition-colors hover:bg-white hover:text-[var(--foreground)] disabled:cursor-not-allowed disabled:opacity-40"
-              )}
-            >
-              Próxima página
-              <CaretRight size={16} weight="bold" />
-            </button>
-          </div>
+          {hasHomeStepPagination ? (
+            <div className="inline-flex w-fit items-center gap-1.5 rounded-xl border border-[var(--primary)]/14 bg-white/76 p-1 shadow-[0_6px_16px_rgba(29,78,216,0.06)]">
+              <button
+                type="button"
+                onClick={prevHomeStepPage}
+                disabled={homeStepPage === 0}
+                aria-label="Mostrar etapas anteriores"
+                title="Etapas anteriores"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-[var(--color-muted-raw)] transition-colors hover:bg-slate-100 hover:text-[var(--foreground)] disabled:cursor-not-allowed disabled:opacity-35"
+              >
+                <CaretLeft size={16} weight="bold" aria-hidden="true" />
+              </button>
+              <span className="min-w-10 px-1 text-center text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--color-muted-raw)]" aria-live="polite">
+                {homeStepPage + 1} de {homeStepTotalPages}
+              </span>
+              <button
+                type="button"
+                onClick={nextHomeStepPage}
+                disabled={homeStepPage === homeStepTotalPages - 1}
+                aria-label="Mostrar próximas etapas"
+                title="Próximas etapas"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-[var(--color-muted-raw)] transition-colors hover:bg-slate-100 hover:text-[var(--foreground)] disabled:cursor-not-allowed disabled:opacity-35"
+              >
+                <CaretRight size={16} weight="bold" aria-hidden="true" />
+              </button>
+            </div>
+          ) : null}
         </div>
 
-        <nav className="mt-3 overflow-hidden" aria-label="Etapas do editor da Home">
+        <nav ref={homeStepsNavigationRef} className="mt-3 overflow-hidden" aria-label="Etapas do editor da Home">
           <div
             className="flex transition-transform duration-500 ease-[cubic-bezier(0.2,0,0,1)] motion-reduce:transition-none"
             style={{ transform: `translateX(-${homeStepPage * 100}%)` }}
           >
             {homeStepPages.map((page, pageIndex) => {
-              const nextStep = homeStepPages[pageIndex + 1]?.[0];
               return (
-                <div key={pageIndex} className="flex w-full shrink-0 gap-1.5">
+                <div
+                  key={pageIndex}
+                  className={cn(
+                    "flex w-full shrink-0 gap-1.5",
+                    homeStepTotalPages === 1 || pageIndex < homeStepTotalPages - 1
+                      ? "justify-between"
+                      : "justify-start"
+                  )}
+                >
                   {page.map((step) => {
                     const index = HOME_STEPS.findIndex((item) => item.key === step.key);
                     const active = step.key === activeStep;
@@ -1293,12 +1434,12 @@ export default function DeveloperHomePage() {
                         aria-current={active ? "step" : undefined}
                         title={`Etapa ${index + 1}: ${step.title}`}
                         className={cn(
-                          "group inline-flex min-h-12 min-w-0 flex-1 items-center gap-2 rounded-xl border px-3 py-2.5 text-left transition-all duration-300",
-                          page.length === 1 && "max-w-xs",
+                          "group inline-flex min-h-12 shrink-0 items-center gap-2 rounded-xl border px-2.5 py-2.5 text-left transition-[border-color,background-color,box-shadow] duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]/40 focus-visible:ring-inset",
                           active
                             ? "border-[var(--primary)]/38 bg-[linear-gradient(145deg,rgba(255,255,255,0.96)_0%,rgba(219,234,254,0.92)_100%)] text-[var(--foreground)] shadow-[0_6px_16px_rgba(29,78,216,0.12)]"
-                            : "border-slate-200/90 bg-white text-[var(--foreground)] shadow-[0_4px_10px_rgba(15,23,42,0.025)] hover:-translate-y-0.5 hover:border-[var(--primary)]/30 hover:shadow-[0_8px_16px_rgba(15,23,42,0.06)]"
+                            : "border-slate-200/90 bg-white text-[var(--foreground)] shadow-[0_4px_10px_rgba(15,23,42,0.025)] hover:border-[var(--primary)]/30 hover:bg-slate-50 hover:shadow-[0_5px_12px_rgba(15,23,42,0.045)]"
                         )}
+                        style={{ width: homeStepButtonWidth(step.title) }}
                       >
                         <span className={cn("flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-[10px] font-bold", active ? "border-[var(--primary)] bg-[var(--primary)] text-white shadow-[0_3px_8px_rgba(29,78,216,0.18)]" : "border-[var(--primary)]/14 bg-[var(--primary)]/7 text-[var(--primary)]")}>
                           {index + 1}
@@ -1307,18 +1448,6 @@ export default function DeveloperHomePage() {
                       </button>
                     );
                   })}
-                  {nextStep ? (
-                    <div
-                      aria-hidden="true"
-                      className="pointer-events-none relative flex min-h-12 w-28 shrink-0 items-center gap-2 overflow-hidden rounded-xl border border-slate-200/75 bg-white/72 px-3 py-2.5 text-slate-500 opacity-60 blur-[1.5px] sm:w-36"
-                    >
-                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-[var(--primary)]/14 bg-[var(--primary)]/7 text-[10px] font-bold text-[var(--primary)]">
-                        {HOME_STEPS.findIndex((item) => item.key === nextStep.key) + 1}
-                      </span>
-                      <span className="truncate text-xs font-semibold leading-4">{nextStep.title}</span>
-                      <span className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-[rgb(239,246,255)] to-transparent" />
-                    </div>
-                  ) : null}
                 </div>
               );
             })}
@@ -1678,7 +1807,18 @@ export default function DeveloperHomePage() {
           <DeveloperSectionHeading
             eyebrow="Etapa 4 - compliance e qualidade"
             title="Certificações da Home"
-            description="Escolha os logos exibidos na faixa entre Previsibilidade e Operação conectada. Cada campo troca somente o logo correspondente."
+            description="Adicione, ordene ou retire os logos exibidos na faixa entre Previsibilidade e Operação conectada."
+            action={
+              <button
+                type="button"
+                disabled={certifications.length >= 24}
+                onClick={() => setCertifications((current) => [...current, emptyCertification(current.length)])}
+                className={developerSecondaryButtonClassName}
+              >
+                <Plus size={16} weight="bold" />
+                Adicionar certificação
+              </button>
+            }
           />
           <form
             className="space-y-5"
@@ -1687,29 +1827,75 @@ export default function DeveloperHomePage() {
               void saveCertifications();
             }}
           >
-            <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-              {HOME_CERTIFICATION_SLOTS.map((certification) => (
-                <div key={certification.key} className={homeEditableCardClassName()}>
-                  <DeveloperMediaField
-                    label={certification.label}
-                    value={certificationSlots[certification.key] ?? ""}
-                    onChange={(url) =>
-                      setCertificationSlots((current) => ({
-                        ...current,
-                        [certification.key]: url,
-                      }))
-                    }
-                    mediaType="image"
-                    previewAlt={certification.alt}
-                    hint="Onde aparece: faixa de certificações da Página Inicial. Deixe vazio para usar o logo padrão do site."
-                    helpKey="certification-logo"
-                    availableMedia={certificationImages}
-                    showLibraryLink={false}
-                    stackControls
-                  />
-                </div>
+            {certifications.length === 0 ? (
+              <DeveloperMessage tone="info">
+                Nenhuma certificação será exibida na Home. Adicione um card para voltar a mostrar a faixa.
+              </DeveloperMessage>
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {certifications.map((certification, index) => (
+                <article key={certification.id} className={`${homeEditableCardClassName()} space-y-4`}>
+                  <div className="flex items-center justify-between gap-3 border-b border-[var(--primary)]/10 pb-3">
+                    <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--color-muted-raw)]">Certificação {String(index + 1).padStart(2, "0")}</p>
+                    <div className="flex items-center gap-1">
+                      <button type="button" disabled={index === 0} onClick={() => setCertifications((current) => moveItem(current, index, -1))} className={`${developerGhostButtonClassName} min-h-8 px-2 py-1.5`} aria-label="Mover certificação para cima" title="Subir"><ArrowUp size={15} weight="bold" /></button>
+                      <button type="button" disabled={index === certifications.length - 1} onClick={() => setCertifications((current) => moveItem(current, index, 1))} className={`${developerGhostButtonClassName} min-h-8 px-2 py-1.5`} aria-label="Mover certificação para baixo" title="Descer"><ArrowDown size={15} weight="bold" /></button>
+                      <DeveloperConfirmButton
+                        message={`Excluir “${certification.title || `Certificação ${index + 1}`}” da faixa da Página Inicial?`}
+                        onConfirm={() => setCertifications((current) => current.filter((item) => item.id !== certification.id))}
+                        actionType="remove"
+                        className="min-h-8 px-2 py-1.5"
+                      ><Trash size={15} weight="bold" /><span className="sr-only">Excluir certificação</span></DeveloperConfirmButton>
+                    </div>
+                  </div>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <DeveloperField label="Nome" required helpKey="certification-title">
+                      <input value={certification.title} onChange={(event) => updateCertification(index, { title: event.target.value })} maxLength={80} className={developerInputClassName} />
+                    </DeveloperField>
+                    <DeveloperField label="Descrição alternativa" required helpKey="certification-alt">
+                      <input value={certification.alt} onChange={(event) => updateCertification(index, { alt: event.target.value })} maxLength={160} className={developerInputClassName} />
+                    </DeveloperField>
+                  </div>
+                  <section className="rounded-2xl border border-[var(--primary)]/12 bg-white/55 p-3.5">
+                    <DeveloperMediaField
+                      label="Logo"
+                      value={certification.image}
+                      previewValue={certificationUploadPreviews[certification.id]?.previewUrl}
+                      displayValue={certificationUploadPreviews[certification.id]
+                        ? `${certificationUploadPreviews[certification.id].fileName} · enviando e otimizando`
+                        : undefined}
+                      onChange={(image) => updateCertification(index, { image })}
+                      mediaType="image"
+                      previewAlt={certification.alt || certification.title || "Logo da certificação"}
+                      hint="Selecione uma imagem já tratada ou envie um novo logo."
+                      helpKey="certification-logo"
+                      availableMedia={certificationImages}
+                      showLibraryLink={false}
+                      compact
+                    />
+                    <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-[var(--primary)]/10 pt-3">
+                      <label className={`${developerPrimaryButtonClassName} min-h-9 cursor-pointer px-3 py-2 text-xs ${uploadingCertificationId === certification.id ? "cursor-wait opacity-60" : ""}`}>
+                        <UploadSimple size={16} weight="bold" />
+                        {uploadingCertificationId === certification.id ? "Enviando e otimizando..." : "Enviar logo"}
+                        <input
+                          type="file"
+                          accept={CERTIFICATION_IMAGE_TYPES.join(",")}
+                          disabled={uploadingCertificationId !== ""}
+                          onChange={(event) => {
+                            const [file] = Array.from(event.target.files ?? []);
+                            event.target.value = "";
+                            void uploadCertificationImage(certification.id, file);
+                          }}
+                          className="sr-only"
+                        />
+                      </label>
+                      <p className="text-[11px] leading-5 text-[var(--color-muted-raw)]">PNG, JPG, WebP ou AVIF · até 8 MB</p>
+                    </div>
+                  </section>
+                </article>
               ))}
-            </div>
+              </div>
+            )}
             <SaveButton saving={saving === "certifications"}>Salvar certificações</SaveButton>
           </form>
         </DeveloperCard>
@@ -2218,35 +2404,6 @@ export default function DeveloperHomePage() {
         ) : null}
       </div>
 
-      <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-[22px] border border-[var(--border)] bg-white/82 p-4 shadow-[0_10px_24px_rgba(15,23,42,0.045)]">
-        <button
-          type="button"
-          onClick={prevHomeStepPage}
-          disabled={homeStepPage === 0}
-          className={cn(
-            developerSecondaryButtonClassName,
-            "rounded-full px-5 disabled:cursor-not-allowed disabled:opacity-45"
-          )}
-        >
-          <CaretLeft size={16} weight="bold" />
-          Página anterior
-        </button>
-        <span className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-muted-raw)]">
-          Página {homeStepPage + 1} de {homeStepTotalPages}
-        </span>
-        <button
-          type="button"
-          onClick={nextHomeStepPage}
-          disabled={homeStepPage === homeStepTotalPages - 1}
-          className={cn(
-            developerSecondaryButtonClassName,
-            "rounded-full px-5 disabled:cursor-not-allowed disabled:opacity-45"
-          )}
-        >
-          Próxima página
-          <CaretRight size={16} weight="bold" />
-        </button>
-      </div>
     </DeveloperPage>
   );
 }

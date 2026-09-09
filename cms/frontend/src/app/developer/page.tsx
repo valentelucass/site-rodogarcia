@@ -1,5 +1,7 @@
 "use client";
 
+import { DeveloperNotification } from "@/components/developer/DeveloperNotifications";
+
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
@@ -39,6 +41,7 @@ interface ContentSummary {
     section3?: { cards?: Array<unknown> };
     regionalPresence?: { units?: Array<{ active?: boolean }> };
     socialProof?: { feedbacks?: Array<{ active?: boolean }> };
+    certifications?: Array<unknown>;
     quickActions?: Array<{ enabled?: boolean }>;
   };
   careersPage?: {
@@ -134,6 +137,7 @@ const EMPTY_CONTENT: ContentSummary = {
     section3: { cards: [] },
     regionalPresence: { units: [] },
     socialProof: { feedbacks: [] },
+    certifications: [],
     quickActions: [],
   },
   careersPage: { jobs: [] },
@@ -454,11 +458,7 @@ export default function DeveloperDashboardPage() {
         ]}
       />
 
-      {passwordChanged ? (
-        <div className="mt-5">
-          <DeveloperMessage tone="success">Senha atualizada com sucesso. Seu acesso ao CMS está liberado.</DeveloperMessage>
-        </div>
-      ) : null}
+      <DeveloperNotification tone="success" message={passwordChanged ? "Senha atualizada com sucesso. Seu acesso ao CMS está liberado." : ""} />
 
       {loading ? (
         <div className="mt-6">
