@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
   [Parameter(Mandatory = $true)]
-  [ValidateSet('Development', 'Production', 'All')]
+  [ValidateSet('Development', 'Production')]
   [string]$Mode
 )
 
@@ -13,13 +13,12 @@ $productionPorts = @(6050, 6051, 6060, 6061, 41110, 41112)
 $portNumbers = switch ($Mode) {
   'Development' { $developmentPorts }
   'Production' { $productionPorts }
-  'All' { @($developmentPorts + $productionPorts) }
 }
 
 function Get-ManagedListeners {
   @(
-    Get-NetTCPConnection -State Listen -ErrorAction SilentlyContinue |
-      Where-Object { $portNumbers -contains $_.LocalPort }
+    Get-NetTCPConnection -ErrorAction Stop |
+      Where-Object { $_.State -eq 'Listen' -and $portNumbers -contains $_.LocalPort }
   )
 }
 

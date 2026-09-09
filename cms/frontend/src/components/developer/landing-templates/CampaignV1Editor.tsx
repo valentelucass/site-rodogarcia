@@ -26,7 +26,7 @@ export function CampaignV1Editor<T extends CampaignV1Landing>({
   media: LandingMedia[];
   uploadingMedia: boolean;
   onChange: (update: (current: T) => T) => void;
-  onUploadMedia: (file: File, alt?: string) => Promise<void>;
+  onUploadMedia: (file: File, alt?: string) => Promise<LandingMedia | null>;
   onDeleteMedia: (item: LandingMedia) => Promise<void>;
 }) {
   return <>

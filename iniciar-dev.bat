@@ -1,5 +1,6 @@
 @echo off
 setlocal EnableExtensions DisableDelayedExpansion
+set "ERRORLEVEL="
 cd /d "%~dp0"
 
 title Rodogarcia - Desenvolvimento
@@ -18,7 +19,7 @@ if not exist "%ENV_FILE%" (
   exit /b 1
 )
 call "%~dp0scripts\load-root-env.bat" "%ENV_FILE%"
-if errorlevel 1 exit /b 1
+if not "%ERRORLEVEL%"=="0" exit /b 1
 
 rem DEV sempre usa os tres backends Spring e volumes locais do repositorio.
 set "NODE_ENV=development"
@@ -82,83 +83,37 @@ if not defined LANDING_BUILDER_SERVICE_TOKEN (
 )
 
 where java >nul 2>nul
-if errorlevel 1 (
+if not "%ERRORLEVEL%"=="0" (
   echo [Rodogarcia DEV] Java compativel com os Maven Wrappers nao foi encontrado no PATH.
   exit /b 1
 )
 where npm >nul 2>nul
-if errorlevel 1 (
+if not "%ERRORLEVEL%"=="0" (
   echo [Rodogarcia DEV] npm nao foi encontrado no PATH.
-  exit /b 1
-)
-
-echo [Rodogarcia DEV] Encerrando os modos DEV e PROD anteriores deste projeto...
-where pm2 >nul 2>nul
-if not errorlevel 1 (
-  call pm2 delete site-api-prod site-prod cms-api-prod cms-prod landing-api-prod landing-prod >nul 2>&1
-  call pm2 delete rodogarcia-backend-prod rodogarcia-frontend-prod rodogarcia-cms-backend-prod rodogarcia-cms-prod rodogarcia-landing-builder-backend-prod rodogarcia-landing-builder-prod >nul 2>&1
-)
-powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\stop-rodogarcia-listeners.ps1" -Mode All
-if errorlevel 1 (
-  echo [Rodogarcia DEV] Nao foi possivel liberar todas as portas canonicas do projeto.
   exit /b 1
 )
 
 echo [Rodogarcia DEV] Ambiente: %ENV_FILE%
 call "%~dp0scripts\compile-spring-dev-backend.bat" "site\backend" "backend publico"
-if errorlevel 1 (
-  echo [Rodogarcia DEV] Preparacao interrompida antes de encerrar processos ou iniciar novos servicos.
-  endlocal
-  exit /b 1
-)
+if not "%ERRORLEVEL%"=="0" goto :preparation_failed
 call "%~dp0scripts\compile-spring-dev-backend.bat" "cms\backend" "backend do CMS"
-if errorlevel 1 (
-  echo [Rodogarcia DEV] Preparacao interrompida antes de encerrar processos ou iniciar novos servicos.
-  endlocal
-  exit /b 1
-)
+if not "%ERRORLEVEL%"=="0" goto :preparation_failed
 call "%~dp0scripts\compile-spring-dev-backend.bat" "landing-builder\backend" "backend do Landing Builder"
-if errorlevel 1 (
-  echo [Rodogarcia DEV] Preparacao interrompida antes de encerrar processos ou iniciar novos servicos.
-  endlocal
-  exit /b 1
-)
+if not "%ERRORLEVEL%"=="0" goto :preparation_failed
 
-if not exist "site\frontend\node_modules" (
-  echo [Rodogarcia DEV] Instalando dependencias do frontend do site a partir do lockfile...
-  pushd "site\frontend"
-  call npm ci
-  if errorlevel 1 (
-    popd
-    echo [Rodogarcia DEV] Preparacao interrompida antes de encerrar processos ou iniciar novos servicos.
-    endlocal
-    exit /b 1
-  )
-  popd
-)
-if not exist "cms\frontend\node_modules" (
-  echo [Rodogarcia DEV] Instalando dependencias do frontend do CMS a partir do lockfile...
-  pushd "cms\frontend"
-  call npm ci
-  if errorlevel 1 (
-    popd
-    echo [Rodogarcia DEV] Preparacao interrompida antes de encerrar processos ou iniciar novos servicos.
-    endlocal
-    exit /b 1
-  )
-  popd
-)
-if not exist "landing-builder\frontend\node_modules" (
-  echo [Rodogarcia DEV] Instalando dependencias do frontend do Landing Builder a partir do lockfile...
-  pushd "landing-builder\frontend"
-  call npm ci
-  if errorlevel 1 (
-    popd
-    echo [Rodogarcia DEV] Preparacao interrompida antes de encerrar processos ou iniciar novos servicos.
-    endlocal
-    exit /b 1
-  )
-  popd
+call "%~dp0scripts\install-dev-frontend-dependencies.bat" "site\frontend" "frontend do site"
+if not "%ERRORLEVEL%"=="0" goto :preparation_failed
+call "%~dp0scripts\install-dev-frontend-dependencies.bat" "cms\frontend" "frontend do CMS"
+if not "%ERRORLEVEL%"=="0" goto :preparation_failed
+call "%~dp0scripts\install-dev-frontend-dependencies.bat" "landing-builder\frontend" "frontend do Landing Builder"
+if not "%ERRORLEVEL%"=="0" goto :preparation_failed
+
+rem A limpeza do DEV nunca pode alterar o PM2 nem as portas de producao.
+echo [Rodogarcia DEV] Encerrando os processos DEV anteriores nas seis portas de desenvolvimento...
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\stop-rodogarcia-listeners.ps1" -Mode Development
+if not "%ERRORLEVEL%"=="0" (
+  echo [Rodogarcia DEV] Nao foi possivel liberar as portas de desenvolvimento.
+  exit /b 1
 )
 
 for %%D in ("site\frontend\.next" "cms\frontend\.next" "landing-builder\frontend\.next") do (
@@ -182,3 +137,8 @@ echo [Rodogarcia DEV] Landing API: http://127.0.0.1:36110
 echo [Rodogarcia DEV] Landing:     http://127.0.0.1:35112
 endlocal
 exit /b 0
+
+:preparation_failed
+echo [Rodogarcia DEV] Preparacao interrompida antes de encerrar processos ou iniciar novos servicos.
+endlocal
+exit /b 1

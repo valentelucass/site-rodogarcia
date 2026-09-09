@@ -155,6 +155,18 @@ const CMS_HELP_TEMPLATES: Record<string, CmsHelpTemplate> = {
     example: "Oculte o depoimento enquanto aguarda autorização do cliente; ele não aparecerá em /lp1 até ser ativado novamente.",
     details: [{ label: "Onde aparece", value: "Na seção correspondente da rota pública da campanha, como /lp1." }, { label: "Após salvar", value: "A seção deixa de ser renderizada ou volta a aparecer na landing e na prévia privada." }, { label: "Conteúdo", value: "Desativar a seção não apaga textos, mídia, perguntas ou botões já preenchidos." }],
   },
+  "landing-pages.field.template": {
+    title: "Template do projeto",
+    summary: "Primeiro escolha o modelo que servirá de ponto de partida para o novo projeto. Depois dessa escolha, o CMS pedirá o nome e criará o rascunho. Hoje há um template comercial disponível; quando novos modelos forem criados, eles aparecerão nesta mesma biblioteca paginada.",
+    example: "Use o template Landing comercial para iniciar uma página de campanha com Hero, serviços, prova social, perguntas e CTA final já organizados.",
+    details: [{ label: "Onde aparece", value: "Na primeira etapa do popup aberto por Iniciar novo projeto em /admin/developer/landing-pages." }, { label: "Sequência", value: "Escolher um template abre a segunda etapa, Nome do projeto. Após confirmar o nome, o CMS cria um rascunho com a estrutura e os textos iniciais desse modelo. Alterações posteriores ficam isoladas nesse projeto." }, { label: "Prévia e biblioteca", value: "Cada card quadrado mostra uma miniatura da composição do template para facilitar a comparação visual. A biblioteca pagina até oito modelos por vez para continuar organizada quando novos templates forem adicionados." }, { label: "Segurança", value: "O template não permite URLs externas nem arquivos fora da biblioteca de mídia privada da campanha.", technical: true }],
+  },
+  "landing-pages.field.project-name": {
+    title: "Nome do projeto",
+    summary: "Dê um nome para reconhecer este novo projeto no CMS. Ao criar, ele aparece em Seus projetos como rascunho e pode ser editado imediatamente.",
+    example: "Use “Campanha logística 2026” para identificar uma landing criada para essa ação comercial.",
+    details: [{ label: "Onde aparece", value: "Na lista Seus projetos de /admin/developer/landing-pages. O visitante não vê este nome automaticamente." }, { label: "Rota inicial", value: "O CMS gera uma rota curta a partir do nome, como /campanha-logistica-2026, e adiciona um número se essa rota já existir. Você pode alterá-la antes de publicar." }, { label: "Limite", value: "Aceita até 120 caracteres. O nome é obrigatório para que o rascunho seja criado.", technical: true }],
+  },
   "landing-pages.field.coverage-title": {
     title: "Título da cobertura",
     summary: "Explique a abrangência que a campanha oferece. Este título aparece ao lado do mapa do Brasil logo após o Hero da landing.",
@@ -223,21 +235,21 @@ const CMS_HELP_TEMPLATES: Record<string, CmsHelpTemplate> = {
   },
   "landing-pages.field.story-image": {
     title: "Imagem ou vídeo da seção",
-    summary: "Escolha uma imagem ou vídeo enviado para esta campanha para ficar na coluna esquerda de “Imagem e conteúdo”. O visitante verá a mídia ao lado do texto; vídeos têm controles de reprodução e podem usar uma capa antes de iniciar.",
-    example: "Envie um vídeo curto da operação, escreva a descrição alternativa na Biblioteca e escolha uma imagem como poster se quiser definir a capa.",
-    details: [{ label: "Onde aparece", value: "Na coluna esquerda da seção “Imagem e conteúdo” da rota pública da campanha." }, { label: "Biblioteca", value: "A lista mostra imagens e vídeos validados e enviados para o Landing Builder; links externos não são aceitos." }, { label: "Acessibilidade", value: "A descrição alternativa é exibida para leitores de tela. Para vídeo, a capa é opcional e os controles permanecem disponíveis ao visitante." }, { label: "Sem mídia", value: "O painel de conteúdo continua visível com uma área neutra à esquerda até uma mídia ser escolhida." }],
+    summary: "Envie a foto ou o vídeo diretamente nesta área ou escolha uma mídia já enviada para a mesma campanha. Depois do envio, o arquivo fica selecionado na coluna esquerda de “Imagem e conteúdo”; vídeos têm controles e podem usar uma capa.",
+    example: "Envie uma foto da operação, descreva o que ela mostra no campo de acessibilidade e ajuste o enquadramento antes de salvar a landing.",
+    details: [{ label: "Onde aparece", value: "Na coluna esquerda da seção “Imagem e conteúdo” da rota pública da campanha." }, { label: "Envio e tratamento", value: "A área aceita PNG, JPG/JPEG, WebP e AVIF para fotos; o Landing Builder confere a assinatura real, corrige a orientação, limita a imagem a 2.400 px e grava uma versão WebP otimizada. Links externos não são aceitos.", technical: true }, { label: "Vídeo", value: "Também aceita MP4, WebM e Ogg nesta seção. O vídeo não é convertido e pode receber uma imagem da própria campanha como capa." }, { label: "Acessibilidade", value: "A descrição alternativa é exibida para leitores de tela. Para vídeo, a capa é opcional e os controles permanecem disponíveis ao visitante." }, { label: "Sem mídia", value: "O painel de conteúdo continua visível com uma área neutra à esquerda até uma mídia ser escolhida." }],
   },
   "landing-pages.field.showcase-background": {
     title: "Foto de fundo das soluções",
-    summary: "Escolha uma imagem da biblioteca desta campanha para ficar ao fundo da seção de soluções, antes de “Imagem e conteúdo”. O texto e os cards continuam legíveis com uma camada de contraste automática.",
+    summary: "Envie a foto diretamente nesta área ou escolha uma imagem já enviada para a campanha. Ela fica ao fundo da seção de soluções, antes de “Imagem e conteúdo”, e o texto continua legível com uma camada de contraste automática.",
     example: "Use uma foto horizontal do armazém, da frota ou da operação, com espaço visual para o título e os cards.",
-    details: [{ label: "Onde aparece", value: "No fundo da seção “Soluções com foto de fundo” da rota pública, antes dos Feedbacks." }, { label: "Biblioteca", value: "A lista aceita somente imagens internas validadas no Landing Builder." }, { label: "Sem imagem", value: "A seção mantém o fundo sólido da paleta da landing e todos os cards permanecem disponíveis." }],
+    details: [{ label: "Onde aparece", value: "No fundo da seção “Soluções com foto de fundo” da rota pública, antes dos Feedbacks." }, { label: "Envio e tratamento", value: "Aceita PNG, JPG/JPEG, WebP e AVIF enviados por este campo. O Landing Builder valida o arquivo e o grava como WebP otimizado; imagens externas não são aceitas.", technical: true }, { label: "Sem imagem", value: "A seção mantém o fundo sólido da paleta da landing e todos os cards permanecem disponíveis." }],
   },
   "landing-pages.field.final-cta-image": {
     title: "Imagem de fundo do CTA final",
-    summary: "Escolha uma imagem desta campanha para aparecer atrás da chamada final antes do rodapé. Sem seleção, o CTA continua com um fundo sólido e legível.",
+    summary: "Envie a foto diretamente nesta área ou escolha uma imagem já enviada para a campanha. Ela aparece atrás da chamada final antes do rodapé; sem seleção, o CTA continua com um fundo sólido e legível.",
     example: "Use uma foto horizontal da operação ou da frota, com espaço visual para o título e o botão no lado esquerdo.",
-    details: [{ label: "Onde aparece", value: "No último CTA da landing, logo depois das Perguntas frequentes e antes do rodapé." }, { label: "Biblioteca", value: "Aceita somente uma imagem enviada e validada para esta campanha; links externos não aparecem na lista." }, { label: "Contraste", value: "A imagem recebe uma camada escura para manter título, descrição e botão legíveis." }],
+    details: [{ label: "Onde aparece", value: "No último CTA da landing, logo depois das Perguntas frequentes e antes do rodapé." }, { label: "Envio e tratamento", value: "Aceita PNG, JPG/JPEG, WebP e AVIF enviados por este campo. O Landing Builder valida o arquivo e o grava como WebP otimizado; links externos não aparecem na lista.", technical: true }, { label: "Contraste", value: "A imagem recebe uma camada escura para manter título, descrição e botão legíveis." }],
   },
   "landing-pages.field.responsive-preview": {
     title: "Referências de tela",

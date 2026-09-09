@@ -1,12 +1,15 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { ArrowSquareOut, Eye, FloppyDisk, Plus, RocketLaunch } from "@phosphor-icons/react";
+import { createPortal } from "react-dom";
+import { ArrowRight, ArrowSquareOut, Eye, FloppyDisk, RocketLaunch } from "@phosphor-icons/react";
 import type { LandingMedia } from "@/components/developer/LandingVisualEditor";
 import { CampaignV1Editor, type CampaignV1Landing } from "@/components/developer/landing-templates/CampaignV1Editor";
 import {
   DeveloperCard,
+  DeveloperCarouselPagination,
   DeveloperField,
+  DeveloperHelp,
   DeveloperHero,
   DeveloperMessage,
   DeveloperPage,
@@ -65,10 +68,28 @@ type LandingForm = {
 
 type LandingMediaListResponse = { media?: LandingMedia[] };
 
-const createBlankLanding = (): LandingForm => ({
-  template: "campaign-v1",
-  name: "Nova campanha",
-  slug: "nova-campanha",
+type LandingTemplate = LandingForm["template"];
+type NewProjectStep = "template" | "name";
+
+const LANDING_TEMPLATES: ReadonlyArray<{
+  id: LandingTemplate;
+  name: string;
+  summary: string;
+  details: string;
+}> = [{
+  id: "campaign-v1",
+  name: "Landing comercial",
+  summary: "Estrutura completa para apresentar uma solução e captar oportunidades.",
+  details: "Inclui Hero, cobertura, serviços, números, mídia, soluções, feedbacks, FAQ e CTA final.",
+}];
+
+const LANDING_TEMPLATES_PER_PAGE = 8;
+const LANDING_PROJECTS_PER_PAGE = 8;
+
+const createBlankLanding = (template: LandingTemplate = "campaign-v1"): LandingForm => ({
+  template,
+  name: "Novo projeto",
+  slug: "novo-projeto",
   theme: { primaryColor: "#111111", secondaryColor: "#2A2A2A", backgroundColor: "#FFFFFF", textColor: "#171717", font: "system" },
   analytics: { ga4MeasurementId: "" },
   seo: { title: "", description: "", index: true },
@@ -154,10 +175,76 @@ function isoDateTime(value: string) {
   return Number.isNaN(date.getTime()) ? null : date.toISOString();
 }
 
+function projectSlugFromName(name: string) {
+  const normalized = name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  const slug = normalized.replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 80).replace(/-+$/g, "");
+  return slug || "projeto";
+}
+
+function availableProjectSlug(name: string, landings: LandingForm[]) {
+  const base = projectSlugFromName(name);
+  const occupied = new Set(landings.map((landing) => landing.slug));
+  if (!occupied.has(base)) return base;
+
+  for (let suffix = 2; ; suffix += 1) {
+    const appendix = `-${suffix}`;
+    const candidate = `${base.slice(0, 80 - appendix.length).replace(/-+$/g, "")}${appendix}`;
+    if (!occupied.has(candidate)) return candidate;
+  }
+}
+
+function LandingTemplatePreview() {
+  return <div aria-hidden="true" className="relative h-full overflow-hidden rounded-lg border border-slate-200 bg-[#f5f7fb] shadow-[inset_0_1px_0_rgba(255,255,255,0.82)]">
+    <div className="absolute inset-x-0 top-0 h-[52%] overflow-hidden bg-[#112c4b] px-[9%] pt-[8%]"><div className="flex items-center justify-between"><span className="h-1.5 w-[18%] rounded-full bg-white/75" /><span className="h-1 w-[30%] rounded-full bg-white/30" /></div><div className="mt-[12%] h-1.5 w-[35%] rounded-full bg-sky-200/80" /><div className="mt-[5%] h-3 w-[70%] rounded-full bg-white" /><div className="mt-[3%] h-3 w-[52%] rounded-full bg-white" /><div className="mt-[8%] h-1.5 w-[66%] rounded-full bg-white/45" /><div className="mt-[3%] h-1.5 w-[51%] rounded-full bg-white/45" /><span className="mt-[9%] block h-4 w-[32%] rounded bg-[#2a55d9]" /><div className="absolute -right-[15%] -top-[28%] size-[68%] rounded-full border-[18px] border-sky-300/10" /></div>
+    <div className="absolute inset-x-0 top-[52%] grid h-[48%] grid-rows-[0.9fr_0.65fr_0.8fr] gap-[5%] px-[9%] py-[7%]"><div className="grid grid-cols-[1.1fr_0.9fr] gap-[7%]"><div><span className="block h-2 w-[74%] rounded-full bg-slate-700" /><span className="mt-[10%] block h-1.5 w-full rounded-full bg-slate-300" /><span className="mt-[7%] block h-1.5 w-[76%] rounded-full bg-slate-300" /></div><div className="rounded bg-sky-100"><span className="m-[13%] block h-[74%] rounded bg-[#2e2882]/75" /></div></div><div className="grid grid-cols-3 gap-[6%]"><span className="rounded bg-[#172b46]" /><span className="rounded bg-[#172b46]" /><span className="rounded bg-[#172b46]" /></div><div className="rounded bg-slate-100 p-[8%]"><span className="block h-1.5 w-[55%] rounded-full bg-slate-600" /><span className="mt-[8%] block h-1 w-full rounded-full bg-slate-300" /><span className="mt-[6%] block h-1 w-[78%] rounded-full bg-slate-300" /></div></div>
+  </div>;
+}
+
+function LandingProjectPreview({ landing }: { landing: LandingForm }) {
+  const primary = landing.theme.primaryColor || "#2a55d9";
+  const secondary = landing.theme.secondaryColor || "#172b46";
+  const background = landing.theme.backgroundColor || "#f5f7fb";
+  const title = landing.hero.title.trim() || landing.name;
+
+  return <div aria-hidden="true" className="relative h-full overflow-hidden" style={{ background }}>
+    <div className="absolute inset-x-0 top-0 h-[56%] px-[9%] pt-[8%]" style={{ background: secondary }}>
+      <div className="flex items-center justify-between"><span className="h-1.5 w-[18%] rounded-full bg-white/80" /><span className="h-1 w-[28%] rounded-full bg-white/30" /></div>
+      <span className="mt-[12%] block h-1.5 w-[28%] rounded-full bg-white/55" />
+      <p className="mt-[4%] max-w-[72%] overflow-hidden text-[clamp(6px,1.15vw,11px)] font-bold leading-[1.1] text-white" style={{ display: "-webkit-box", WebkitBoxOrient: "vertical", WebkitLineClamp: 3 }}>{title}</p>
+      <span className="mt-[8%] block h-4 w-[32%] rounded" style={{ background: primary }} />
+      <span className="absolute -right-[15%] -top-[45%] size-[75%] rounded-full border-[18px] border-white/10" />
+    </div>
+    <div className="absolute inset-x-0 bottom-0 grid h-[44%] grid-rows-[1fr_0.72fr] gap-[12%] px-[9%] py-[7%]">
+      <div className="grid grid-cols-[1.1fr_0.9fr] gap-[8%]"><div><span className="block h-1.5 w-[72%] rounded-full bg-slate-700" /><span className="mt-[9%] block h-1 w-full rounded-full bg-slate-300" /><span className="mt-[7%] block h-1 w-[76%] rounded-full bg-slate-300" /></div><div className="rounded" style={{ background: `${primary}24` }}><span className="m-[13%] block h-[74%] rounded" style={{ background: primary }} /></div></div>
+      <div className="grid grid-cols-3 gap-[7%]"><span className="rounded" style={{ background: secondary }} /><span className="rounded" style={{ background: secondary }} /><span className="rounded" style={{ background: secondary }} /></div>
+    </div>
+  </div>;
+}
+
+function LandingProjectCard({ landing, active, onOpen }: { landing: LandingForm; active: boolean; onOpen: () => void }) {
+  return <button type="button" onClick={onOpen} className={`group flex h-full min-h-[216px] w-full flex-col overflow-hidden rounded-xl border text-left shadow-[0_8px_18px_rgba(15,23,42,0.06)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_26px_rgba(15,23,42,0.11)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--primary)]/20 ${active ? "border-[var(--primary)] bg-[var(--primary)]/[0.06] ring-1 ring-[var(--primary)]/15" : "border-[var(--border)] bg-white/80 hover:border-[var(--primary)]/45"}`}>
+    <div className="relative aspect-[16/7] w-full shrink-0 border-b border-[var(--border)]/70 bg-slate-100"><LandingProjectPreview landing={landing} /><span className="absolute left-2 top-2 rounded-full bg-slate-950/75 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-[0.13em] text-white">Prévia</span></div>
+    <div className="flex min-h-0 flex-1 flex-col p-3">
+      <div className="flex items-start justify-between gap-2"><div className="min-w-0"><p className="text-[9px] font-bold uppercase tracking-[0.15em] text-[var(--primary)]">Landing comercial</p><h3 className="mt-1 truncate text-sm font-bold text-[var(--foreground)]">{landing.name}</h3></div><DeveloperStatusPill active={landing.status === "published"} activeLabel="Publicada" inactiveLabel={labelForStatus(landing.status)} /></div>
+      <p className="mt-2 truncate font-mono text-[10px] text-[var(--color-muted-raw)]">/{landing.slug}</p>
+      <span className="mt-auto flex items-center justify-between border-t border-[var(--border)]/75 pt-2.5 text-[11px] font-bold text-[var(--primary)]">Editar projeto <ArrowRight size={14} weight="bold" className="transition-transform duration-200 group-hover:translate-x-0.5" /></span>
+    </div>
+  </button>;
+}
+
 export default function LandingPagesPage() {
   const { apiRequest } = useApiRequest();
   const [form, setForm] = useState<LandingForm>(createBlankLanding);
   const [creatingNew, setCreatingNew] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<LandingTemplate | null>(null);
+  const [newProjectDialogOpen, setNewProjectDialogOpen] = useState(false);
+  const [newProjectStep, setNewProjectStep] = useState<NewProjectStep>("template");
+  const [newProjectName, setNewProjectName] = useState("");
+  const [newProjectTemplate, setNewProjectTemplate] = useState<LandingTemplate>("campaign-v1");
+  const [creatingProject, setCreatingProject] = useState(false);
+  const [newProjectError, setNewProjectError] = useState<string | null>(null);
+  const [templatesPage, setTemplatesPage] = useState(0);
+  const [projectsPage, setProjectsPage] = useState(0);
   const [message, setMessage] = useState<{ tone: "success" | "error"; text: string } | null>(null);
   const [saving, setSaving] = useState(false);
   const [uploadingMedia, setUploadingMedia] = useState(false);
@@ -177,6 +264,18 @@ export default function LandingPagesPage() {
   });
   const landings = useMemo(() => data?.landings?.map(normalizeLanding) ?? [], [data?.landings]);
   const media = mediaData?.media ?? [];
+  const templatesTotalPages = Math.max(1, Math.ceil(LANDING_TEMPLATES.length / LANDING_TEMPLATES_PER_PAGE));
+  const visibleTemplates = useMemo(() => LANDING_TEMPLATES.slice(templatesPage * LANDING_TEMPLATES_PER_PAGE, (templatesPage + 1) * LANDING_TEMPLATES_PER_PAGE), [templatesPage]);
+  const projectsTotalPages = Math.max(1, Math.ceil(landings.length / LANDING_PROJECTS_PER_PAGE));
+  const visibleProjects = useMemo(() => landings.slice(projectsPage * LANDING_PROJECTS_PER_PAGE, (projectsPage + 1) * LANDING_PROJECTS_PER_PAGE), [landings, projectsPage]);
+
+  useEffect(() => {
+    setTemplatesPage((current) => Math.min(current, templatesTotalPages - 1));
+  }, [templatesTotalPages]);
+
+  useEffect(() => {
+    setProjectsPage((current) => Math.min(current, projectsTotalPages - 1));
+  }, [projectsTotalPages]);
 
   useEffect(() => {
     if (!creatingNew && !form.id && landings.length > 0) {
@@ -188,6 +287,61 @@ export default function LandingPagesPage() {
     }
   }, [creatingNew, form.id, landings]);
   const hasUnsavedChanges = Boolean(form.id && savedFingerprint && JSON.stringify(form) !== savedFingerprint);
+
+  function openNewProjectDialog() {
+    setSelectedTemplate(null);
+    setNewProjectStep("template");
+    setTemplatesPage(0);
+    setNewProjectName("");
+    setNewProjectError(null);
+    setNewProjectDialogOpen(true);
+  }
+
+  function chooseProjectTemplate(template: LandingTemplate) {
+    setSelectedTemplate(template);
+    setNewProjectTemplate(template);
+    setNewProjectName("");
+    setNewProjectError(null);
+    setNewProjectStep("name");
+  }
+
+  async function createProject(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const name = newProjectName.trim();
+    if (!name) {
+      setNewProjectError("Informe um nome para criar o projeto.");
+      return;
+    }
+
+    setCreatingProject(true);
+    setNewProjectError(null);
+    const draft = createBlankLanding(newProjectTemplate);
+    const result = await apiRequest<{ landing: LandingForm }>(api.admin.landings, {
+      method: "POST",
+      body: JSON.stringify({ ...draft, name, slug: availableProjectSlug(name, landings) }),
+    });
+    setCreatingProject(false);
+
+    if (!result.success || !result.data?.landing) {
+      setNewProjectError(result.error ?? "Não foi possível criar o projeto.");
+      return;
+    }
+
+    const created = normalizeLanding(result.data.landing);
+    setSelectedTemplate(newProjectTemplate);
+    setForm(created);
+    setCreatingNew(false);
+    setSavedFingerprint(JSON.stringify(created));
+    setPreviewPath(null);
+    setRevisions([]);
+    setPublishAt(localDateTime(created.scheduledPublishAt));
+    setUnpublishAt(localDateTime(created.scheduledUnpublishAt));
+    setNewProjectStep("template");
+    setNewProjectDialogOpen(false);
+    setMessage({ tone: "success", text: "Projeto criado como rascunho. Agora personalize o conteúdo e salve as próximas alterações." });
+    invalidateAdminResource(adminResourceKeys.landings);
+    await refresh();
+  }
 
   async function save(event: React.FormEvent) {
     event.preventDefault();
@@ -267,7 +421,7 @@ export default function LandingPagesPage() {
     window.open(siteUrl(result.data.previewPath), "_blank", "noopener,noreferrer");
   }
 
-  async function uploadMedia(file: File, alt = "") {
+  async function uploadMedia(file: File, alt = ""): Promise<LandingMedia | null> {
     setUploadingMedia(true);
     setMessage(null);
     const body = new FormData();
@@ -276,14 +430,16 @@ export default function LandingPagesPage() {
     const result = await apiRequest<{ media: LandingMedia }>(api.admin.landingMedia, { method: "POST", body });
     setUploadingMedia(false);
 
-    if (!result.success) {
+    const uploaded = result.data?.media;
+    if (!result.success || !uploaded) {
       setMessage({ tone: "error", text: result.error ?? "Não foi possível enviar a imagem." });
-      return;
+      return null;
     }
 
     invalidateAdminResource("admin:landing-media");
     await refreshMedia();
-    setMessage({ tone: "success", text: "Imagem enviada para a biblioteca da campanha. Selecione-a para usar no logo ou fundo." });
+    setMessage({ tone: "success", text: "Mídia enviada, tratada e selecionada nesta área. Salve a landing para publicar a alteração." });
+    return uploaded;
   }
 
   async function duplicateLanding() {
@@ -416,7 +572,7 @@ export default function LandingPagesPage() {
   }
 
   return <DeveloperPage>
-    <DeveloperHero eyebrow="Campanhas" title="Landing Pages" description="Crie campanhas independentes no template padrão, revise em prévia privada e publique pela própria rota." stats={[{ label: "Landings", value: landings.length }, { label: "Publicadas", value: landings.filter((landing) => landing.status === "published").length }, { label: "Mídias", value: media.length }]} />
+    <DeveloperHero eyebrow="Landing Pages" title="Projetos e sites" description="Crie projetos independentes, escolha um template de partida, revise em prévia privada e publique pela própria rota." stats={[{ label: "Projetos", value: landings.length }, { label: "Publicados", value: landings.filter((landing) => landing.status === "published").length }, { label: "Mídias", value: media.length }]} />
     {loading ? <DeveloperMessage tone="info">Carregando campanhas...</DeveloperMessage> : null}
     {error ? <DeveloperMessage tone="error">{error}</DeveloperMessage> : null}
     {mediaLoading ? <div className="mt-3"><DeveloperMessage tone="info">Carregando biblioteca da campanha...</DeveloperMessage></div> : null}
@@ -424,14 +580,11 @@ export default function LandingPagesPage() {
     {message ? <div className="mt-5"><DeveloperMessage tone={message.tone}>{message.text}</DeveloperMessage></div> : null}
 
     <DeveloperCard className="mt-5 py-4">
-      <div className="flex flex-wrap items-center justify-between gap-3"><div><p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--primary)]">Biblioteca</p><h2 className="mt-0.5 text-base font-semibold text-[var(--foreground)]">Suas campanhas</h2></div><button type="button" onClick={() => { setCreatingNew(true); setForm(createBlankLanding()); setMessage(null); }} className={`${developerSecondaryButtonClassName} min-h-9 px-3 py-2 text-xs`}><Plus size={16} weight="bold" />Nova</button></div>
-      {landings.length === 0 && !loading ? <p className="mt-2 text-sm text-[var(--color-muted-raw)]">Nenhuma campanha criada. Use <strong className="font-semibold text-[var(--foreground)]">Nova</strong> para começar.</p> : null}
-      {landings.length > 0 ? <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
-        {landings.map((landing) => <button key={landing.id} type="button" onClick={() => { setCreatingNew(false); setForm(landing); setSavedFingerprint(JSON.stringify(landing)); setPublishAt(localDateTime(landing.scheduledPublishAt)); setUnpublishAt(localDateTime(landing.scheduledUnpublishAt)); setPreviewPath(null); setRevisions([]); setMessage(null); }} className={`min-w-52 rounded-xl border px-3 py-2 text-left transition ${form.id === landing.id ? "border-[var(--primary)] bg-[var(--primary)]/5" : "border-[var(--border)] hover:border-[var(--primary)]/40"}`}>
-          <div className="flex items-center justify-between gap-2"><strong className="truncate text-sm text-[var(--foreground)]">{landing.name}</strong><DeveloperStatusPill active={landing.status === "published"} activeLabel="Publicada" inactiveLabel={labelForStatus(landing.status)} /></div>
-          <p className="mt-1 truncate text-xs text-[var(--color-muted-raw)]">/{landing.slug}</p>
-        </button>)}
-      </div> : null}
+      <DeveloperSectionHeading eyebrow="Projetos e sites" title="Seus projetos" action={<button type="button" onClick={openNewProjectDialog} className={`${developerPrimaryButtonClassName} min-h-9 px-3 py-2 text-xs`}>Iniciar novo projeto</button>} />
+      {landings.length === 0 && !loading ? <p className="mt-2 text-sm text-[var(--color-muted-raw)]">Nenhum projeto criado. Clique em <strong className="font-semibold text-[var(--foreground)]">Iniciar novo projeto</strong> para escolher um template.</p> : null}
+      {landings.length > 0 ? <><div className="mt-3 grid grid-cols-[repeat(auto-fill,minmax(12.5rem,14.5rem))] justify-start gap-3">
+        {visibleProjects.map((landing) => <LandingProjectCard key={landing.id} landing={landing} active={form.id === landing.id} onOpen={() => { setCreatingNew(false); setForm(landing); setSavedFingerprint(JSON.stringify(landing)); setPublishAt(localDateTime(landing.scheduledPublishAt)); setUnpublishAt(localDateTime(landing.scheduledUnpublishAt)); setPreviewPath(null); setRevisions([]); setMessage(null); }} />)}
+      </div><DeveloperCarouselPagination currentPage={projectsPage} totalPages={projectsTotalPages} onNext={() => setProjectsPage((current) => Math.min(current + 1, projectsTotalPages - 1))} onPrev={() => setProjectsPage((current) => Math.max(current - 1, 0))} compact /></> : null}
     </DeveloperCard>
 
     {media.length > 0 ? <DeveloperCard className="mt-5">
@@ -439,10 +592,10 @@ export default function LandingPagesPage() {
       <div className="mt-4 grid gap-3 lg:grid-cols-2">{media.map((item) => <article key={item.id} className="rounded-xl border border-[var(--border)] p-3"><div className="flex items-center justify-between gap-2"><strong className="text-sm text-[var(--foreground)]">{item.kind === "video" ? "Vídeo" : "Imagem"}</strong><span className="text-xs text-[var(--color-muted-raw)]">{item.id}</span></div><DeveloperField label="Descrição alternativa" className="mt-3"><input defaultValue={item.alt ?? ""} maxLength={160} onBlur={(event) => { if (event.target.value !== (item.alt ?? "")) void updateMedia(item, { alt: event.target.value }); }} className={developerInputClassName} placeholder="O que a pessoa deve entender com esta mídia?" /></DeveloperField>{item.kind === "video" ? <DeveloperField label="Poster do vídeo" className="mt-3"><select value={item.poster ?? ""} onChange={(event) => void updateMedia(item, { poster: event.target.value })} className={developerInputClassName}><option value="">Usar primeiro quadro do vídeo</option>{media.filter((candidate) => candidate.kind === "image").map((candidate) => <option key={candidate.id} value={candidate.url}>{candidate.alt || candidate.id}</option>)}</select></DeveloperField> : null}</article>)}</div>
     </DeveloperCard> : null}
 
-    <form onSubmit={save} className="mt-5 space-y-5">
+    {form.id ? <form onSubmit={save} className="mt-5 space-y-5">
       <CampaignV1Editor landing={form} media={media} uploadingMedia={uploadingMedia} onChange={(update) => setForm((current) => update(current))} onUploadMedia={uploadMedia} onDeleteMedia={deleteMedia} />
       <DeveloperCard>
-        <DeveloperSectionHeading eyebrow="Configuração" title={form.id ? form.name : "Nova landing"} description="A prévia usa o renderizador público e sempre mostra a última versão salva. A publicação valida SEO, CTAs e conteúdo de orientação do template." action={<div className="flex flex-wrap gap-2"><button type="button" onClick={() => void openPreview()} disabled={saving || openingPreview || hasUnsavedChanges} className={developerSecondaryButtonClassName}><ArrowSquareOut size={16} weight="bold" />{openingPreview ? "Abrindo..." : "Abrir prévia real"}</button><button type="submit" disabled={saving} className={developerSecondaryButtonClassName}><FloppyDisk size={16} weight="bold" />Salvar</button><button type="button" disabled={saving || form.status === "published" || form.status === "archived"} onClick={() => void changePublication(true)} className={developerPrimaryButtonClassName}><RocketLaunch size={16} weight="bold" />Publicar</button></div>} />
+        <DeveloperSectionHeading eyebrow="Configuração" title={form.id ? form.name : "Novo projeto"} description="A prévia usa o renderizador público e sempre mostra a última versão salva. A publicação valida SEO, CTAs e conteúdo de orientação do template." action={<div className="flex flex-wrap gap-2"><button type="button" onClick={() => void openPreview()} disabled={saving || openingPreview || hasUnsavedChanges} className={developerSecondaryButtonClassName}><ArrowSquareOut size={16} weight="bold" />{openingPreview ? "Abrindo..." : "Abrir prévia real"}</button><button type="submit" disabled={saving} className={developerSecondaryButtonClassName}><FloppyDisk size={16} weight="bold" />Salvar</button><button type="button" disabled={saving || form.status === "published" || form.status === "archived"} onClick={() => void changePublication(true)} className={developerPrimaryButtonClassName}><RocketLaunch size={16} weight="bold" />Publicar</button></div>} />
         <div className="grid gap-4 md:grid-cols-2"><DeveloperField label="Nome" required helpKey="landing-pages.field.nome"><input value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} className={developerInputClassName} maxLength={120} /></DeveloperField><DeveloperField label="Rota" required helpKey="landing-pages.field.rota" hint="Exemplo: campanha-distribuicao. A página será aberta em /campanha-distribuicao."><input value={form.slug} onChange={(event) => setForm({ ...form, slug: event.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "") })} className={developerInputClassName} maxLength={80} /></DeveloperField></div>
         {hasUnsavedChanges ? <p className="mt-3 text-sm font-medium text-amber-700">Há alterações não salvas. Salve para atualizar a prévia pública e habilitar a publicação.</p> : null}
         <div className="mt-4 flex flex-wrap gap-2">
@@ -466,24 +619,31 @@ export default function LandingPagesPage() {
       </DeveloperCard> : null}
 
       <DeveloperCard>
-        <DeveloperSectionHeading eyebrow="Busca" title="SEO da campanha" description="Defina como a campanha aparece no Google e se ela pode ser indexada. A prévia privada nunca entra em resultados de busca." />
-        <div className="grid gap-4 lg:grid-cols-2 lg:grid-rows-[auto_auto] lg:items-start">
+        <DeveloperSectionHeading eyebrow="Busca" title="SEO da campanha" description="Defina como a campanha aparece no Google e se ela pode ser indexada. A prévia privada nunca entra em resultados de busca." action={<span className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${form.seo.index ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-700" : "border-amber-500/20 bg-amber-500/10 text-amber-700"}`}>{form.seo.index ? "Indexação ativa" : "Fora dos resultados"}</span>} />
+        <div className="grid gap-4 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.25fr)] xl:items-start">
           <DeveloperField label="Título SEO" helpKey="landing-pages.field.seo-title" hint="Se ficar vazio, a landing usa o título principal do Hero.">
-            <input value={form.seo.title} onChange={(event) => setForm({ ...form, seo: { ...form.seo, title: event.target.value } })} className={developerInputClassName} maxLength={70} />
+            <input value={form.seo.title} onChange={(event) => setForm({ ...form, seo: { ...form.seo, title: event.target.value } })} className={developerInputClassName} maxLength={70} placeholder="Ex.: Soluções logísticas para indústrias" />
           </DeveloperField>
-          <DeveloperField label="Descrição SEO" helpKey="landing-pages.field.seo-description" hint="Resumo curto usado por buscadores e compartilhamentos." className="lg:col-start-2 lg:row-span-2">
-            <textarea value={form.seo.description} onChange={(event) => setForm({ ...form, seo: { ...form.seo, description: event.target.value } })} className={`${developerInputClassName} min-h-24 resize-y`} maxLength={180} />
+          <DeveloperField label="Descrição SEO" helpKey="landing-pages.field.seo-description" hint="Resumo curto usado por buscadores e compartilhamentos.">
+            <textarea value={form.seo.description} onChange={(event) => setForm({ ...form, seo: { ...form.seo, description: event.target.value } })} className={`${developerInputClassName} min-h-24 resize-y`} maxLength={180} placeholder="Resuma a proposta de valor desta campanha." />
           </DeveloperField>
-          <DeveloperField label="Indexação" helpKey="landing-pages.field.seo-index" hint="Campanhas de teste podem permanecer fora dos resultados de busca." className="lg:col-start-1">
-            <label className="flex min-h-10 items-center gap-3 rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm font-semibold">
+          <section className="xl:col-span-2 rounded-xl border border-[var(--border)] bg-white/[0.55] p-3 sm:flex sm:items-center sm:justify-between sm:gap-5">
+            <div className="min-w-0"><div className="flex items-center gap-1.5"><p className="text-sm font-semibold text-[var(--foreground)]">Indexação</p><DeveloperHelp label="Indexação" templateKey="landing-pages.field.seo-index" /></div><p className="mt-1 text-xs leading-5 text-[var(--color-muted-raw)]">Campanhas de teste podem permanecer fora dos resultados de busca.</p></div>
+            <label className="mt-3 flex min-h-10 shrink-0 items-center gap-3 rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm font-semibold sm:mt-0">
               <input type="checkbox" checked={form.seo.index} onChange={(event) => setForm({ ...form, seo: { ...form.seo, index: event.target.checked } })} className="size-4 accent-[var(--primary)]" />
-              Permitir que buscadores indexem esta campanha publicada
+              Permitir indexação
             </label>
-          </DeveloperField>
+          </section>
         </div>
       </DeveloperCard>
 
       <DeveloperCard><DeveloperSectionHeading eyebrow="Medição" title="Analytics da campanha" description="O Measurement ID informado é isolado para esta campanha e só é carregado depois do consentimento de analytics. Integrações sem renderizador sujeito a consentimento não fazem parte deste template." /><DeveloperField label="Measurement ID GA4" helpKey="landing-pages.field.ga4"><input placeholder="G-XXXXXXXXXX" value={form.analytics.ga4MeasurementId} onChange={(event) => setForm({ ...form, analytics: { ga4MeasurementId: event.target.value.toUpperCase() } })} className={developerInputClassName} /></DeveloperField></DeveloperCard>
-    </form>
+    </form> : null}
+    {newProjectDialogOpen ? createPortal(<div data-new-landing-project-dialog="true" className="cms-content-dialog fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/70 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="new-landing-project-title" onMouseDown={() => !creatingProject && setNewProjectDialogOpen(false)}>
+      <form className={`new-landing-project-dialog__surface max-h-[calc(100dvh-2rem)] w-full overflow-y-auto rounded-2xl border border-[var(--border)] bg-[var(--card)] p-5 shadow-[0_24px_80px_rgba(2,6,23,0.4)] sm:p-6 ${newProjectStep === "template" ? "max-w-5xl" : "max-w-lg"}`} onSubmit={(event) => { if (newProjectStep === "name") void createProject(event); else event.preventDefault(); }} onMouseDown={(event) => event.stopPropagation()}>
+        <div className="flex items-start justify-between gap-4"><div><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--primary)]">{newProjectStep === "template" ? "Etapa 1 · template" : "Etapa 2 · nome do projeto"}</p><h2 id="new-landing-project-title" className="mt-1 text-xl font-bold text-[var(--foreground)]">{newProjectStep === "template" ? "Escolha um template para iniciar" : "Como este projeto será chamado?"}</h2><p className="mt-1 text-sm leading-6 text-[var(--color-muted-raw)]">{newProjectStep === "template" ? "Escolha o modelo que deseja usar. Depois, você dará um nome ao projeto antes de começar a edição." : "Você escolheu um template. Dê um nome para criar o rascunho e começar a edição."}</p></div><button type="button" aria-label="Fechar criação de projeto" onClick={() => setNewProjectDialogOpen(false)} disabled={creatingProject} className="rounded-lg px-2 py-1 text-xl leading-none text-[var(--color-muted-raw)] transition hover:bg-white hover:text-[var(--foreground)] disabled:cursor-not-allowed disabled:opacity-50">×</button></div>
+        {newProjectStep === "template" ? <><div className="mt-5 grid grid-cols-[repeat(auto-fill,minmax(10.5rem,13rem))] justify-start gap-3">{visibleTemplates.map((template) => { const selected = selectedTemplate === template.id; return <article key={template.id} className={`flex aspect-square flex-col rounded-xl border p-2.5 transition ${selected ? "border-[var(--primary)] bg-[var(--primary)]/5 ring-1 ring-[var(--primary)]/10" : "border-[var(--border)] bg-white/70 hover:border-[var(--primary)]/40"}`}><div className="relative aspect-[16/10] shrink-0"><LandingTemplatePreview /><span className="absolute left-2 top-2 rounded-full bg-slate-950/70 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.1em] text-white">Prévia</span><span className="absolute right-2 top-2 rounded-full border border-[var(--primary)]/30 bg-[var(--card)]/90 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.1em] text-[var(--primary)]">{selected ? "Escolhido" : "Disponível"}</span></div><h3 className="mt-2 truncate text-sm font-semibold text-[var(--foreground)]">{template.name}</h3><p className="sr-only">{template.summary} {template.details}</p><button type="button" onClick={() => chooseProjectTemplate(template.id)} className={`${selected ? developerPrimaryButtonClassName : developerSecondaryButtonClassName} mt-auto min-h-8 w-full px-2 py-1.5 text-[11px]`}>Usar este template</button></article>; })}</div><DeveloperCarouselPagination currentPage={templatesPage} totalPages={templatesTotalPages} onNext={() => setTemplatesPage((current) => Math.min(current + 1, templatesTotalPages - 1))} onPrev={() => setTemplatesPage((current) => Math.max(current - 1, 0))} compact /><div className="mt-4 flex justify-end"><button type="button" onClick={() => setNewProjectDialogOpen(false)} className={developerSecondaryButtonClassName}>Cancelar</button></div></> : <><div className="mt-5 space-y-4"><DeveloperField label="Nome do projeto" required helpKey="landing-pages.field.project-name" hint="Este nome organiza seus projetos no CMS; você poderá mudá-lo depois."><input autoFocus required value={newProjectName} onChange={(event) => { setNewProjectName(event.target.value); setNewProjectError(null); }} className={developerInputClassName} maxLength={120} placeholder="Ex.: Campanha logística 2026" /></DeveloperField><section className="rounded-xl border border-[var(--border)] bg-white/[0.55] p-3"><div className="flex items-center gap-1.5"><p className="text-sm font-semibold text-[var(--foreground)]">Template de partida</p><DeveloperHelp label="Template do projeto" templateKey="landing-pages.field.template" /></div><p className="mt-1 text-sm font-medium text-[var(--foreground)]">{LANDING_TEMPLATES.find((template) => template.id === newProjectTemplate)?.name ?? "Landing comercial"}</p><p className="mt-1 text-xs leading-5 text-[var(--color-muted-raw)]">A estrutura será copiada para este projeto; alterações futuras não modificam o template original.</p></section><p className="rounded-lg border border-dashed border-[var(--border)] px-3 py-2 text-xs leading-5 text-[var(--color-muted-raw)]">A rota inicial será <strong className="font-semibold text-[var(--foreground)]">/{availableProjectSlug(newProjectName || "projeto", landings)}</strong>. Você poderá editá-la antes de publicar.</p>{newProjectError ? <p role="alert" className="text-sm font-medium text-red-600">{newProjectError}</p> : null}</div><div className="mt-6 flex flex-wrap justify-end gap-2"><button type="button" onClick={() => { setNewProjectError(null); setNewProjectStep("template"); }} disabled={creatingProject} className={developerSecondaryButtonClassName}>Voltar aos templates</button><button type="submit" disabled={creatingProject || !newProjectName.trim()} className={developerPrimaryButtonClassName}>{creatingProject ? "Criando..." : "Criar projeto"}</button></div></>}
+      </form>
+    </div>, document.querySelector<HTMLElement>("[data-admin-shell='true']") ?? document.body) : null}
   </DeveloperPage>;
 }

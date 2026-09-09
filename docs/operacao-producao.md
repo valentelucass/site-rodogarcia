@@ -43,6 +43,12 @@ As variáveis internas, segredos e caminhos de storage são privados; nenhuma po
 
 O desenvolvimento integrado usa Spring em `31012` e `31013`, site em `35180`, CMS Next em `35013`, API Builder em `36110` e renderizador em `35112`. O responsável inicia esse fluxo manualmente; a URL normal do painel é `http://127.0.0.1:35180/admin/auth/entrar`.
 
+`iniciar-dev.bat` prepara os backends e as dependências antes de encerrar os listeners das seis portas DEV. Ele preserva os registros PM2 e as portas de produção; iniciar desenvolvimento não desliga nem remove os serviços publicados. O helper de limpeza exige um ambiente explícito (`Development` ou `Production`) e não aceita `All`.
+
+A preparação DEV considera falha qualquer retorno diferente de zero do Maven ou npm, incluindo códigos negativos do Windows como `-4048`; nesse caso, interrompe antes de limpar portas ou caches. Dependências existentes são preservadas, e instalações necessárias usam o lockfile com dependências de desenvolvimento. Falhas ao consultar conexões ou liberar portas também interrompem a inicialização.
+
+O rollout manual com `iniciar-prod.bat` continua encerrando DEV antes de `npm ci`, pois o checkout compartilha dependências e caches de build. Os processos PM2 de produção só são substituídos depois da aprovação do preflight.
+
 ## PM2 e rollout manual
 
 `ecosystem.config.js` define `site-api-prod`, `site-prod`, `cms-api-prod`, `cms-prod`, `landing-api-prod` e `landing-prod`, todos em loopback. As três APIs executam `java -jar dist/server.jar`.

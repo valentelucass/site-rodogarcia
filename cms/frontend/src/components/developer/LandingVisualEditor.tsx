@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState, type ChangeEvent } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { ArrowsIn, ArrowsOut, Desktop, DeviceMobile, PencilSimple, Plus, Rectangle, SquaresFour, Trash, UploadSimple, X } from "@phosphor-icons/react";
+import { ArrowsIn, ArrowsOut, Desktop, DeviceMobile, PencilSimple, Plus, Rectangle, SquaresFour, X } from "@phosphor-icons/react";
 import { DeveloperHelp } from "./ui";
+import { LandingMediaPicker } from "./LandingMediaPicker";
 import { MediaPlacementEditor } from "./MediaPlacementEditor";
 import { type CampaignV1SectionKey, type CampaignV1Sections } from "./landing-templates/CampaignV1SectionsEditor";
 import { CAMPAIGN_V1_EDIT_TARGETS, CampaignV1FocusedSectionEditor, campaignV1EditTargetTitle, type CampaignV1EditTarget } from "./landing-templates/CampaignV1FocusedSectionEditor";
@@ -40,7 +41,6 @@ export type LandingMedia = {
   createdAt: string;
 };
 
-type MediaSlot = "logo" | "background";
 type PreviewMode = "desktop" | "tablet" | "mobile" | "compare";
 type IndividualPreviewMode = Exclude<PreviewMode, "compare">;
 type LandingTheme = LandingPreview["theme"];
@@ -177,76 +177,6 @@ function LandingThemeEditor({ theme, onChange }: { theme: LandingTheme; onChange
         </label>)}
       </div>
     </section>
-  </div>;
-}
-
-function LandingMediaPicker({
-  slot,
-  currentUrl,
-  media,
-  uploading,
-  onSelect,
-  onUpload,
-  onDelete,
-}: {
-  slot: MediaSlot;
-  currentUrl: string;
-  media: LandingMedia[];
-  uploading: boolean;
-  onSelect: (url: string) => void;
-  onUpload: (file: File, alt?: string) => Promise<void>;
-  onDelete: (item: LandingMedia) => Promise<void>;
-}) {
-  const imageMedia = media.filter((item) => item.kind === "image");
-  const label = slot === "logo" ? "logo" : "foto de fundo";
-  const [alt, setAlt] = useState("");
-
-  async function uploadSelectedFile(event: ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
-    event.target.value = "";
-    if (!file) return;
-    await onUpload(file, alt);
-    setAlt("");
-  }
-
-  return <div className="space-y-4">
-    <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-      <p className="text-sm font-semibold text-slate-800">Mídia própria da campanha</p>
-      <p className="mt-1 text-xs leading-5 text-slate-500">Escolha um arquivo já enviado ou envie uma mídia para esta landing. Links externos não são aceitos. Vídeos só podem ser usados na seção Imagem e conteúdo.</p>
-      <label className="mt-3 block text-xs font-semibold text-slate-700">Descrição da mídia (alt)<input value={alt} onChange={(event) => setAlt(event.target.value)} maxLength={160} placeholder="Descreva a imagem para leitores de tela" className={inputClass} /></label>
-      <label className={`mt-3 inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-lg bg-slate-950 px-3 py-2 text-sm font-bold text-white transition hover:bg-slate-800 ${uploading ? "cursor-wait opacity-60" : ""}`}>
-        <UploadSimple size={17} weight="bold" />
-        {uploading ? "Enviando..." : "Enviar mídia"}
-        <input type="file" accept="image/png,image/jpeg,image/webp,image/avif,video/mp4,video/webm,video/ogg" disabled={uploading} onChange={(event) => void uploadSelectedFile(event)} className="sr-only" />
-      </label>
-    </div>
-
-    {currentUrl && isInternalMediaPath(currentUrl) ? <div className="rounded-xl border border-[var(--primary)]/25 bg-[var(--primary)]/[0.05] p-3">
-      <p className="text-xs font-semibold text-[var(--foreground)]">Selecionado para {label}</p>
-      <img src={currentUrl} alt="Mídia selecionada" className="mt-2 h-24 w-full rounded-lg border border-slate-200 bg-white object-contain" />
-      <button type="button" onClick={() => onSelect("")} className="mt-2 text-xs font-bold text-[var(--primary)] hover:underline">Remover desta área</button>
-    </div> : null}
-
-    <div>
-      <p className="text-sm font-semibold text-slate-800">Biblioteca da campanha</p>
-      {imageMedia.length === 0 ? <p className="mt-2 text-sm text-slate-500">Nenhuma imagem enviada para esta campanha ainda.</p> : <div className="mt-2 grid max-h-72 gap-2 overflow-y-auto sm:grid-cols-2">
-        {imageMedia.map((item) => {
-          const selected = item.url === currentUrl;
-          return <article key={item.id} className={`overflow-hidden rounded-xl border bg-white ${selected ? "border-[var(--primary)] ring-2 ring-[var(--primary)]/15" : "border-slate-200"}`}>
-            <button type="button" onClick={() => onSelect(item.url)} className="block w-full text-left" aria-pressed={selected}>
-              <img src={item.url} alt={item.alt || "Imagem da campanha"} className="h-28 w-full bg-slate-100 object-cover" />
-              <span className="block truncate px-2.5 py-2 text-xs font-semibold text-slate-700">{item.alt || "Imagem sem descrição"}</span>
-            </button>
-            <div className="flex items-center justify-between border-t border-slate-100 px-2.5 py-1.5">
-              <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">{selected ? "Em uso" : "Selecionar"}</span>
-              <button type="button" onClick={() => { if (window.confirm("Excluir este arquivo da biblioteca da campanha?")) void onDelete(item); }} className="inline-flex size-7 items-center justify-center rounded-md text-red-600 transition hover:bg-red-50" aria-label={`Excluir ${item.alt || "imagem"}`} title="Excluir arquivo">
-                <Trash size={15} weight="bold" />
-              </button>
-            </div>
-          </article>;
-        })}
-      </div>}
-    </div>
   </div>;
 }
 
@@ -423,7 +353,7 @@ export function LandingVisualEditor<T extends LandingPreview>({
   media: LandingMedia[];
   uploadingMedia: boolean;
   onChange: (update: (current: T) => T) => void;
-  onUploadMedia: (file: File, alt?: string) => Promise<void>;
+  onUploadMedia: (file: File, alt?: string) => Promise<LandingMedia | null>;
   onDeleteMedia: (item: LandingMedia) => Promise<void>;
 }) {
   const [previewMode, setPreviewMode] = useState<PreviewMode>("desktop");
@@ -676,12 +606,12 @@ export function LandingVisualEditor<T extends LandingPreview>({
     {dialog && dialogPortalTarget ? createPortal(<div data-landing-editor-dialog="true" className={`${isFullscreen ? "" : "cms-content-dialog "}fixed inset-0 z-[100] flex items-end justify-center bg-slate-950/55 p-3 backdrop-blur-sm sm:items-center`} role="dialog" aria-modal="true" aria-label={dialogTitle[dialog]} onMouseDown={closeDialog}><div className="landing-editor-dialog__surface max-h-[calc(100dvh-1.5rem)] w-full max-w-6xl overflow-y-auto rounded-2xl bg-white p-5 shadow-2xl sm:p-6 lg:p-7" onMouseDown={(event) => event.stopPropagation()}><div className="mb-6 flex items-start justify-between gap-5"><div className="max-w-3xl"><p className="text-[10px] font-bold uppercase tracking-[.18em] text-slate-500">Edição rápida</p><h3 className="mt-1 text-xl font-bold text-slate-950">{dialogTitle[dialog]}</h3><p className="mt-1 text-sm text-slate-500">As alterações aparecem na prévia imediatamente. Salve a landing quando terminar.</p></div><button type="button" onClick={closeDialog} aria-label="Fechar" className="shrink-0 rounded-lg p-2 text-slate-500 hover:bg-slate-100"><X size={20} weight="bold" /></button></div>
       {dialog === "theme" ? <LandingThemeEditor theme={theme} onChange={(nextTheme) => onChange((current) => ({ ...current, theme: nextTheme }))} /> : null}
       {dialog === "contacts" ? <div className="grid gap-4 sm:grid-cols-2"><label className="text-sm font-semibold text-slate-700">Telefone<input value={hero.phone} onChange={(event) => editHero({ phone: event.target.value })} className={inputClass} /></label><label className="text-sm font-semibold text-slate-700">E-mail<input value={hero.email} onChange={(event) => editHero({ email: event.target.value })} className={inputClass} /></label></div> : null}
-      {dialog === "logo" ? <LandingMediaPicker slot="logo" currentUrl={hero.logo} media={media} uploading={uploadingMedia} onSelect={(url) => editHero({ logo: url })} onUpload={onUploadMedia} onDelete={onDeleteMedia} /> : null}
-      {dialog === "background" ? <><LandingMediaPicker slot="background" currentUrl={hero.backgroundImage} media={media} uploading={uploadingMedia} onSelect={(url) => editHero({ backgroundImage: url })} onUpload={onUploadMedia} onDelete={onDeleteMedia} /><MediaPlacementEditor label="o Hero da campanha" src={hero.backgroundImage} mediaType="image" value={hero.backgroundPresentation} onChange={(backgroundPresentation) => editHero({ backgroundPresentation })} frameAspectRatio="amplo e responsivo" /></> : null}
+      {dialog === "logo" ? <LandingMediaPicker label="Logo da landing" currentUrl={hero.logo} media={media} uploading={uploadingMedia} emptyLabel="Remover logo" onSelect={(url) => editHero({ logo: url })} onUpload={onUploadMedia} onDelete={onDeleteMedia} /> : null}
+      {dialog === "background" ? <><LandingMediaPicker label="Foto de fundo do Hero" currentUrl={hero.backgroundImage} media={media} uploading={uploadingMedia} emptyLabel="Usar fundo sólido" onSelect={(url) => editHero({ backgroundImage: url })} onUpload={onUploadMedia} onDelete={onDeleteMedia} /><MediaPlacementEditor label="o Hero da campanha" src={hero.backgroundImage} mediaType="image" value={hero.backgroundPresentation} onChange={(backgroundPresentation) => editHero({ backgroundPresentation })} frameAspectRatio="amplo e responsivo" /></> : null}
       {dialog === "hero-copy" ? <div className="grid gap-4"><label className="text-sm font-semibold text-slate-700">Selo<input value={hero.eyebrow} onChange={(event) => editHero({ eyebrow: event.target.value })} className={inputClass} maxLength={80} /></label><label className="text-sm font-semibold text-slate-700">Título<input value={hero.title} onChange={(event) => editHero({ title: event.target.value })} className={inputClass} maxLength={180} /></label><label className="text-sm font-semibold text-slate-700">Descrição<textarea value={hero.description} onChange={(event) => editHero({ description: event.target.value })} className={`${inputClass} min-h-24 resize-y`} maxLength={900} /></label></div> : null}
       {dialog === "hero-cta" ? <div className="grid gap-4 sm:grid-cols-2"><label className="text-sm font-semibold text-slate-700">Botão<input value={hero.ctaLabel} onChange={(event) => editHero({ ctaLabel: event.target.value })} className={inputClass} maxLength={70} /></label><label className="text-sm font-semibold text-slate-700">Destino do botão<input value={hero.ctaUrl} onChange={(event) => editHero({ ctaUrl: event.target.value })} className={inputClass} maxLength={400} /></label></div> : null}
       {dialog === "highlights" ? <div><p className="text-sm font-semibold text-slate-700">Informações em destaque</p><div className="mt-2 grid gap-3 sm:grid-cols-2">{hero.highlights.map((item, index) => <div key={index} className="rounded-xl border border-slate-200 p-3"><input value={item.title} onChange={(event) => updateHighlight(index, "title", event.target.value)} placeholder="Título" className={inputClass} /><textarea value={item.description} onChange={(event) => updateHighlight(index, "description", event.target.value)} placeholder="Descrição" className={`${inputClass} min-h-20 resize-y`} /></div>)}</div>{hero.highlights.length < 4 ? <button type="button" onClick={() => editHero({ highlights: [...hero.highlights, { title: "", description: "" }] })} className="mt-3 inline-flex items-center gap-2 text-sm font-bold text-slate-950"><Plus size={16} weight="bold" />Adicionar informação</button> : null}</div> : null}
-      {isCampaignV1EditDialog(dialog) ? <CampaignV1FocusedSectionEditor target={dialog} landing={landing} media={media} onChange={onChange} /> : null}
+      {isCampaignV1EditDialog(dialog) ? <CampaignV1FocusedSectionEditor target={dialog} landing={landing} media={media} uploadingMedia={uploadingMedia} onChange={onChange} onUploadMedia={onUploadMedia} onDeleteMedia={onDeleteMedia} /> : null}
       <div className="mt-6 flex justify-end"><button type="button" onClick={closeDialog} className="rounded-lg bg-slate-950 px-4 py-2.5 text-sm font-bold text-white">Concluir edição</button></div>
     </div></div>, dialogPortalTarget) : null}
   </>;

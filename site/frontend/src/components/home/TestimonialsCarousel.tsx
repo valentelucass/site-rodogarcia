@@ -207,7 +207,7 @@ export default function TestimonialsCarousel({ section }: TestimonialsCarouselPr
           <div className="mt-8 flex items-center justify-center gap-1 sm:mt-10 sm:gap-4">
             <TestimonialNavButton label="Depoimento anterior" direction="previous" onClick={() => goToTestimonial(currentIndex - 1)} />
             <p className="sr-only sm:hidden">Deslize para a esquerda ou direita para trocar de depoimento.</p>
-            <div className="flex min-w-0 flex-wrap items-center justify-center overflow-hidden" role="group" aria-label={`Depoimento ${currentIndex + 1} de ${totalSlides}`}>
+            <div className="flex min-w-0 items-center justify-center overflow-hidden" role="group" aria-label={`Depoimento ${currentIndex + 1} de ${totalSlides}`}>
               {items.map((item, index) => (
                 <button
                   key={item.id}

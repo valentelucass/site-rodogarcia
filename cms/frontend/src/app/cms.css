@@ -387,6 +387,32 @@ html[data-landing-preview-fullscreen="true"] [data-developer-mobile-navigation="
   color: #c9d5e5 !important;
 }
 
+/* A criação de Landing Page é portalizada dentro do shell para continuar no tema ativo. */
+[data-admin-shell="true"]:is([data-admin-theme="dark"], .cms-dark) [data-new-landing-project-dialog="true"] .new-landing-project-dialog__surface {
+  border-color: rgba(125, 211, 252, 0.22);
+  background: #142844 !important;
+  color: #e7edf8;
+  color-scheme: dark;
+}
+
+[data-admin-shell="true"]:is([data-admin-theme="dark"], .cms-dark) [data-new-landing-project-dialog="true"] .new-landing-project-dialog__surface label {
+  color: #dbe7f5 !important;
+}
+
+[data-admin-shell="true"]:is([data-admin-theme="dark"], .cms-dark) [data-new-landing-project-dialog="true"] .new-landing-project-dialog__surface input {
+  border-color: rgba(148, 163, 184, 0.32) !important;
+  background: #0f192a !important;
+  color: #e7edf8 !important;
+}
+
+[data-admin-shell="true"]:is([data-admin-theme="dark"], .cms-dark) [data-new-landing-project-dialog="true"] .new-landing-project-dialog__surface [class*="bg-white"] {
+  background-color: #132b4a !important;
+}
+
+[data-admin-shell="true"]:is([data-admin-theme="dark"], .cms-dark) [data-new-landing-project-dialog="true"] .new-landing-project-dialog__surface [class*="border-slate-"] {
+  border-color: rgba(148, 163, 184, 0.22) !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .cms-theme-toggle,
   .cms-theme-toggle::before,

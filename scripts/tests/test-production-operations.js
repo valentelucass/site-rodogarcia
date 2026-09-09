@@ -3,6 +3,7 @@ const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
 const { spawnSync } = require("node:child_process");
+const { testDevelopmentPreflight } = require("./test-development-preflight");
 
 const ROOT_DIR = path.resolve(__dirname, "../..");
 
@@ -250,8 +251,46 @@ function testLaunchersClearOnlyRodogarciaCanonicalPorts() {
     path.join(ROOT_DIR, "iniciar-dev.bat"),
     "utf8"
   );
-  assert.match(developmentLauncher, /stop-rodogarcia-listeners\.ps1" -Mode All/i);
-  assert.match(developmentLauncher, /pm2 delete site-api-prod site-prod cms-api-prod cms-prod landing-api-prod landing-prod/i);
+  assert.match(developmentLauncher, /stop-rodogarcia-listeners\.ps1" -Mode Development/i);
+  const developmentCommands = developmentLauncher.replace(/^\s*rem\b.*$/gim, "");
+  assert.doesNotMatch(developmentCommands, /\bpm2\b/i);
+  assert.doesNotMatch(developmentCommands, /-Mode\s+(All|Production)\b/i);
+  assert.doesNotMatch(cleanup, /['"]All['"]/i);
+
+  const cleanupIndex = developmentLauncher.indexOf('stop-rodogarcia-listeners.ps1');
+  assert.ok(cleanupIndex > developmentLauncher.lastIndexOf('compile-spring-dev-backend.bat'));
+  assert.ok(cleanupIndex > developmentLauncher.lastIndexOf('install-dev-frontend-dependencies.bat'));
+  assert.ok(cleanupIndex < developmentLauncher.indexOf('rmdir /s /q'));
+}
+
+function testListenerCleanupPreservesTheOtherEnvironment() {
+  if (process.platform !== "win32") return;
+
+  for (const mode of ["Development", "Production"]) {
+    const failureMessages = {
+      failure: /Nao foi possivel encerrar\s+o PID/,
+      "query-failure": /Consulta simulada falhou/,
+      "still-listening": /As portas Rodogarcia ainda estao em uso/,
+    };
+    for (const scenario of ["empty", "other-environment", "both-environments", ...Object.keys(failureMessages)]) {
+      const result = spawnSync(
+        "powershell.exe",
+        [
+          "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
+          path.join(ROOT_DIR, "scripts", "tests", "test-listener-cleanup.ps1"),
+          "-Mode", mode, "-Scenario", scenario,
+        ],
+        { cwd: ROOT_DIR, encoding: "utf8", timeout: 15000 }
+      );
+      assert.equal(result.error, undefined);
+      if (failureMessages[scenario]) {
+        assert.notEqual(result.status, 0, `${mode}: a falha ao encerrar precisa interromper a limpeza.`);
+        assert.match(result.stderr.replace(/\s+/g, " "), failureMessages[scenario]);
+      } else {
+        assert.equal(result.status, 0, `${mode}/${scenario}: ${result.stderr || result.stdout}`);
+      }
+    }
+  }
 }
 
 function testProductionLauncherUsesWindowsLineEndingsForLabels() {
@@ -321,7 +360,7 @@ function testNegativeNpmExitStopsTheInstallHelper() {
 
   const fixture = fs.mkdtempSync(path.join(os.tmpdir(), "rodogarcia-npm-exit-test-"));
   try {
-    writeFile(path.join(fixture, "npm.cmd"), "@echo off\r\nexit /b -4048\r\n");
+    writeFile(path.join(fixture, "npm.cmd"), "@echo off\r\necho NPM_NEGATIVE_EXIT_FIXTURE\r\nexit /b -4048\r\n");
     const result = spawnSync(
       "cmd.exe",
       [
@@ -333,9 +372,11 @@ function testNegativeNpmExitStopsTheInstallHelper() {
         cwd: ROOT_DIR,
         encoding: "utf8",
         env: { ...process.env, PATH: `${fixture};${process.env.PATH}` },
+        windowsVerbatimArguments: true,
       }
     );
     assert.equal(result.status, 1, result.stderr);
+    assert.match(result.stdout, /NPM_NEGATIVE_EXIT_FIXTURE/);
   } finally {
     remove(fixture);
   }
@@ -455,6 +496,8 @@ testInitialRolloutAllowsMissingActiveArtifacts();
 testExternalBackupManifestTargetsItsOriginalSource();
 testProductionLauncherUsesExternalBatchHelpers();
 testLaunchersClearOnlyRodogarciaCanonicalPorts();
+testListenerCleanupPreservesTheOtherEnvironment();
+testDevelopmentPreflight();
 testProductionLauncherUsesWindowsLineEndingsForLabels();
 testPublicHomeVideoPolicy();
 testNegativeNpmExitStopsTheInstallHelper();
